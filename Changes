@@ -1,0 +1,38 @@
+Revision history for Perl extension List::Compare.
+
+0.04  Sat Jun  8 10:32:00 2002
+	- last draft version before using h2xs
+
+0.05  Sun Jun  9 11:08:27 2002
+	- original version; created by h2xs 1.20 with options
+		-XA -n List::Compare
+
+0.06  Wed Jun 12 22:00:00 2002
+	- documentation changes; POD broke
+
+0.07  Thu Jun 13 18:30:00 2002
+	- documentation changes
+
+0.08  Sat Jun 15 13:04:17 EDT 2002
+	- added method get_version()
+	- used non-idiomatic syntax for 'foreach' in hope of making module more backwardly compatible
+	- to free up memory, zeroed out %seenA and %seenB when no longer needed
+	- added method get_bag()
+	- inspired by Set::Scalar, used typeglob syntax to implement aliases for methods
+	- revised POD extensively
+
+0.09  Sun Jun 16 13:28:18 EDT 2002
+	- added tests to test get_bag()
+	- implemented Carp module for warnings
+
+0.10  Wed Jun 19 22:17:49 EDT 2002
+	- corrected one typo in documentation
+	- commented out # require 5.00562 and use warnings
+	- first version uploaded to CPAN
+
+0.11  Thu Jun 20 18:00:04 EDT 2002
+	- corrected errors in POD that caused HTML to display incorrectly
+
+
+
+

@@ -1,5 +1,5 @@
 package List::Compare::Base::_Auxiliary;
-$VERSION = 0.26;
+$VERSION = 0.27;
 # Holds subroutines used within various List::Compare
 # and List::Compare::Functional
 use Carp;
@@ -193,8 +193,7 @@ sub _calculate_seen_xintersection_only {
         }
         $seen{$i} = \%seenthis;
         for (my $j = $i+1; $j <=$#{$aref}; $j++) {
-            my %seenthat = ();
-            my %seenintersect = ();
+            my (%seenthat, %seenintersect);
             my $ilabel = $i . '_' . $j;
             $seenthat{$_}++ foreach ( _list_builder($aref, $j) );
             foreach (keys %seenthat) {
@@ -230,8 +229,7 @@ sub _calculate_xintersection_only {
             $seenthis{$h}++;
         }
         for (my $j = $i+1; $j <=$#{$aref}; $j++) {
-            my %seenthat = ();
-            my %seenintersect = ();
+            my (%seenthat, %seenintersect);
             my $ilabel = $i . '_' . $j;
             $seenthat{$_}++ foreach ( _list_builder($aref, $j) );
             foreach (keys %seenthat) {

@@ -95,6 +95,11 @@ Revision history for Perl extension List::Compare.
 	- modification of interfaces to methods/functions are_members_which() and are_members_any throughout; items to be tested must be passed (by reference) as an anonymous array rather than as a flat list
 
 0.26  Sun Apr 11 2004
+        - List::Compare::SeenHash and associated tests deprecated
+        - capacity to pass references to seen-hashes to constructor now 
+transferred directly into List::Compare
 	- corrections to POD
 
+0.28  Sun Apr 18 2004
+	- corrections to POD
 

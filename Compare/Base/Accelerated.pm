@@ -1,6 +1,6 @@
 package List::Compare::Base::Accelerated;
-$VERSION = 0.26;
-# as of:  April 11, 2004
+$VERSION = 0.27;
+# as of:  April 18, 2004
 # functions used in List::Compare accelerated mode
 use strict;
 use Carp;

@@ -1,6 +1,6 @@
 package List::Compare::Base::Multiple::Accelerated;
-$VERSION = 0.26;
-# As of:  April 11, 2004
+$VERSION = 0.27;
+# As of:  April 18, 2004
 use strict;
 use Carp;
 use List::Compare::Base::_Auxiliary qw(:calculate);

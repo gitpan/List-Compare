@@ -1,14 +1,14 @@
 List::Compare - Compare elements of two or more lists
 
-This document refers to version 0.26 of List::Compare.  This version was
-released April 11, 2004.
+This document refers to version 0.27 of List::Compare.  This version was
+released April 18, 2004.
 
 To install this module on your system, place the tarball archive file in a 
 temporary directory and call the following:
 
-% gunzip List-Compare-0.26.tar.gz
-% tar xf List-Compare-0.26.tar
-% cd List-Compare-0.26
+% gunzip List-Compare-0.27.tar.gz
+% tar xf List-Compare-0.27.tar
+% cd List-Compare-0.27
 % perl Makefile.PL
 % make
 % make test
@@ -53,12 +53,19 @@ of List::Compare these warning messages would appear when you called
 'make test' as part of the installation process.  This was harmless 
 but annoying and has been fixed.
 
-Beginning with version 0.25 in March 2004, there is a modification to the 
+Beginning with version 0.25 in April 2004, there is a modification to the 
 interface of two methods/functions: are_members_which() and 
 are_members_any().  Whereas previously the strings to be tested could be 
 passed to the subroutine either as a flat list or via a reference to an 
 anonymous array, now those items must be passed via reference to an 
 anonymous array.
+
+Beginning with version 0.26 in April 2004, the functionality previously 
+found in List::Compare::SeenHash has been incorporated directly into 
+List::Compare.  Hence, List::Compare::SeenHash and the test suite files 
+associated with it have been deprecated and are no longer included in the 
+CPAN distribution.  Please see the List::Compare documentation for 
+further details.
 
 In sending e-mail to the author, please put "List::Compare" or 
 "List-Compare" in the subject line.

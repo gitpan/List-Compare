@@ -1,5 +1,5 @@
 package List::Compare::Functional;
-$VERSION = 0.26;   # April 11, 2004 
+$VERSION = 0.27;   # April 18, 2004 
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
     get_intersection
@@ -472,8 +472,8 @@ List::Compare::Functional - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.26 of List::Compare::Functional.  
-This version was released April 11, 2004.  The first released 
+This document refers to version 0.27 of List::Compare::Functional.  
+This version was released April 18, 2004.  The first released 
 version of List::Compare::Functional was v0.21.  Its version numbers 
 are set to be consistent with the other parts of the List::Compare 
 distribution.
@@ -531,6 +531,12 @@ Get those items which appear at least once in both lists (their intersection).
 
     @intersection = get_intersection( [ \@Llist, \@Rlist ] );
 
+Note that you could place the references to the lists being compared into 
+a named array and then pass C<get_intersection()> a reference to that array.
+
+    @to_be_compared = ( \@Llist, \@Rlist );
+    @intersection = get_intersection( \@to_be_compared );
+
 =item *
 
 Get those items which appear at least once in either list (their union).
@@ -564,18 +570,19 @@ elements as appear in the original lists.
 
 =item *
 
-An alternative approach to the above methods:  If you do not immediately 
-require an array as the return value of the method call, but simply need 
+An alternative approach to the above functions:  If you do not immediately 
+require an array as the return value of the function call, but simply need 
 a I<reference> to an (anonymous) array, use one of the following 
-parallel methods:
+parallel functions:
 
-    $intersection_ref = get_intersection_ref( [ \@Llist, \@Rlist ] );
-    $union_ref        = get_union_ref( [ \@Llist, \@Rlist ] );
-    $Lonly_ref        = get_unique_ref( [ \@Llist, \@Rlist ] );
-    $Ronly_ref        = get_complement_ref( [ \@Llist, \@Rlist ] );
+    $intersection_ref = get_intersection_ref(         [ \@Llist, \@Rlist ] );
+    $union_ref        = get_union_ref(                [ \@Llist, \@Rlist ] );
+    $Lonly_ref        = get_unique_ref(               [ \@Llist, \@Rlist ] );
+    $Ronly_ref        = get_complement_ref(           [ \@Llist, \@Rlist ] );
     $LorRonly_ref     = get_symmetric_difference_ref( [ \@Llist, \@Rlist ] );
-    $LorRonly_ref     = get_symdiff_ref( [ \@Llist, \@Rlist ] );  # alias
-    $bag_ref          = get_bag_ref( [ \@Llist, \@Rlist ] );
+    $LorRonly_ref     = get_symdiff_ref(              [ \@Llist, \@Rlist ] );
+                            # alias
+    $bag_ref          = get_bag_ref(                  [ \@Llist, \@Rlist ] );
 
 =item *
 
@@ -583,6 +590,8 @@ Return a true value if the first list ('L' for 'left') is a subset of the
 second list ('R' for 'right').
 
     $LR = is_LsubsetR( [ \@Llist, \@Rlist ] );
+
+=item *
 
 Return a true value if R is a subset of L.
 
@@ -626,8 +635,9 @@ list of arguments passed to C<new()>.
 
 =item *
 
-As with other List::Compare methods which return a list, you may wish the 
-above method returned a (scalar) reference to an array holding the list:
+As with other List::Compare::Functional functions which return a list, you 
+may wish the above function returned a (scalar) reference to an array 
+holding the list:
 
     $memb_arr_ref = is_member_which_ref( [ \@Llist, \@Rlist ] , [ 'baker' ] );
 
@@ -638,9 +648,9 @@ In the example above, C<$memb_arr_ref> will be:
 because C<'baker'> is found in C<@Llist> and C<@Rlist>, which hold positions 
 C<0> and C<1>, respectively, in the list of arguments passed to C<new()>.
 
-B<Note:>  methods C<is_member_which()> and C<is_member_which_ref> test
+B<Note:>  functions C<is_member_which()> and C<is_member_which_ref> test
 only one string at a time and hence take only one argument.  To test more 
-than one string at a time see the next method, C<are_members_which()>.
+than one string at a time see the next function, C<are_members_which()>.
 
 =item *
 
@@ -652,7 +662,8 @@ array, a reference to which is the second argument passed to that function.
 
     $memb_hash_ref = 
         are_members_which( [ \@Llist, \@Rlist ] , 
-            [ qw| abel baker fargo hilton zebra | ]);
+                           [ qw| abel baker fargo hilton zebra | ]
+                         );
 
 The return value is a reference to a hash of arrays.  The 
 key for each element in this hash is the string being tested.  Each element's 
@@ -675,8 +686,8 @@ Unlike those functions, C<are_members_which()> returns a hash reference.
 =item *
 
 Determine whether a given string can be found in I<any> of the lists passed as 
-arguments.  Return 1 if a specified string can be found in any of the lists 
-and 0 if not.
+arguments.  Return C<1> if a specified string can be found in any of the lists 
+and C<0> if not.
 
     $found = is_member_any( [ \@Llist, \@Rlist ] , [ 'abel' ] );
 
@@ -691,12 +702,14 @@ array, a reference to which is the first argument passed to
 C<are_members_any()>.  The strings to be tested are also placed in an 
 array, a reference to which is the second argument passed to that function.
 
-    $memb_hash_ref = are_members_any( [ \@Llist, \@Rlist ] , 
-        [ qw| abel baker fargo hilton zebra | ]);
+    $memb_hash_ref = 
+        are_members_any( [ \@Llist, \@Rlist ] , 
+                         [ qw| abel baker fargo hilton zebra | ]
+                       );
 
 The return value is a reference to a hash where an element's key is the 
-string being tested and the element's value is 1 if the string can be 
-found in I<any> of the lists and 0 if not.  In the examples above, 
+string being tested and the element's value is C<1> if the string can be 
+found in I<any> of the lists and C<0> if not.  In the examples above, 
 C<$memb_hash_ref> will be:
 
     {
@@ -755,7 +768,7 @@ consideration.  Example:  To get elements unique to C<@Carmen>:
                  [ 2 ]
              );
 
-If no index position is passed to C<get_unique()> it will default to 0 
+If no index position is passed to C<get_unique()> it will default to C<0> 
 and report items unique to the first list passed to the function.  Hence,
 
     @Lonly = get_unique( [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] );
@@ -778,7 +791,7 @@ elements found in lists other than C<@Don>:
                  [ 3 ]
              );
 
-If no index position is passed to C<get_complement()> it will default to 0 
+If no index position is passed to C<get_complement()> it will default to C<0> 
 and report items found in all lists I<other than> the first list passed to 
 C<get_complement()>.
 
@@ -790,7 +803,7 @@ is same as:
 
 =item *
 
-Get those items which do not appear in more than one of several lists 
+Get those items which do I<not> appear in I<more than one> of several lists 
 (their symmetric_difference);
 
     @LorRonly = get_symmetric_difference( [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] );
@@ -798,9 +811,9 @@ Get those items which do not appear in more than one of several lists
 
 =item *
 
-Get those items found in any of several lists which do not appear in all 
-of the lists (I<i.e.,> all items except those found in the intersection 
-of the lists):
+Get those items found in I<any> of several lists which do I<not> appear 
+in C<all> of the lists (I<i.e.,> all items except those found in the 
+intersection of the lists):
 
     @nonintersection = get_nonintersection(
                            [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] );
@@ -814,12 +827,6 @@ Get those items which appear in I<more than one> of several lists
 
 =item *
 
-If you only need a reference to an array as a return value rather than a 
-full array, use the following alternative methods:
-
-
-=item *
-
 Make a bag of every item found in every list.  The bag differs from the 
 union of the two lists in that it holds as many copies of individual 
 elements as appear in the original lists.
@@ -828,9 +835,9 @@ elements as appear in the original lists.
 
 =item *
 
-An alternative approach to the above methods:  If you do not immediately 
-require an array as the return value of the method call, but simply need 
-a I<reference> to an array, use one of the following parallel methods:
+An alternative approach to the above functions:  If you do not immediately 
+require an array as the return value of the function, but simply need 
+a I<reference> to an array, use one of the following parallel functions:
 
     $intersection_ref    = get_intersection_ref( 
                              [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] );
@@ -857,12 +864,13 @@ To determine whether one particular list is a subset of another of the
 lists passed to the function, pass to C<is_LsubsetR()> two array references. 
 The first of these is a reference to an array of array 
 references, the arrays holding the lists under consideration.  The 
-second of these is a reference to a two-element array consisting of the 
+second is a reference to a two-element array consisting of the 
 index of the presumed subset, followed by the index position of the presumed 
-superset.  A true value (1) is returned if the first (left-hand) element 
+superset.  A true value (C<1>) is returned if the first (left-hand) element 
 in the second reference list is a subset of the second (right-hand) element; 
-a false value (0) is returned otherwise.  Example:  To determine whether 
-C<@Ed> is a subset of C<@Carmen>, call:
+a false value (C<0>) is returned otherwise.
+
+Example:  To determine whether C<@Ed> is a subset of C<@Carmen>, call:
 
     $LR = is_LsubsetR(
               [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ], 
@@ -896,8 +904,9 @@ C<is_LequivalentR()> with two array references.
 The first is a reference to an array of array 
 references, the arrays holding the lists under consideration.  The 
 second of these is a reference to a two-element array consisting of the 
-two lists being tested for equivalence.  A true value (1) is returned if 
-the lists are equivalent; a false value (0) is returned otherwise.  
+two lists being tested for equivalence.  A true value (C<1>) is returned if 
+the lists are equivalent; a false value (C<0>) is returned otherwise.
+ 
 Example:  To determine whether C<@Don> and C<@Ed> are equivalent, call:
 
     $eqv = is_LequivalentR(
@@ -957,8 +966,8 @@ list of arguments passed to C<is_member_which()>.
 
 =item *
 
-As with other List::Compare::Functional methods which return a list, you may 
-wish the above method returned a reference to an array holding the list:
+As with other List::Compare::Functional functions which return a list, you may 
+wish the above function returned a reference to an array holding the list:
 
     $memb_arr_ref = is_member_which_ref(
                         [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
@@ -973,10 +982,10 @@ because C<'jerky'> is found in C<@Don> and C<@Ed>, which hold positions
 C<3> and C<4>, respectively, in the list of arguments passed to 
 C<is_member_which()>.
 
-B<Note:>  methods C<is_member_which()> and C<is_member_which_ref> test
+B<Note:>  functions C<is_member_which()> and C<is_member_which_ref> test
 only one string at a time and hence take only one element in the second 
 array reference argument.  To test more than one string at a time see 
-the next method, C<are_members_which()>.
+the next function, C<are_members_which()>.
 
 =item *
 
@@ -990,10 +999,11 @@ holds a list of the strings being tested.
                          [ qw| abel baker fargo hilton zebra | ]
                      );
 
-Return a reference to a hash of arrays.  In this hash, each element's 
-value is a reference to an anonymous array whose elements are those 
-indices in the argument list corresponding to lists holding the 
-strings being tested.  In the two examples above, C<$memb_hash_ref> will be:
+The return valus is a reference to a hash of arrays.  In this hash, 
+each element's value is a reference to an anonymous array whose 
+elements are those indices in the argument list corresponding to 
+lists holding the strings being tested.  In the two examples above, 
+C<$memb_hash_ref> will be:
 
     {
          abel     => [ 0             ],
@@ -1007,7 +1017,7 @@ B<Note:>  C<are_members_which()> tests more than one string at a time.  Hence,
 its second array reference argument can take more than one element.
 C<is_member_which()> and C<is_member_which_ref()> each take only one element 
 in their second array reference arguments.  C<are_members_which()> returns a 
-hash reference; the other methods return either a list or a reference to an 
+hash reference; the other functions return either a list or a reference to an 
 array holding that list, depending on context.
 
 =item *
@@ -1102,8 +1112,8 @@ and passed in exactly the same manner to the various functions.
     );
 
     @intersection = get_intersection( [ \%Llist, \%Rlist ] );
-    @union        = get_union( [ \%Llist, \%Rlist ] );
-    @complement   = get_complement( [ \%Llist, \%Rlist ] );
+    @union        = get_union(        [ \%Llist, \%Rlist ] );
+    @complement   = get_complement(   [ \%Llist, \%Rlist ] );
 
 and so forth.
 
@@ -1246,7 +1256,7 @@ comparisons among more than two lists, it was necessary to change the type
 of arguments passed to the various functions.  Whereas previously a 
 typical List::Compare::Functional function would be called like this:
 
-    @intersection = get_intersection( \@Llist, \@Rlist );
+    @intersection = get_intersection( \@Llist, \@Rlist ); # SUPERSEDED
 
 ... now the references to the lists being compared must now be placed 
 within a wrapper array (anonymous or named), a reference to which is 
@@ -1311,7 +1321,7 @@ James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please
 include 'List::Compare::Functional' or 'List-Compare-Functional' in your 
 subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  April 11, 2004. 
+Creation date:  May 20, 2002.  Last modification date:  April 18, 2004. 
 Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

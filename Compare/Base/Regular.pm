@@ -1,6 +1,6 @@
 package List::Compare::Base::Regular;
-$VERSION = 0.26;
-# As of:  April 11, 2004 
+$VERSION = 0.27;
+# As of:  April 18, 2004 
 # functions used in List::Compare regular mode
 use strict;
 use Carp;

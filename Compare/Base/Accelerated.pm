@@ -1,22 +1,23 @@
 package List::Compare::Base::Accelerated;
-# as of:  October 26, 2003
+$VERSION = 0.22;
+# as of:  November 23, 2003
 use strict;
 use Carp;
 use List::Compare::Base::_Engine qw|
-	_intersection_engine
-	_union_engine
-	_unique_engine
-	_complement_engine
-	_symmetric_difference_engine
-	_is_LsubsetR_engine
-	_is_RsubsetL_engine
-	_is_member_which_engine
-	_are_members_which_engine
-	_is_member_any_engine
-	_are_members_any_engine
-	_print_subset_chart_engine
-	_is_LequivalentR_engine
-	_print_equivalence_chart_engine
+    _intersection_engine
+    _union_engine
+    _unique_engine
+    _complement_engine
+    _symmetric_difference_engine
+    _is_LsubsetR_engine
+    _is_RsubsetL_engine
+    _is_member_which_engine
+    _are_members_which_engine
+    _is_member_any_engine
+    _are_members_any_engine
+    _print_subset_chart_engine
+    _is_LequivalentR_engine
+    _print_equivalence_chart_engine
 |;
 
 sub get_intersection {
@@ -26,7 +27,9 @@ sub get_intersection {
 sub get_intersection_ref {
     my $class = shift;
     my %data = %$class;
-	return _intersection_engine($data{'L'}, $data{'R'});
+    $data{'unsort'} 
+      ? return          _intersection_engine($data{'L'}, $data{'R'})   
+      : return [ sort @{_intersection_engine($data{'L'}, $data{'R'})} ];
 }
 
 sub get_union {
@@ -36,7 +39,9 @@ sub get_union {
 sub get_union_ref {
     my $class = shift;
     my %data = %$class;
-	return _union_engine($data{'L'}, $data{'R'});
+    $data{'unsort'} 
+      ? return          _union_engine($data{'L'}, $data{'R'})   
+      : return [ sort @{_union_engine($data{'L'}, $data{'R'})} ];
 }
 
 sub get_shared {
@@ -58,7 +63,9 @@ sub get_unique {
 sub get_unique_ref {
     my $class = shift;
     my %data = %$class;
-	return _unique_engine($data{'L'}, $data{'R'});
+    $data{'unsort'} 
+      ? return          _unique_engine($data{'L'}, $data{'R'})   
+      : return [ sort @{_unique_engine($data{'L'}, $data{'R'})} ];
 }
 
 *get_Lonly = \&get_unique;
@@ -73,7 +80,9 @@ sub get_complement {
 sub get_complement_ref {
     my $class = shift;
     my %data = %$class;
-	return _complement_engine($data{'L'}, $data{'R'});
+    $data{'unsort'} 
+      ? return          _complement_engine($data{'L'}, $data{'R'})   
+      : return [ sort @{_complement_engine($data{'L'}, $data{'R'})} ];
 }
 
 *get_Ronly = \&get_complement;
@@ -88,7 +97,9 @@ sub get_symmetric_difference {
 sub get_symmetric_difference_ref {
     my $class = shift;
     my %data = %$class;
-	return _symmetric_difference_engine($data{'L'}, $data{'R'});
+    $data{'unsort'} 
+      ? return          _symmetric_difference_engine($data{'L'}, $data{'R'})  
+      : return [ sort @{_symmetric_difference_engine($data{'L'}, $data{'R'})} ];
 }
 
 *get_symdiff  = \&get_symmetric_difference;
@@ -113,7 +124,7 @@ sub get_nonintersection_ref {
 sub is_LsubsetR {
     my $class = shift;
     my %data = %$class;
-	return _is_LsubsetR_engine($data{'L'}, $data{'R'});
+    return _is_LsubsetR_engine($data{'L'}, $data{'R'});
 }
 
 *is_AsubsetB  = \&is_LsubsetR;
@@ -121,7 +132,7 @@ sub is_LsubsetR {
 sub is_RsubsetL {
     my $class = shift;
     my %data = %$class;
-	return _is_RsubsetL_engine($data{'L'}, $data{'R'});
+    return _is_RsubsetL_engine($data{'L'}, $data{'R'});
 }
 
 *is_BsubsetA  = \&is_RsubsetL;
@@ -135,7 +146,7 @@ sub is_member_which_ref {
     croak "Method call requires exactly 1 argument (no references):  $!"
         unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
     my %data = %$class;
-	return _is_member_which_engine($data{'L'}, $data{'R'}, shift);
+    return _is_member_which_engine($data{'L'}, $data{'R'}, shift);
 }    
 
 sub are_members_which {
@@ -146,7 +157,7 @@ sub are_members_which {
     @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
         ?  @{$_[0]}
         :  @_;
-	return _are_members_which_engine($data{'L'}, $data{'R'}, \@args);
+    return _are_members_which_engine($data{'L'}, $data{'R'}, \@args);
 }
 
 sub is_member_any {
@@ -154,7 +165,7 @@ sub is_member_any {
     croak "Method call requires exactly 1 argument (no references):  $!"
         unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
     my %data = %$class;
-	return _is_member_any_engine($data{'L'}, $data{'R'}, shift);
+    return _is_member_any_engine($data{'L'}, $data{'R'}, shift);
 }    
 
 sub are_members_any {
@@ -165,19 +176,19 @@ sub are_members_any {
     @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
         ?  @{$_[0]}
         :  @_;
-	return _are_members_any_engine($data{'L'}, $data{'R'}, \@args);
+    return _are_members_any_engine($data{'L'}, $data{'R'}, \@args);
 }    
 
 sub print_subset_chart {
     my $class = shift;
     my %data = %$class;
-	_print_subset_chart_engine($data{'L'}, $data{'R'});
+    _print_subset_chart_engine($data{'L'}, $data{'R'});
 }
 
 sub is_LequivalentR {
     my $class = shift;
     my %data = %$class;
-	return _is_LequivalentR_engine($data{'L'}, $data{'R'});
+    return _is_LequivalentR_engine($data{'L'}, $data{'R'});
 }
 
 *is_LeqvlntR = \&is_LequivalentR;
@@ -185,7 +196,7 @@ sub is_LequivalentR {
 sub print_equivalence_chart {
     my $class = shift;
     my %data = %$class;
-	_print_equivalence_chart_engine($data{'L'}, $data{'R'});
+    _print_equivalence_chart_engine($data{'L'}, $data{'R'});
 }
 
 1;

@@ -1,7 +1,8 @@
 package List::Compare::Base::_Engine;
+$VERSION = 0.22;
 # Holds subroutines used within both 
 # List::Compare::Base::Accelerated and List::Compare::Functional
-# As of October 26, 2003
+# As of November 23, 2003
 use Carp;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
@@ -29,7 +30,7 @@ sub _intersection_engine {
     foreach (keys %{$hrefL}) {
         $intersection{$_}++ if (exists ${$hrefR}{$_});
     }
-    return [ sort keys %intersection ];
+    return [ keys %intersection ];
 }
 
 sub _union_engine {
@@ -37,7 +38,7 @@ sub _union_engine {
     my ($hrefL, $hrefR) = _calc_seen($l, $r);
     my %union = ();
     $union{$_}++ foreach ( (keys %{$hrefL}), (keys %{$hrefR}) );
-    return [ sort keys %union ];
+    return [ keys %union ];
 }
 
 sub _unique_engine {
@@ -47,7 +48,7 @@ sub _unique_engine {
     foreach (keys %{$hrefL}) {
         $Lonly{$_}++ unless exists ${$hrefR}{$_};
     }
-    return [ sort keys %Lonly ];
+    return [ keys %Lonly ];
 }
 
 sub _complement_engine {
@@ -60,7 +61,7 @@ sub _complement_engine {
     foreach (keys %{$hrefR}) {
         $Ronly{$_}++ unless (exists $intersection{$_});
     }
-    return [ sort keys %Ronly ];
+    return [ keys %Ronly ];
 }
 
 sub _symmetric_difference_engine {
@@ -78,7 +79,7 @@ sub _symmetric_difference_engine {
         $Ronly{$_}++ unless (exists $intersection{$_});
     }
     $LorRonly{$_}++ foreach ( (keys %Lonly), (keys %Ronly) );
-    return [ sort keys %LorRonly ];
+    return [ keys %LorRonly ];
 }
 
 sub _is_LsubsetR_engine {

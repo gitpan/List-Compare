@@ -1,5 +1,5 @@
 package List::Compare::Functional;
-$VERSION = 0.21;   # October 26, 2003 
+$VERSION = 0.22;   # November 23, 2003 
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
     get_intersection
@@ -134,7 +134,10 @@ sub get_intersection {
 }
 
 sub get_intersection_ref {
-    return _intersection_engine(_argument_checker(@_));
+    my @args = @_;
+    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
+        ? return          _intersection_engine(_argument_checker(@args[1..$#args]))
+        : return [ sort @{_intersection_engine(_argument_checker(@args))} ];
 }
 
 sub get_union {
@@ -142,7 +145,10 @@ sub get_union {
 }
 
 sub get_union_ref {
-    return _union_engine(_argument_checker(@_));
+    my @args = @_;
+    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
+        ? return          _union_engine(_argument_checker(@args[1..$#args]))
+        : return [ sort @{_union_engine(_argument_checker(@args))} ];
 }
 
 sub get_shared {
@@ -153,7 +159,6 @@ sub get_shared_ref {
     my $method = (caller(0))[3];
     $method =~ s/.*::(\w*)$/$1/;
     carp "When comparing only 2 lists, \&$method defaults to \n  \&get_union_ref.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
-#    &get_union_ref($class);
     &get_union_ref(@_);
 }
 
@@ -162,7 +167,10 @@ sub get_unique {
 }
 
 sub get_unique_ref {
-    return _unique_engine(_argument_checker(@_));
+    my @args = @_;
+    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
+        ? return          _unique_engine(_argument_checker(@args[1..$#args]))
+        : return [ sort @{_unique_engine(_argument_checker(@args))} ];
 }
 
 *get_Lonly = \&get_unique;
@@ -175,7 +183,10 @@ sub get_complement {
 }
 
 sub get_complement_ref {
-    return _complement_engine(_argument_checker(@_));
+    my @args = @_;
+    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
+        ? return          _complement_engine(_argument_checker(@args[1..$#args]))
+        : return [ sort @{_complement_engine(_argument_checker(@args))} ];
 }
 
 *get_Ronly = \&get_complement;
@@ -188,7 +199,10 @@ sub get_symmetric_difference {
 }
 
 sub get_symmetric_difference_ref {
-    return _symmetric_difference_engine(_argument_checker(@_));
+    my @args = @_;
+    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
+        ? return          _symmetric_difference_engine(_argument_checker(@args[1..$#args]))
+        : return [ sort @{_symmetric_difference_engine(_argument_checker(@args))} ];
 }
 
 *get_symdiff  = \&get_symmetric_difference;
@@ -206,7 +220,6 @@ sub get_nonintersection_ref {
     my $method = (caller(0))[3];
     $method =~ s/.*::(\w*)$/$1/;
     carp "When comparing only 2 lists, \&$method defaults to \n  \&get_symmetric_difference_ref.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
-#    &get_symmetric_difference_ref($class);
     &get_symmetric_difference_ref(@_);
 }
 
@@ -261,24 +274,29 @@ sub get_bag {
 }
 
 sub get_bag_ref {
-    my ($l, $r) = _argument_checker(@_);
+    my @args = @_;
+    my ($unsorted, $l, $r);
+    $unsorted = shift(@args) if ($args[0] eq '-u' or $args[0] eq '--unsorted');
+    ($l, $r) = _argument_checker(@args);
     if ( ref($l) eq 'ARRAY' and ref($r) eq 'ARRAY' ) {
-        return [ sort( @$l, @$r ) ];
+        $unsorted ? return [     ( @$l, @$r ) ]
+                  : return [ sort( @$l, @$r ) ];
     } else {
         my (@bag);
-    my %l = %{$l};
-    my %r = %{$r};
+        my %l = %{$l};
+        my %r = %{$r};
         foreach (keys %l) {
-        for (my $j=1; $j <= $l{$_}; $j++) {
-            push(@bag, $_);
-        }
-    } 
+            for (my $j=1; $j <= $l{$_}; $j++) {
+                push(@bag, $_);
+            }
+        } 
         foreach (keys %r) {
-        for (my $j=1; $j <= $r{$_}; $j++) {
-            push(@bag, $_);
-        }
-    } 
-        return [ sort( @bag ) ];
+            for (my $j=1; $j <= $r{$_}; $j++) {
+                push(@bag, $_);
+            }
+        } 
+        $unsorted ? return [      @bag ]
+                  : return [ sort @bag ];
     }
 }
 
@@ -363,11 +381,11 @@ List::Compare::Functional - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.21 of List::Compare::Functional.  
-This version was released October 26, 2003.  Version 0.21 is actually 
-the first released version of List::Compare::Functional, but its 
-version number is being set to be consistent with the other parts 
-of the List::Compare distribution.
+This document refers to version 0.22 of List::Compare::Functional.  
+This version was released November 23, 2003.  The first released 
+version of List::Compare::Functional was v0.21.  Its version numbers 
+are set to be consistent with the other parts of the List::Compare 
+distribution.
  
 =head1 SYNOPSIS
 
@@ -656,6 +674,31 @@ and passed in exactly the same manner to the various functions.
 
 and so forth.
 
+=head2 Faster Results with the Unsorted Option
+
+By default, List::Compare::Function functions return lists sorted in Perl's 
+default ASCII-betical mode.  Sorting entails a performance cost, and if you 
+do not need a sorted list and do not wish to pay this performance cost, you 
+may call the following List::Compare::Function functions with the 'unsorted' 
+option:
+
+    @intersection = get_intersection('-u', \@Llist, \@Rlist);
+    @union = get_union('-u', \@Llist, \@Rlist);
+    @Lonly = get_unique('-u', \@Llist, \@Rlist);
+    @Ronly = get_complement('-u', \@Llist, \@Rlist);
+    @LorRonly = get_symmetric_difference('-u', \@Llist, \@Rlist);
+    @bag = get_bag('-u', \@Llist, \@Rlist);
+
+For greater readability, the option may be spelled out:
+
+    @intersection = get_intersection('--unsorted', \@Llist, \@Rlist);
+
+Should you need a reference to an unsorted list as the return value, you 
+may call the unsorted option as follows:
+
+    $intersection_ref = get_intersection_ref('-u', \@Llist, \@Rlist);
+    $intersection_ref = get_intersection_ref('--unsorted', \@Llist, \@Rlist);
+
 =head1 DESCRIPTION
 
 =head2 General Comments
@@ -670,7 +713,8 @@ List::Compare and List::Compare::SeenHash. Like that Accelerated mode,
 List::Compare::Functional compares only two lists at a time -- it cannot, 
 in the current implementation, compare three or more lists simultaneously -- 
 and it can only carry out one functional comparison at a time.  If you need 
-to compare three or more lists simultaneously, use List::Compare's ''Multiple'' mode (or the Multiple mode in List::Compare::SeenHash).  Similarly, if you 
+to compare three or more lists simultaneously, use List::Compare's ''Multiple'' 
+mode (or the Multiple mode in List::Compare::SeenHash).  Similarly, if you 
 need to compute, say, both the intersection and union of two or more lists, 
 use List::Compare's Regular or Multiple modes (or their analogues in 
 List::Compare::SeenHash).
@@ -757,7 +801,7 @@ people on the planet still using those early versions.
 
 James E. Keenan (jkeenan@cpan.org).
 
-Creation date:  May 20, 2002.  Last modification date:  October 26, 2003. 
+Creation date:  May 20, 2002.  Last modification date:  November 23, 2003. 
 Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

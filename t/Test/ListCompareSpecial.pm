@@ -1,12 +1,12 @@
 package Test::ListCompareSpecial;
 # Contains test subroutines for distribution with List::Compare
-# As of:  June 1, 2003
+# As of:  November 21, 2003
 require Exporter;
 our @ISA         = qw(Exporter);
 our @EXPORT      = qw( ok  $testnum );
-our @EXPORT_OK   = qw( ok_seen_a  ok_seen_h ok_any_h _capture ); 
+our @EXPORT_OK   = qw( ok_capture_error ok_seen_a  ok_seen_h ok_any_h _capture ); 
 our %EXPORT_TAGS = (
-    seen => [ qw( ok_seen_a  ok_seen_h ok_any_h _capture ) ],
+    seen => [ qw( ok_capture_error ok_seen_a  ok_seen_h ok_any_h _capture ) ],
 );
 
 $testnum = 1;
@@ -14,6 +14,12 @@ $testnum = 1;
 sub ok {
     my $condition = shift;
     print $condition ? "ok $testnum\n" : "not ok $testnum\n";
+    $testnum++;
+}
+
+sub ok_capture_error {
+    my $condition = shift;
+    print $condition ? "\nok $testnum  IGNORE PRINTOUT;\n        bad values have been correctly detected during initialization.\n" : "not ok $testnum\n";
     $testnum++;
 }
 

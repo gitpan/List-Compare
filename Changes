@@ -80,6 +80,9 @@ Revision history for Perl extension List::Compare.
 0.21 Sun Oct 26 2003
 	- added functional interface to list comparison functions:  List::Compare::Functional; this required changes in List::Compare::Base::Accelerated and the creation of List::Compare::Base::_Engine
 
+0.21 Sun Nov 23 2003
+	- corrected conceptual flaw in List::Compare::SeenHash so as to exclude values in a seen-hash mathematically equal to zero
+	- implemented 'unsorted' option for list comparisons
 
  
 

@@ -1,5 +1,5 @@
 package List::Compare;
-$VERSION = 0.21;   # October 26, 2003 
+$VERSION = 0.22;   # November 23, 2003 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
@@ -7,19 +7,22 @@ use base qw(List::Compare::Base::Regular);
 
 sub new {
     my $class = shift;
-    my @arrayrefs= @_;
-    my ($option, $self, $dataref);
-    $option = $arrayrefs[0] eq '-a' ? shift(@arrayrefs) : 0;
-    foreach (@arrayrefs) {
+    my @args = @_;
+    my ($unsorted, $accelerated, $self, $dataref, $unsortflag);
+    $unsorted = ($args[0] eq '-u' or $args[0] eq '--unsorted')
+                ? shift(@args) : '';
+    $accelerated = shift(@args) 
+	if ($args[0] eq '-a' or $args[0] eq '--accelerated');
+    foreach (@args) {
         croak "Must pass array references: $!" unless ref($_) eq 'ARRAY';
     }
 
     # bless a ref to an empty hash into the invoking class
-    if (@arrayrefs > 2) {
+    if (@args > 2) {
         $class .= '::Multiple';
         $self = bless {}, ref($class) || $class;
-    } elsif (@arrayrefs == 2) {
-        if ($option eq '-a') {
+    } elsif (@args == 2) {
+        if ($accelerated) {
             $class .= '::Accelerated';
             $self = bless {}, ref($class) || $class;
         } else {
@@ -31,7 +34,8 @@ sub new {
     
     # do necessary calculations and store results in a hash
     # take a reference to that hash
-    $dataref = $self->_init(@arrayrefs);
+    $unsortflag = $unsorted ? 1 : 0;
+    $dataref = $self->_init($unsortflag, @args);
     
     # initialize the object from the prepared values (Damian, p. 98)
     %$self = %$dataref;
@@ -40,9 +44,9 @@ sub new {
 
 sub _init {
     my $self = shift;
-    my ($refL, $refR) = @_;
+    my ($unsortflag, $refL, $refR) = @_;
     my (%data, %seenL, %seenR);
-    my @bag = sort(@$refL, @$refR);
+    my @bag = $unsortflag ? (@$refL, @$refR) : sort(@$refL, @$refR);
 
     my (%intersection, %union, %Lonly, %Ronly, %LorRonly);
     my $LsubsetR_status = my $RsubsetL_status = 1;
@@ -84,11 +88,16 @@ sub _init {
     
     $data{'seenL'}                = \%seenL; 
     $data{'seenR'}                = \%seenR; 
-    $data{'intersection'}         = [ sort keys %intersection ];
-    $data{'union'}                = [ sort keys %union ];
-    $data{'unique'}               = [ sort keys %Lonly ];
-    $data{'complement'}           = [ sort keys %Ronly ];
-    $data{'symmetric_difference'} = [ sort keys %LorRonly ];
+    $data{'intersection'}         = $unsortflag ? [      keys %intersection ] 
+                                                : [ sort keys %intersection ];
+    $data{'union'}                = $unsortflag ? [      keys %union ]
+                                                : [ sort keys %union ];
+    $data{'unique'}               = $unsortflag ? [      keys %Lonly ] 
+                                                : [ sort keys %Lonly ];
+    $data{'complement'}           = $unsortflag ? [      keys %Ronly ] 
+                                                : [ sort keys %Ronly ];
+    $data{'symmetric_difference'} = $unsortflag ? [      keys %LorRonly ] 
+                                                : [ sort keys %LorRonly ];
     $data{'LsubsetR_status'}      = $LsubsetR_status;
     $data{'RsubsetL_status'}      = $RsubsetL_status;
     $data{'LequivalentR_status'}  = $LequivalentR_status;
@@ -120,10 +129,11 @@ use base qw(List::Compare::Base::Accelerated);
 
 sub _init {
     my $self = shift;
-    my ($refL, $refR) = @_;
+    my ($unsortflag, $refL, $refR) = @_;
     my %data = ();
     $data{'L'} = $refL;
     $data{'R'} = $refR;
+    $data{'unsort'} = $unsortflag ? 1 : 0;
     return \%data;
 }    
 
@@ -134,7 +144,8 @@ sub get_bag {
 sub get_bag_ref {
     my $class = shift;
     my %data = %$class;
-    return [ sort(@{$data{'L'}}, @{$data{'R'}}) ]; 
+    $data{'unsort'} ? return [      @{$data{'L'}}, @{$data{'R'}}  ]
+                    : return [ sort(@{$data{'L'}}, @{$data{'R'}}) ]; 
 }
 
 sub get_version {
@@ -151,6 +162,7 @@ use base qw(List::Compare::Base::Multiple);
 
 sub _init {
     my $self = shift;
+    my $unsortflag = shift;
     my @arrayrefs = @_;
     my %data = ();
     my $maxindex = $#arrayrefs;
@@ -159,7 +171,7 @@ sub _init {
     foreach my $aref (@arrayrefs) {
         push @bag, $_ foreach @$aref;
     }
-    @bag = sort(@bag);
+    @bag = sort(@bag) unless $unsortflag;
 
     my (@intersection, @union);
         # will hold overall intersection/union
@@ -211,25 +223,24 @@ sub _init {
             $xintersection{$ilabel} = \%seenintersect;
         }
     }
-    @union = sort keys %union;
+    @union = $unsortflag ? keys %union : sort(keys %union);
+
     # At this point we now have %seen, @union and %xintersection available 
     # for use in other calculations.
 
-
     # Calculate overall intersection
     # Inputs:  %xintersection
-    my @xkeys = sort keys %xintersection;
+    my @xkeys = keys %xintersection;
     %intersection = %{$xintersection{$xkeys[0]}};
     for (my $m = 1; $m <= $#xkeys; $m++) {
         my %compare = %{$xintersection{$xkeys[$m]}};
         my %result = ();
-        foreach (sort keys %compare) {
+        foreach (keys %compare) {
             $result{$_}++ if (exists $intersection{$_});
         }
         %intersection = %result;
     }
-    @intersection = sort keys %intersection;
-    
+    @intersection = $unsortflag ? keys %intersection : sort(keys %intersection);
     
     # Calculate nonintersection
     # Inputs:  @union    %intersection
@@ -237,34 +248,31 @@ sub _init {
         push(@nonintersection, $_) unless (exists $intersection{$_});
     }
     
-    
     # Calculate %xunique
     # Inputs:  @arrayrefs    %seen    %xintersection
     for (my $i = 0; $i <= $#arrayrefs; $i++) {
         my %seenthis = %{$seen{$i}};
-        my @uniquethis = ();
+        my (@uniquethis, %deductions, %alldeductions);
         # Get those elements of %xintersection which we'll need 
         # to subtract from %seenthis
-        my %deductions = my %alldeductions = ();
-        foreach (sort keys %xintersection) {
+        foreach (keys %xintersection) {
             my ($left, $right) = split /_/, $_;
             if ($left == $i || $right == $i) {
                 $deductions{$_} = $xintersection{$_};
             }
         }
-        foreach my $ded (sort keys %deductions) {
-            foreach (sort keys %{$deductions{$ded}}) {
+        foreach my $ded (keys %deductions) {
+            foreach (keys %{$deductions{$ded}}) {
                 $alldeductions{$_}++;
             }
         }
-        foreach (sort keys %seenthis) {
+        foreach (keys %seenthis) {
             push(@uniquethis, $_) unless ($alldeductions{$_});
         }
         $xunique{$i} = \@uniquethis;
     }
     # %xunique is now available for use in further calculations, 
     # such as returning the items unique to a particular source list.
-
 
     # Calculate %xcomplement
     # Inputs:  @arrayrefs    %seen    @union
@@ -280,13 +288,12 @@ sub _init {
     # such as returning the items in all lists different from those in a 
     # particular source list.
 
-
     # Calculate @shared and @symmetric_difference
     # Inputs:  %xintersection    @union
-    foreach my $q (sort keys %xintersection) {
-        $shared{$_}++ foreach (sort keys %{$xintersection{$q}});
+    foreach my $q (keys %xintersection) {
+        $shared{$_}++ foreach (keys %{$xintersection{$q}});
     }
-    @shared = sort keys %shared;
+    @shared = $unsortflag ? keys %shared : sort(keys %shared);
     foreach (@union) {
         push(@symmetric_difference, $_) unless (exists $shared{$_});
     }
@@ -354,8 +361,8 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.21 of List::Compare.  This version was
-released October 26, 2003.
+This document refers to version 0.22 of List::Compare.  This version was
+released November 23, 2003.
 
 =head1 SYNOPSIS
 
@@ -372,6 +379,17 @@ references to the arrays to the constructor.
     @Rlist = qw(baker camera delta delta edward fargo golfer hilton);
 
     $lc = List::Compare->new(\@Llist, \@Rlist);
+
+By default, List::Compare's methods return lists which are sorted using 
+Perl's default C<sort> mode:  ASCII-betical sorting.  Should the user 
+not need to have these lists sorted, he/she may achieve a speed boost 
+by constructing the List::Compare object with the unsorted option:
+
+    $lc = List::Compare->new('-u', \@Llist, \@Rlist);
+
+or
+
+    $lc = List::Compare->new('--unsorted', \@Llist, \@Rlist);
 
 =item *
 
@@ -589,6 +607,21 @@ argument to the constructor.
 
     $lca = List::Compare->new('-a', \@Llist, \@Rlist);
 
+or
+
+    $lca = List::Compare->new('--accelerated', \@Llist, \@Rlist);
+
+As with List::Compare's Regular case, should the user not need to have 
+a sorted list returned by an accelerated List::Compare method, he/she may 
+achieve a speed boost by constructing the accelerated List::Compare object 
+with the unsorted option:
+
+    $lca = List::Compare->new('-u', '-a', \@Llist, \@Rlist);
+
+or
+
+    $lca = List::Compare->new('--unsorted', '--accelerated', \@Llist, \@Rlist);
+
 All the comparison methods available in the Regular case are available to 
 the user in the Accelerated case as well.
 
@@ -637,6 +670,16 @@ references to the arrays to the constructor.
     @Ed     = qw(fargo icon icon jerky);
 
     $lcm = List::Compare->new(\@Al, \@Bob, \@Carmen, \@Don, \@Ed);
+
+As with List::Compare's Regular case, should the user not need to have 
+a sorted list returned by a List::Compare method, he/she may achieve a 
+speed boost by constructing the object with the unsorted option:
+
+    $lcm = List::Compare->new('-u', \@Al, \@Bob, \@Carmen, \@Don, \@Ed);
+
+or
+
+    $lcm = List::Compare->new('--unsorted', \@Al, \@Bob, \@Carmen, \@Don, \@Ed);
 
 B<Multiple Mode Methods Analogous to Regular and Accelerated Mode Methods>
 
@@ -1006,6 +1049,27 @@ List::Compare further takes this complexity into account by offering the
 new methods C<get_shared()> and C<get_nonintersection()> described in the 
 Synopsis above.
 
+=item *
+
+Unsorted Option
+
+When List::Compare is used to return lists representing various comparisons 
+of two or more lists (I<e.g.>, the lists' union or intersection), the lists 
+returned are, by default, sorted using Perl's default C<sort> mode:  
+ASCII-betical sorting.  Sorting produces results which are more easily 
+human-readable but entails a performance cost.
+
+Should the user not need sorted results, he/she can avoid the performance 
+cost by calling List::Compare's constructor using the unsorted option.  
+This is done by calling C<'-u'> or C<'--unsorted'> as the first argument 
+passed to the constructor, I<i.e.>, as an argument called before any 
+references to lists are passed to the constructor.
+
+Note that if are calling List::Compare in the Accelerated mode I<and> wish 
+to have the lists returned in unsorted order, you I<first> pass the 
+argument for the unsorted option (C<'-u'> or C<'--unsorted'>) and I<then> 
+pass the argument for the Accelerated mode (C<'-a'> or C<'--accelerated'>).
+ 
 =back
 
 =head2 Miscellaneous Methods
@@ -1077,7 +1141,7 @@ that we used each datum as the key to an element of a 'seen-hash':
 
 Since in almost all cases List::Compare takes the elements in the arrays 
 passed to its constructor and I<internally> assigns them to elements in a 
-seen-hash, why shouldn't we be able to pass (references) to seen-hashes 
+seen-hash, why shouldn't we be able to pass (references to) seen-hashes 
 I<directly> to the constructor and avoid possibly unnecessary array 
 assignments before the constructor is called?
 
@@ -1130,12 +1194,30 @@ between the two lists represented as seen-hashes.  And
 
 will generate meaningful comparisons of three or more lists simultaneously.
 
+List::Compare::SeenHash's constructor may be called with the unsorted 
+option when the user does not need a sorted list returned as the result of 
+a List::Compare::SeenHash method call.
+
+    $lcshu = List::Compare::SeenHash->new('-u', \%Llist, \%Rlist);
+    $lcshau = List::Compare::SeenHash->new('-u', '-a', \%Llist, \%Rlist);
+    $lcshmu = List::Compare::SeenHash->new('-u', \%Alpha, \%Beta, \%Gamma);
+
 Please see the documentation for List::Compare::SeenHash for a more detailed 
 explanation.
 
 =head2 A Non-Object-Oriented Interface:  List::Compare::Functional
 
-Version 0.21 of List::Compare introduces List::Compare::Functional, a functional (I<i.e.>, non-object-oriented) interface to list comparison functions.  List::Compare::Functional supports all the functions currently supported in List::Compare's Accelerated mode (described above).  Like the Accelerated mode, it compares only two lists at a time and yields only one comparison at a time.  Unlike the Accelerated mode, however, it does not require use of the C<'-a'> flag in the function call.  Please see the documentation for List::Compare::Functional to learn how to import its functions into your main package.
+Version 0.21 of List::Compare introduced List::Compare::Functional, 
+a functional (I<i.e.>, non-object-oriented) interface to list comparison 
+functions.  List::Compare::Functional supports all the functions currently 
+supported in List::Compare's Accelerated mode (described above).  Like the 
+Accelerated mode, it compares only two lists at a time and yields only one 
+comparison at a time.  Unlike the Accelerated mode, however, it does not 
+require use of the C<'-a'> flag in the function call.  
+List::Compare::Functional will return unsorted comparisons of two lists by 
+passing C<'-u'> or C<'--unsorted'> as the first argument to the function.  
+Please see the documentation for List::Compare::Functional to learn how to 
+import its functions into your main package.
 
 =head1 ASSUMPTIONS AND QUALIFICATIONS
 
@@ -1145,8 +1227,9 @@ module.  This has been commented out in the actual module as the code
 appears to be compatible with earlier versions of Perl; how earlier the 
 author cannot say.  In particular, the author would like the module to 
 be installable on older versions of MacPerl.  As is, the author has 
-successfully installed the module on Linux (RedHat 7.2, Perl 5.6.0) and 
-Windows98 (ActivePerl 5.6.1).  See the CPAN home page for this module for 
+successfully installed the module on Linux (RedHat 7.2, Perl 5.6.0), 
+Windows95 and Windows98 (ActivePerl 6/Perl 5.6.1) and Windows2000 
+(ActivePerl 8/Perl 5.8.0).  See the CPAN home page for this module for 
 a list of other systems on which this version of List::Compare has been 
 tested and installed.
 
@@ -1189,17 +1272,31 @@ functions in different scripts, I knew a module was lurking somewhere.
 I learned the truth of the mantra ''Repeated Code is a Mistake'' from a 
 2001 talk by Mark-Jason Dominus L<http://perl.plover.com/> to the New York 
 Perlmongers L<http://ny.pm.org/>.  
-See L<http://www.perl.com/pub/a/2000/11/repair3.html>.   
+See L<http://www.perl.com/pub/a/2000/11/repair3.html>. 
+ 
 The first public presentation of this module took place at Perl Seminar 
 New York L<http://groups.yahoo.com/group/perlsemny> on May 21, 2002.  
 Comments and suggestions were provided there and since by Glenn Maciag, 
 Gary Benson, Josh Rabinowitz, Terrence Brannon and Dave Cross.
+
 The placement in the installation tree of Test::ListCompareSpecial came 
 as a result of a question answered by Michael Graham in his talk 
 "Test::More to Test::Extreme" given at Yet Another Perl Conference::Canada 
-in Ottawa, Ontario, on May 16, 2003.  In May-June 2003, Glenn Maciag made 
-valuable suggestions which led to changes in method names and in 
-documentation in v0.20.  Another presentation at Perl Seminar New York in October 2003 prompted me to begin planning List::Compare::Functional.
+in Ottawa, Ontario, on May 16, 2003.  
+
+In May-June 2003, Glenn Maciag made valuable suggestions which led to 
+changes in method names and in documentation in v0.20.  
+
+Another presentation at Perl Seminar New York in 
+October 2003 prompted me to begin planning List::Compare::Functional.  
+
+In a November 2003 Perl Seminar New York presentation, Ben Holtzman 
+discussed the performance costs entailed in Perl's C<sort> function.  
+This led me to ask, "Why should a user of List::Compare pay this performance 
+cost if he or she doesn't need a human-readable list as a result (as 
+would be the case if the list returned were used as the input into some 
+other function)?"  This led to the development of List::Compare's 
+unsorted option.
 
 =head2 If You Like List::Compare, You'll Love ...
 
@@ -1208,7 +1305,8 @@ study a number of other modules already available on CPAN.  Each of these
 modules is more sophisticated than List::Compare -- which is not surprising
 since all that List::Compare originally aspired to do was to avoid typing
 Cookbook code repeatedly.  Here is a brief description of the features of
-these modules.
+these modules.  (Warning:  This description is only valid as of June 2002.  
+Some of these modules may have changed since then.)
 
 =over 4
 
@@ -1303,7 +1401,7 @@ you must first install the Want module, also available on CPAN.
 
 James E. Keenan (jkeenan@cpan.org).
 
-Creation date:  May 20, 2002.  Last modification date:  October 26, 2003. 
+Creation date:  May 20, 2002.  Last modification date:  November 23, 2003. 
 Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

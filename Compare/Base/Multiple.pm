@@ -1,5 +1,6 @@
 package List::Compare::Base::Multiple;
-# As of:  October 26, 2003
+$VERSION = 0.22;
+# As of:  November 23, 2003
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl

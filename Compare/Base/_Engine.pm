@@ -1,8 +1,8 @@
 package List::Compare::Base::_Engine;
-$VERSION = 0.24;
+$VERSION = 0.25;
 # Holds subroutines used within both 
 # List::Compare::Base::Accelerated and List::Compare::Functional
-# As of March 28, 2004
+# As of April 4, 2004
 use Carp;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
@@ -198,7 +198,7 @@ sub _calc_seen {
     if (ref($refL) eq 'HASH' and ref($refR) eq 'HASH') {
         return ($refL, $refR);
     } elsif (ref($refL) eq 'ARRAY' and ref($refR) eq 'ARRAY') {
-        my %seenL = my %seenR = ();
+        my (%seenL, %seenR);
         foreach (@$refL) { $seenL{$_}++ }
         foreach (@$refR) { $seenR{$_}++ }
         return (\%seenL, \%seenR); 

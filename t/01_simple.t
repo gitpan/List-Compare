@@ -7,7 +7,7 @@
 
 END {print "not ok 1\n" unless $loaded;} # 3/28/2004
 use Test::Simple tests =>
-798;
+754;
 use lib ("./t");
 use List::Compare;
 use Test::ListCompareSpecial;
@@ -561,8 +561,22 @@ $memb_arr_ref = $lc->is_member_which_ref('zebra');
 ok(ok_seen_a( $memb_arr_ref, 'zebra',  0, [ qw<     > ] ));# 332
 
 
-$memb_hash_ref = $lc->are_members_which(qw| abel baker camera delta edward fargo 
-    golfer hilton icon jerky zebra |);
+#$memb_hash_ref = $lc->are_members_which(qw| abel baker camera delta edward fargo 
+#    golfer hilton icon jerky zebra |);
+#ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0   > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'fargo',  2, [ qw< 0 1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'golfer', 2, [ qw< 0 1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'hilton', 1, [ qw<   1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'icon',   0, [ qw<     > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'jerky',  0, [ qw<     > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<     > ] ));
+
+$memb_hash_ref = $lc->are_members_which( [ qw| abel baker camera delta edward fargo 
+    golfer hilton icon jerky zebra | ] );
 ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0   > ] ));# 333
 ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1 > ] ));# 334
 ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1 > ] ));# 335
@@ -575,129 +589,115 @@ ok(ok_seen_h( $memb_hash_ref, 'icon',   0, [ qw<     > ] ));# 341
 ok(ok_seen_h( $memb_hash_ref, 'jerky',  0, [ qw<     > ] ));# 342
 ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<     > ] ));# 343
 
-$memb_hash_ref = $lc->are_members_which( [ qw| abel baker camera delta edward fargo 
-    golfer hilton icon jerky zebra | ] );
-ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0   > ] ));# 344
-ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1 > ] ));# 345
-ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1 > ] ));# 346
-ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1 > ] ));# 347
-ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1 > ] ));# 348
-ok(ok_seen_h( $memb_hash_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 349
-ok(ok_seen_h( $memb_hash_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 350
-ok(ok_seen_h( $memb_hash_ref, 'hilton', 1, [ qw<   1 > ] ));# 351
-ok(ok_seen_h( $memb_hash_ref, 'icon',   0, [ qw<     > ] ));# 352
-ok(ok_seen_h( $memb_hash_ref, 'jerky',  0, [ qw<     > ] ));# 353
-ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<     > ] ));# 354
+ok($lc->is_member_any('abel'));         # 344
+ok($lc->is_member_any('baker'));        # 345
+ok($lc->is_member_any('camera'));       # 346
+ok($lc->is_member_any('delta'));        # 347
+ok($lc->is_member_any('edward'));       # 348
+ok($lc->is_member_any('fargo'));        # 349
+ok($lc->is_member_any('golfer'));       # 350
+ok($lc->is_member_any('hilton'));       # 351
+ok(! $lc->is_member_any('icon' ));      # 352
+ok(! $lc->is_member_any('jerky'));      # 353
+ok(! $lc->is_member_any('zebra'));      # 354
 
-ok($lc->is_member_any('abel'));         # 355
-ok($lc->is_member_any('baker'));        # 356
-ok($lc->is_member_any('camera'));       # 357
-ok($lc->is_member_any('delta'));        # 358
-ok($lc->is_member_any('edward'));       # 359
-ok($lc->is_member_any('fargo'));        # 360
-ok($lc->is_member_any('golfer'));       # 361
-ok($lc->is_member_any('hilton'));       # 362
-ok(! $lc->is_member_any('icon' ));      # 363
-ok(! $lc->is_member_any('jerky'));      # 364
-ok(! $lc->is_member_any('zebra'));      # 365
-
-$memb_hash_ref = $lc->are_members_any(qw| abel baker camera delta edward fargo 
-    golfer hilton icon jerky zebra |);
-
-ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));# 366
-ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));# 367
-ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));# 368
-ok(ok_any_h( $memb_hash_ref, 'delta',  1 ));# 369
-ok(ok_any_h( $memb_hash_ref, 'edward', 1 ));# 370
-ok(ok_any_h( $memb_hash_ref, 'fargo',  1 ));# 371
-ok(ok_any_h( $memb_hash_ref, 'golfer', 1 ));# 372
-ok(ok_any_h( $memb_hash_ref, 'hilton', 1 ));# 373
-ok(ok_any_h( $memb_hash_ref, 'icon',   0 ));# 374
-ok(ok_any_h( $memb_hash_ref, 'jerky',  0 ));# 375
-ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));# 376
+#$memb_hash_ref = $lc->are_members_any(qw| abel baker camera delta edward fargo 
+#    golfer hilton icon jerky zebra |);
+#
+#ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));
+#ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));
+#ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));
+#ok(ok_any_h( $memb_hash_ref, 'delta',  1 ));
+#ok(ok_any_h( $memb_hash_ref, 'edward', 1 ));
+#ok(ok_any_h( $memb_hash_ref, 'fargo',  1 ));
+#ok(ok_any_h( $memb_hash_ref, 'golfer', 1 ));
+#ok(ok_any_h( $memb_hash_ref, 'hilton', 1 ));
+#ok(ok_any_h( $memb_hash_ref, 'icon',   0 ));
+#ok(ok_any_h( $memb_hash_ref, 'jerky',  0 ));
+#ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));
 
 $memb_hash_ref = $lc->are_members_any( [ qw| abel baker camera delta edward fargo 
     golfer hilton icon jerky zebra | ] );
 
-ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));# 377
-ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));# 378
-ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));# 379
-ok(ok_any_h( $memb_hash_ref, 'delta',  1 ));# 380
-ok(ok_any_h( $memb_hash_ref, 'edward', 1 ));# 381
-ok(ok_any_h( $memb_hash_ref, 'fargo',  1 ));# 382
-ok(ok_any_h( $memb_hash_ref, 'golfer', 1 ));# 383
-ok(ok_any_h( $memb_hash_ref, 'hilton', 1 ));# 384
-ok(ok_any_h( $memb_hash_ref, 'icon',   0 ));# 385
-ok(ok_any_h( $memb_hash_ref, 'jerky',  0 ));# 386
-ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));# 387
+ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));# 355
+ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));# 356
+ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));# 357
+ok(ok_any_h( $memb_hash_ref, 'delta',  1 ));# 358
+ok(ok_any_h( $memb_hash_ref, 'edward', 1 ));# 359
+ok(ok_any_h( $memb_hash_ref, 'fargo',  1 ));# 360
+ok(ok_any_h( $memb_hash_ref, 'golfer', 1 ));# 361
+ok(ok_any_h( $memb_hash_ref, 'hilton', 1 ));# 362
+ok(ok_any_h( $memb_hash_ref, 'icon',   0 ));# 363
+ok(ok_any_h( $memb_hash_ref, 'jerky',  0 ));# 364
+ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));# 365
 
 $vers = $lc->get_version;
-ok($vers);                              # 388
+ok($vers);                              # 366
 
 my $lc_s  = List::Compare->new(\@a2, \@a3);
 
-ok($lc_s);                              # 389
+ok($lc_s);                              # 367
 
 $LR = $lc_s->is_LsubsetR;
-ok(! $LR);                              # 390
+ok(! $LR);                              # 368
 
 $LR = $lc_s->is_AsubsetB;
-ok(! $LR);                              # 391
+ok(! $LR);                              # 369
 
 $RL = $lc_s->is_RsubsetL;
-ok($RL);                                # 392
+ok($RL);                                # 370
 
 $RL = $lc_s->is_BsubsetA;
-ok($RL);                                # 393
+ok($RL);                                # 371
 
 $eqv = $lc_s->is_LequivalentR;
-ok(! $eqv);                             # 394
+ok(! $eqv);                             # 372
 
 $eqv = $lc_s->is_LeqvlntR;
-ok(! $eqv);                             # 395
+ok(! $eqv);                             # 373
 
 my $lc_e  = List::Compare->new(\@a3, \@a4);
 
-ok($lc_e);                              # 396
+ok($lc_e);                              # 374
 
 $eqv = $lc_e->is_LequivalentR;
-ok($eqv);                               # 397
+ok($eqv);                               # 375
 
 $eqv = $lc_e->is_LeqvlntR;
-ok($eqv);                               # 398
+ok($eqv);                               # 376
 
 ########## BELOW:  Tests for '-u' option ##########
 
 my $lcu    = List::Compare->new('-u', \@a0, \@a1);
 
-ok($lcu);                               # 399
+ok($lcu);                               # 377
 
 @union = $lcu->get_union;
 $seen{$_}++ foreach (@union);
-ok(exists $seen{'abel'});               # 400
-ok(exists $seen{'baker'});              # 401
-ok(exists $seen{'camera'});             # 402
-ok(exists $seen{'delta'});              # 403
-ok(exists $seen{'edward'});             # 404
-ok(exists $seen{'fargo'});              # 405
-ok(exists $seen{'golfer'});             # 406
-ok(exists $seen{'hilton'});             # 407
-ok(! exists $seen{'icon'});             # 408
-ok(! exists $seen{'jerky'});            # 409
+ok(exists $seen{'abel'});               # 378
+ok(exists $seen{'baker'});              # 379
+ok(exists $seen{'camera'});             # 380
+ok(exists $seen{'delta'});              # 381
+ok(exists $seen{'edward'});             # 382
+ok(exists $seen{'fargo'});              # 383
+ok(exists $seen{'golfer'});             # 384
+ok(exists $seen{'hilton'});             # 385
+ok(! exists $seen{'icon'});             # 386
+ok(! exists $seen{'jerky'});            # 387
 %seen = ();
 
 $union_ref = $lcu->get_union_ref;
 $seen{$_}++ foreach (@{$union_ref});
-ok(exists $seen{'abel'});               # 410
-ok(exists $seen{'baker'});              # 411
-ok(exists $seen{'camera'});             # 412
-ok(exists $seen{'delta'});              # 413
-ok(exists $seen{'edward'});             # 414
-ok(exists $seen{'fargo'});              # 415
-ok(exists $seen{'golfer'});             # 416
-ok(exists $seen{'hilton'});             # 417
-ok(! exists $seen{'icon'});             # 418
-ok(! exists $seen{'jerky'});            # 419
+ok(exists $seen{'abel'});               # 388
+ok(exists $seen{'baker'});              # 389
+ok(exists $seen{'camera'});             # 390
+ok(exists $seen{'delta'});              # 391
+ok(exists $seen{'edward'});             # 392
+ok(exists $seen{'fargo'});              # 393
+ok(exists $seen{'golfer'});             # 394
+ok(exists $seen{'hilton'});             # 395
+ok(! exists $seen{'icon'});             # 396
+ok(! exists $seen{'jerky'});            # 397
 %seen = ();
 
 {
@@ -705,16 +705,16 @@ ok(! exists $seen{'jerky'});            # 419
 	@shared = $lcu->get_shared;
 }
 $seen{$_}++ foreach (@shared);
-ok(exists $seen{'abel'});               # 420
-ok(exists $seen{'baker'});              # 421
-ok(exists $seen{'camera'});             # 422
-ok(exists $seen{'delta'});              # 423
-ok(exists $seen{'edward'});             # 424
-ok(exists $seen{'fargo'});              # 425
-ok(exists $seen{'golfer'});             # 426
-ok(exists $seen{'hilton'});             # 427
-ok(! exists $seen{'icon'});             # 428
-ok(! exists $seen{'jerky'});            # 429
+ok(exists $seen{'abel'});               # 398
+ok(exists $seen{'baker'});              # 399
+ok(exists $seen{'camera'});             # 400
+ok(exists $seen{'delta'});              # 401
+ok(exists $seen{'edward'});             # 402
+ok(exists $seen{'fargo'});              # 403
+ok(exists $seen{'golfer'});             # 404
+ok(exists $seen{'hilton'});             # 405
+ok(! exists $seen{'icon'});             # 406
+ok(! exists $seen{'jerky'});            # 407
 %seen = ();
 
 {
@@ -722,324 +722,324 @@ ok(! exists $seen{'jerky'});            # 429
 	$shared_ref = $lcu->get_shared_ref;
 }
 $seen{$_}++ foreach (@{$shared_ref});
-ok(exists $seen{'abel'});               # 430
-ok(exists $seen{'baker'});              # 431
-ok(exists $seen{'camera'});             # 432
-ok(exists $seen{'delta'});              # 433
-ok(exists $seen{'edward'});             # 434
-ok(exists $seen{'fargo'});              # 435
-ok(exists $seen{'golfer'});             # 436
-ok(exists $seen{'hilton'});             # 437
-ok(! exists $seen{'icon'});             # 438
-ok(! exists $seen{'jerky'});            # 439
+ok(exists $seen{'abel'});               # 408
+ok(exists $seen{'baker'});              # 409
+ok(exists $seen{'camera'});             # 410
+ok(exists $seen{'delta'});              # 411
+ok(exists $seen{'edward'});             # 412
+ok(exists $seen{'fargo'});              # 413
+ok(exists $seen{'golfer'});             # 414
+ok(exists $seen{'hilton'});             # 415
+ok(! exists $seen{'icon'});             # 416
+ok(! exists $seen{'jerky'});            # 417
 %seen = ();
 
 @intersection = $lcu->get_intersection;
 $seen{$_}++ foreach (@intersection);
-ok(! exists $seen{'abel'});             # 440
-ok(exists $seen{'baker'});              # 441
-ok(exists $seen{'camera'});             # 442
-ok(exists $seen{'delta'});              # 443
-ok(exists $seen{'edward'});             # 444
-ok(exists $seen{'fargo'});              # 445
-ok(exists $seen{'golfer'});             # 446
-ok(! exists $seen{'hilton'});           # 447
-ok(! exists $seen{'icon'});             # 448
-ok(! exists $seen{'jerky'});            # 449
+ok(! exists $seen{'abel'});             # 418
+ok(exists $seen{'baker'});              # 419
+ok(exists $seen{'camera'});             # 420
+ok(exists $seen{'delta'});              # 421
+ok(exists $seen{'edward'});             # 422
+ok(exists $seen{'fargo'});              # 423
+ok(exists $seen{'golfer'});             # 424
+ok(! exists $seen{'hilton'});           # 425
+ok(! exists $seen{'icon'});             # 426
+ok(! exists $seen{'jerky'});            # 427
 %seen = ();
 
 $intersection_ref = $lcu->get_intersection_ref;
 $seen{$_}++ foreach (@{$intersection_ref});
-ok(! exists $seen{'abel'});             # 450
-ok(exists $seen{'baker'});              # 451
-ok(exists $seen{'camera'});             # 452
-ok(exists $seen{'delta'});              # 453
-ok(exists $seen{'edward'});             # 454
-ok(exists $seen{'fargo'});              # 455
-ok(exists $seen{'golfer'});             # 456
-ok(! exists $seen{'hilton'});           # 457
-ok(! exists $seen{'icon'});             # 458
-ok(! exists $seen{'jerky'});            # 459
+ok(! exists $seen{'abel'});             # 428
+ok(exists $seen{'baker'});              # 429
+ok(exists $seen{'camera'});             # 430
+ok(exists $seen{'delta'});              # 431
+ok(exists $seen{'edward'});             # 432
+ok(exists $seen{'fargo'});              # 433
+ok(exists $seen{'golfer'});             # 434
+ok(! exists $seen{'hilton'});           # 435
+ok(! exists $seen{'icon'});             # 436
+ok(! exists $seen{'jerky'});            # 437
 %seen = ();
 
 @unique = $lcu->get_unique;
 $seen{$_}++ foreach (@unique);
-ok(exists $seen{'abel'});               # 460
-ok(! exists $seen{'baker'});            # 461
-ok(! exists $seen{'camera'});           # 462
-ok(! exists $seen{'delta'});            # 463
-ok(! exists $seen{'edward'});           # 464
-ok(! exists $seen{'fargo'});            # 465
-ok(! exists $seen{'golfer'});           # 466
-ok(! exists $seen{'hilton'});           # 467
-ok(! exists $seen{'icon'});             # 468
-ok(! exists $seen{'jerky'});            # 469
+ok(exists $seen{'abel'});               # 438
+ok(! exists $seen{'baker'});            # 439
+ok(! exists $seen{'camera'});           # 440
+ok(! exists $seen{'delta'});            # 441
+ok(! exists $seen{'edward'});           # 442
+ok(! exists $seen{'fargo'});            # 443
+ok(! exists $seen{'golfer'});           # 444
+ok(! exists $seen{'hilton'});           # 445
+ok(! exists $seen{'icon'});             # 446
+ok(! exists $seen{'jerky'});            # 447
 %seen = ();
 
 $unique_ref = $lcu->get_unique_ref;
 $seen{$_}++ foreach (@{$unique_ref});
-ok(exists $seen{'abel'});               # 470
-ok(! exists $seen{'baker'});            # 471
-ok(! exists $seen{'camera'});           # 472
-ok(! exists $seen{'delta'});            # 473
-ok(! exists $seen{'edward'});           # 474
-ok(! exists $seen{'fargo'});            # 475
-ok(! exists $seen{'golfer'});           # 476
-ok(! exists $seen{'hilton'});           # 477
-ok(! exists $seen{'icon'});             # 478
-ok(! exists $seen{'jerky'});            # 479
+ok(exists $seen{'abel'});               # 448
+ok(! exists $seen{'baker'});            # 449
+ok(! exists $seen{'camera'});           # 450
+ok(! exists $seen{'delta'});            # 451
+ok(! exists $seen{'edward'});           # 452
+ok(! exists $seen{'fargo'});            # 453
+ok(! exists $seen{'golfer'});           # 454
+ok(! exists $seen{'hilton'});           # 455
+ok(! exists $seen{'icon'});             # 456
+ok(! exists $seen{'jerky'});            # 457
 %seen = ();
 
 @unique = $lcu->get_Lonly;
 $seen{$_}++ foreach (@unique);
-ok(exists $seen{'abel'});               # 480
-ok(! exists $seen{'baker'});            # 481
-ok(! exists $seen{'camera'});           # 482
-ok(! exists $seen{'delta'});            # 483
-ok(! exists $seen{'edward'});           # 484
-ok(! exists $seen{'fargo'});            # 485
-ok(! exists $seen{'golfer'});           # 486
-ok(! exists $seen{'hilton'});           # 487
-ok(! exists $seen{'icon'});             # 488
-ok(! exists $seen{'jerky'});            # 489
+ok(exists $seen{'abel'});               # 458
+ok(! exists $seen{'baker'});            # 459
+ok(! exists $seen{'camera'});           # 460
+ok(! exists $seen{'delta'});            # 461
+ok(! exists $seen{'edward'});           # 462
+ok(! exists $seen{'fargo'});            # 463
+ok(! exists $seen{'golfer'});           # 464
+ok(! exists $seen{'hilton'});           # 465
+ok(! exists $seen{'icon'});             # 466
+ok(! exists $seen{'jerky'});            # 467
 %seen = ();
 
 $unique_ref = $lcu->get_Lonly_ref;
 $seen{$_}++ foreach (@{$unique_ref});
-ok(exists $seen{'abel'});               # 490
-ok(! exists $seen{'baker'});            # 491
-ok(! exists $seen{'camera'});           # 492
-ok(! exists $seen{'delta'});            # 493
-ok(! exists $seen{'edward'});           # 494
-ok(! exists $seen{'fargo'});            # 495
-ok(! exists $seen{'golfer'});           # 496
-ok(! exists $seen{'hilton'});           # 497
-ok(! exists $seen{'icon'});             # 498
-ok(! exists $seen{'jerky'});            # 499
+ok(exists $seen{'abel'});               # 468
+ok(! exists $seen{'baker'});            # 469
+ok(! exists $seen{'camera'});           # 470
+ok(! exists $seen{'delta'});            # 471
+ok(! exists $seen{'edward'});           # 472
+ok(! exists $seen{'fargo'});            # 473
+ok(! exists $seen{'golfer'});           # 474
+ok(! exists $seen{'hilton'});           # 475
+ok(! exists $seen{'icon'});             # 476
+ok(! exists $seen{'jerky'});            # 477
 %seen = ();
 
 @unique = $lcu->get_Aonly;
 $seen{$_}++ foreach (@unique);
-ok(exists $seen{'abel'});               # 500
-ok(! exists $seen{'baker'});            # 501
-ok(! exists $seen{'camera'});           # 502
-ok(! exists $seen{'delta'});            # 503
-ok(! exists $seen{'edward'});           # 504
-ok(! exists $seen{'fargo'});            # 505
-ok(! exists $seen{'golfer'});           # 506
-ok(! exists $seen{'hilton'});           # 507
-ok(! exists $seen{'icon'});             # 508
-ok(! exists $seen{'jerky'});            # 509
+ok(exists $seen{'abel'});               # 478
+ok(! exists $seen{'baker'});            # 479
+ok(! exists $seen{'camera'});           # 480
+ok(! exists $seen{'delta'});            # 481
+ok(! exists $seen{'edward'});           # 482
+ok(! exists $seen{'fargo'});            # 483
+ok(! exists $seen{'golfer'});           # 484
+ok(! exists $seen{'hilton'});           # 485
+ok(! exists $seen{'icon'});             # 486
+ok(! exists $seen{'jerky'});            # 487
 %seen = ();
 
 $unique_ref = $lcu->get_Aonly_ref;
 $seen{$_}++ foreach (@{$unique_ref});
-ok(exists $seen{'abel'});               # 510
-ok(! exists $seen{'baker'});            # 511
-ok(! exists $seen{'camera'});           # 512
-ok(! exists $seen{'delta'});            # 513
-ok(! exists $seen{'edward'});           # 514
-ok(! exists $seen{'fargo'});            # 515
-ok(! exists $seen{'golfer'});           # 516
-ok(! exists $seen{'hilton'});           # 517
-ok(! exists $seen{'icon'});             # 518
-ok(! exists $seen{'jerky'});            # 519
+ok(exists $seen{'abel'});               # 488
+ok(! exists $seen{'baker'});            # 489
+ok(! exists $seen{'camera'});           # 490
+ok(! exists $seen{'delta'});            # 491
+ok(! exists $seen{'edward'});           # 492
+ok(! exists $seen{'fargo'});            # 493
+ok(! exists $seen{'golfer'});           # 494
+ok(! exists $seen{'hilton'});           # 495
+ok(! exists $seen{'icon'});             # 496
+ok(! exists $seen{'jerky'});            # 497
 %seen = ();
 
 @complement = $lcu->get_complement;
 $seen{$_}++ foreach (@complement);
-ok(! exists $seen{'abel'});             # 520
-ok(! exists $seen{'baker'});            # 521
-ok(! exists $seen{'camera'});           # 522
-ok(! exists $seen{'delta'});            # 523
-ok(! exists $seen{'edward'});           # 524
-ok(! exists $seen{'fargo'});            # 525
-ok(! exists $seen{'golfer'});           # 526
-ok(exists $seen{'hilton'});             # 527
-ok(! exists $seen{'icon'});             # 528
-ok(! exists $seen{'jerky'});            # 529
+ok(! exists $seen{'abel'});             # 498
+ok(! exists $seen{'baker'});            # 499
+ok(! exists $seen{'camera'});           # 500
+ok(! exists $seen{'delta'});            # 501
+ok(! exists $seen{'edward'});           # 502
+ok(! exists $seen{'fargo'});            # 503
+ok(! exists $seen{'golfer'});           # 504
+ok(exists $seen{'hilton'});             # 505
+ok(! exists $seen{'icon'});             # 506
+ok(! exists $seen{'jerky'});            # 507
 %seen = ();
 
 $complement_ref = $lcu->get_complement_ref;
 $seen{$_}++ foreach (@{$complement_ref});
-ok(! exists $seen{'abel'});             # 530
-ok(! exists $seen{'baker'});            # 531
-ok(! exists $seen{'camera'});           # 532
-ok(! exists $seen{'delta'});            # 533
-ok(! exists $seen{'edward'});           # 534
-ok(! exists $seen{'fargo'});            # 535
-ok(! exists $seen{'golfer'});           # 536
-ok(exists $seen{'hilton'});             # 537
-ok(! exists $seen{'icon'});             # 538
-ok(! exists $seen{'jerky'});            # 539
+ok(! exists $seen{'abel'});             # 508
+ok(! exists $seen{'baker'});            # 509
+ok(! exists $seen{'camera'});           # 510
+ok(! exists $seen{'delta'});            # 511
+ok(! exists $seen{'edward'});           # 512
+ok(! exists $seen{'fargo'});            # 513
+ok(! exists $seen{'golfer'});           # 514
+ok(exists $seen{'hilton'});             # 515
+ok(! exists $seen{'icon'});             # 516
+ok(! exists $seen{'jerky'});            # 517
 %seen = ();
 
 @complement = $lcu->get_Ronly;
 $seen{$_}++ foreach (@complement);
-ok(! exists $seen{'abel'});             # 540
-ok(! exists $seen{'baker'});            # 541
-ok(! exists $seen{'camera'});           # 542
-ok(! exists $seen{'delta'});            # 543
-ok(! exists $seen{'edward'});           # 544
-ok(! exists $seen{'fargo'});            # 545
-ok(! exists $seen{'golfer'});           # 546
-ok(exists $seen{'hilton'});             # 547
-ok(! exists $seen{'icon'});             # 548
-ok(! exists $seen{'jerky'});            # 549
+ok(! exists $seen{'abel'});             # 518
+ok(! exists $seen{'baker'});            # 519
+ok(! exists $seen{'camera'});           # 520
+ok(! exists $seen{'delta'});            # 521
+ok(! exists $seen{'edward'});           # 522
+ok(! exists $seen{'fargo'});            # 523
+ok(! exists $seen{'golfer'});           # 524
+ok(exists $seen{'hilton'});             # 525
+ok(! exists $seen{'icon'});             # 526
+ok(! exists $seen{'jerky'});            # 527
 %seen = ();
 
 $complement_ref = $lcu->get_Ronly_ref;
 $seen{$_}++ foreach (@{$complement_ref});
-ok(! exists $seen{'abel'});             # 550
-ok(! exists $seen{'baker'});            # 551
-ok(! exists $seen{'camera'});           # 552
-ok(! exists $seen{'delta'});            # 553
-ok(! exists $seen{'edward'});           # 554
-ok(! exists $seen{'fargo'});            # 555
-ok(! exists $seen{'golfer'});           # 556
-ok(exists $seen{'hilton'});             # 557
-ok(! exists $seen{'icon'});             # 558
-ok(! exists $seen{'jerky'});            # 559
+ok(! exists $seen{'abel'});             # 528
+ok(! exists $seen{'baker'});            # 529
+ok(! exists $seen{'camera'});           # 530
+ok(! exists $seen{'delta'});            # 531
+ok(! exists $seen{'edward'});           # 532
+ok(! exists $seen{'fargo'});            # 533
+ok(! exists $seen{'golfer'});           # 534
+ok(exists $seen{'hilton'});             # 535
+ok(! exists $seen{'icon'});             # 536
+ok(! exists $seen{'jerky'});            # 537
 %seen = ();
 
 @complement = $lcu->get_Bonly;
 $seen{$_}++ foreach (@complement);
-ok(! exists $seen{'abel'});             # 560
-ok(! exists $seen{'baker'});            # 561
-ok(! exists $seen{'camera'});           # 562
-ok(! exists $seen{'delta'});            # 563
-ok(! exists $seen{'edward'});           # 564
-ok(! exists $seen{'fargo'});            # 565
-ok(! exists $seen{'golfer'});           # 566
-ok(exists $seen{'hilton'});             # 567
-ok(! exists $seen{'icon'});             # 568
-ok(! exists $seen{'jerky'});            # 569
+ok(! exists $seen{'abel'});             # 538
+ok(! exists $seen{'baker'});            # 539
+ok(! exists $seen{'camera'});           # 540
+ok(! exists $seen{'delta'});            # 541
+ok(! exists $seen{'edward'});           # 542
+ok(! exists $seen{'fargo'});            # 543
+ok(! exists $seen{'golfer'});           # 544
+ok(exists $seen{'hilton'});             # 545
+ok(! exists $seen{'icon'});             # 546
+ok(! exists $seen{'jerky'});            # 547
 %seen = ();
 
 $complement_ref = $lcu->get_Bonly_ref;
 $seen{$_}++ foreach (@{$complement_ref});
-ok(! exists $seen{'abel'});             # 570
-ok(! exists $seen{'baker'});            # 571
-ok(! exists $seen{'camera'});           # 572
-ok(! exists $seen{'delta'});            # 573
-ok(! exists $seen{'edward'});           # 574
-ok(! exists $seen{'fargo'});            # 575
-ok(! exists $seen{'golfer'});           # 576
-ok(exists $seen{'hilton'});             # 577
-ok(! exists $seen{'icon'});             # 578
-ok(! exists $seen{'jerky'});            # 579
+ok(! exists $seen{'abel'});             # 548
+ok(! exists $seen{'baker'});            # 549
+ok(! exists $seen{'camera'});           # 550
+ok(! exists $seen{'delta'});            # 551
+ok(! exists $seen{'edward'});           # 552
+ok(! exists $seen{'fargo'});            # 553
+ok(! exists $seen{'golfer'});           # 554
+ok(exists $seen{'hilton'});             # 555
+ok(! exists $seen{'icon'});             # 556
+ok(! exists $seen{'jerky'});            # 557
 %seen = ();
 
 @symmetric_difference = $lcu->get_symmetric_difference;
 $seen{$_}++ foreach (@symmetric_difference);
-ok(exists $seen{'abel'});               # 580
-ok(! exists $seen{'baker'});            # 581
-ok(! exists $seen{'camera'});           # 582
-ok(! exists $seen{'delta'});            # 583
-ok(! exists $seen{'edward'});           # 584
-ok(! exists $seen{'fargo'});            # 585
-ok(! exists $seen{'golfer'});           # 586
-ok(exists $seen{'hilton'});             # 587
-ok(! exists $seen{'icon'});             # 588
-ok(! exists $seen{'jerky'});            # 589
+ok(exists $seen{'abel'});               # 558
+ok(! exists $seen{'baker'});            # 559
+ok(! exists $seen{'camera'});           # 560
+ok(! exists $seen{'delta'});            # 561
+ok(! exists $seen{'edward'});           # 562
+ok(! exists $seen{'fargo'});            # 563
+ok(! exists $seen{'golfer'});           # 564
+ok(exists $seen{'hilton'});             # 565
+ok(! exists $seen{'icon'});             # 566
+ok(! exists $seen{'jerky'});            # 567
 %seen = ();
 
 $symmetric_difference_ref = $lcu->get_symmetric_difference_ref;
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
-ok(exists $seen{'abel'});               # 590
-ok(! exists $seen{'baker'});            # 591
-ok(! exists $seen{'camera'});           # 592
-ok(! exists $seen{'delta'});            # 593
-ok(! exists $seen{'edward'});           # 594
-ok(! exists $seen{'fargo'});            # 595
-ok(! exists $seen{'golfer'});           # 596
-ok(exists $seen{'hilton'});             # 597
-ok(! exists $seen{'icon'});             # 598
-ok(! exists $seen{'jerky'});            # 599
+ok(exists $seen{'abel'});               # 568
+ok(! exists $seen{'baker'});            # 569
+ok(! exists $seen{'camera'});           # 570
+ok(! exists $seen{'delta'});            # 571
+ok(! exists $seen{'edward'});           # 572
+ok(! exists $seen{'fargo'});            # 573
+ok(! exists $seen{'golfer'});           # 574
+ok(exists $seen{'hilton'});             # 575
+ok(! exists $seen{'icon'});             # 576
+ok(! exists $seen{'jerky'});            # 577
 %seen = ();
 
 @symmetric_difference = $lcu->get_symdiff;
 $seen{$_}++ foreach (@symmetric_difference);
-ok(exists $seen{'abel'});               # 600
-ok(! exists $seen{'baker'});            # 601
-ok(! exists $seen{'camera'});           # 602
-ok(! exists $seen{'delta'});            # 603
-ok(! exists $seen{'edward'});           # 604
-ok(! exists $seen{'fargo'});            # 605
-ok(! exists $seen{'golfer'});           # 606
-ok(exists $seen{'hilton'});             # 607
-ok(! exists $seen{'icon'});             # 608
-ok(! exists $seen{'jerky'});            # 609
+ok(exists $seen{'abel'});               # 578
+ok(! exists $seen{'baker'});            # 579
+ok(! exists $seen{'camera'});           # 580
+ok(! exists $seen{'delta'});            # 581
+ok(! exists $seen{'edward'});           # 582
+ok(! exists $seen{'fargo'});            # 583
+ok(! exists $seen{'golfer'});           # 584
+ok(exists $seen{'hilton'});             # 585
+ok(! exists $seen{'icon'});             # 586
+ok(! exists $seen{'jerky'});            # 587
 %seen = ();
 
 $symmetric_difference_ref = $lcu->get_symdiff_ref;
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
-ok(exists $seen{'abel'});               # 610
-ok(! exists $seen{'baker'});            # 611
-ok(! exists $seen{'camera'});           # 612
-ok(! exists $seen{'delta'});            # 613
-ok(! exists $seen{'edward'});           # 614
-ok(! exists $seen{'fargo'});            # 615
-ok(! exists $seen{'golfer'});           # 616
-ok(exists $seen{'hilton'});             # 617
-ok(! exists $seen{'icon'});             # 618
-ok(! exists $seen{'jerky'});            # 619
+ok(exists $seen{'abel'});               # 588
+ok(! exists $seen{'baker'});            # 589
+ok(! exists $seen{'camera'});           # 590
+ok(! exists $seen{'delta'});            # 591
+ok(! exists $seen{'edward'});           # 592
+ok(! exists $seen{'fargo'});            # 593
+ok(! exists $seen{'golfer'});           # 594
+ok(exists $seen{'hilton'});             # 595
+ok(! exists $seen{'icon'});             # 596
+ok(! exists $seen{'jerky'});            # 597
 %seen = ();
 
 @symmetric_difference = $lcu->get_LorRonly;
 $seen{$_}++ foreach (@symmetric_difference);
-ok(exists $seen{'abel'});               # 620
-ok(! exists $seen{'baker'});            # 621
-ok(! exists $seen{'camera'});           # 622
-ok(! exists $seen{'delta'});            # 623
-ok(! exists $seen{'edward'});           # 624
-ok(! exists $seen{'fargo'});            # 625
-ok(! exists $seen{'golfer'});           # 626
-ok(exists $seen{'hilton'});             # 627
-ok(! exists $seen{'icon'});             # 628
-ok(! exists $seen{'jerky'});            # 629
+ok(exists $seen{'abel'});               # 598
+ok(! exists $seen{'baker'});            # 599
+ok(! exists $seen{'camera'});           # 600
+ok(! exists $seen{'delta'});            # 601
+ok(! exists $seen{'edward'});           # 602
+ok(! exists $seen{'fargo'});            # 603
+ok(! exists $seen{'golfer'});           # 604
+ok(exists $seen{'hilton'});             # 605
+ok(! exists $seen{'icon'});             # 606
+ok(! exists $seen{'jerky'});            # 607
 %seen = ();
 
 $symmetric_difference_ref = $lcu->get_LorRonly_ref;
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
-ok(exists $seen{'abel'});               # 630
-ok(! exists $seen{'baker'});            # 631
-ok(! exists $seen{'camera'});           # 632
-ok(! exists $seen{'delta'});            # 633
-ok(! exists $seen{'edward'});           # 634
-ok(! exists $seen{'fargo'});            # 635
-ok(! exists $seen{'golfer'});           # 636
-ok(exists $seen{'hilton'});             # 637
-ok(! exists $seen{'icon'});             # 638
-ok(! exists $seen{'jerky'});            # 639
+ok(exists $seen{'abel'});               # 608
+ok(! exists $seen{'baker'});            # 609
+ok(! exists $seen{'camera'});           # 610
+ok(! exists $seen{'delta'});            # 611
+ok(! exists $seen{'edward'});           # 612
+ok(! exists $seen{'fargo'});            # 613
+ok(! exists $seen{'golfer'});           # 614
+ok(exists $seen{'hilton'});             # 615
+ok(! exists $seen{'icon'});             # 616
+ok(! exists $seen{'jerky'});            # 617
 %seen = ();
 
 @symmetric_difference = $lcu->get_AorBonly;
 $seen{$_}++ foreach (@symmetric_difference);
-ok(exists $seen{'abel'});               # 640
-ok(! exists $seen{'baker'});            # 641
-ok(! exists $seen{'camera'});           # 642
-ok(! exists $seen{'delta'});            # 643
-ok(! exists $seen{'edward'});           # 644
-ok(! exists $seen{'fargo'});            # 645
-ok(! exists $seen{'golfer'});           # 646
-ok(exists $seen{'hilton'});             # 647
-ok(! exists $seen{'icon'});             # 648
-ok(! exists $seen{'jerky'});            # 649
+ok(exists $seen{'abel'});               # 618
+ok(! exists $seen{'baker'});            # 619
+ok(! exists $seen{'camera'});           # 620
+ok(! exists $seen{'delta'});            # 621
+ok(! exists $seen{'edward'});           # 622
+ok(! exists $seen{'fargo'});            # 623
+ok(! exists $seen{'golfer'});           # 624
+ok(exists $seen{'hilton'});             # 625
+ok(! exists $seen{'icon'});             # 626
+ok(! exists $seen{'jerky'});            # 627
 %seen = ();
 
 $symmetric_difference_ref = $lcu->get_AorBonly_ref;
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
-ok(exists $seen{'abel'});               # 650
-ok(! exists $seen{'baker'});            # 651
-ok(! exists $seen{'camera'});           # 652
-ok(! exists $seen{'delta'});            # 653
-ok(! exists $seen{'edward'});           # 654
-ok(! exists $seen{'fargo'});            # 655
-ok(! exists $seen{'golfer'});           # 656
-ok(exists $seen{'hilton'});             # 657
-ok(! exists $seen{'icon'});             # 658
-ok(! exists $seen{'jerky'});            # 659
+ok(exists $seen{'abel'});               # 628
+ok(! exists $seen{'baker'});            # 629
+ok(! exists $seen{'camera'});           # 630
+ok(! exists $seen{'delta'});            # 631
+ok(! exists $seen{'edward'});           # 632
+ok(! exists $seen{'fargo'});            # 633
+ok(! exists $seen{'golfer'});           # 634
+ok(exists $seen{'hilton'});             # 635
+ok(! exists $seen{'icon'});             # 636
+ok(! exists $seen{'jerky'});            # 637
 %seen = ();
 
 {
@@ -1047,16 +1047,16 @@ ok(! exists $seen{'jerky'});            # 659
 	@nonintersection = $lcu->get_nonintersection;
 }
 $seen{$_}++ foreach (@nonintersection);
-ok(exists $seen{'abel'});               # 660
-ok(! exists $seen{'baker'});            # 661
-ok(! exists $seen{'camera'});           # 662
-ok(! exists $seen{'delta'});            # 663
-ok(! exists $seen{'edward'});           # 664
-ok(! exists $seen{'fargo'});            # 665
-ok(! exists $seen{'golfer'});           # 666
-ok(exists $seen{'hilton'});             # 667
-ok(! exists $seen{'icon'});             # 668
-ok(! exists $seen{'jerky'});            # 669
+ok(exists $seen{'abel'});               # 638
+ok(! exists $seen{'baker'});            # 639
+ok(! exists $seen{'camera'});           # 640
+ok(! exists $seen{'delta'});            # 641
+ok(! exists $seen{'edward'});           # 642
+ok(! exists $seen{'fargo'});            # 643
+ok(! exists $seen{'golfer'});           # 644
+ok(exists $seen{'hilton'});             # 645
+ok(! exists $seen{'icon'});             # 646
+ok(! exists $seen{'jerky'});            # 647
 %seen = ();
 
 {
@@ -1064,251 +1064,251 @@ ok(! exists $seen{'jerky'});            # 669
 	$nonintersection_ref = $lcu->get_nonintersection_ref;
 }
 $seen{$_}++ foreach (@{$nonintersection_ref});
-ok(exists $seen{'abel'});               # 670
-ok(! exists $seen{'baker'});            # 671
-ok(! exists $seen{'camera'});           # 672
-ok(! exists $seen{'delta'});            # 673
-ok(! exists $seen{'edward'});           # 674
-ok(! exists $seen{'fargo'});            # 675
-ok(! exists $seen{'golfer'});           # 676
-ok(exists $seen{'hilton'});             # 677
-ok(! exists $seen{'icon'});             # 678
-ok(! exists $seen{'jerky'});            # 679
+ok(exists $seen{'abel'});               # 648
+ok(! exists $seen{'baker'});            # 649
+ok(! exists $seen{'camera'});           # 650
+ok(! exists $seen{'delta'});            # 651
+ok(! exists $seen{'edward'});           # 652
+ok(! exists $seen{'fargo'});            # 653
+ok(! exists $seen{'golfer'});           # 654
+ok(exists $seen{'hilton'});             # 655
+ok(! exists $seen{'icon'});             # 656
+ok(! exists $seen{'jerky'});            # 657
 %seen = ();
 
 @bag = $lcu->get_bag;
 $seen{$_}++ foreach (@bag);
-ok($seen{'abel'} == 2);                 # 680
-ok($seen{'baker'} == 2);                # 681
-ok($seen{'camera'} == 2);               # 682
-ok($seen{'delta'} == 3);                # 683
-ok($seen{'edward'} == 2);               # 684
-ok($seen{'fargo'} == 2);                # 685
-ok($seen{'golfer'} == 2);               # 686
-ok($seen{'hilton'} == 1);               # 687
-ok(! exists $seen{'icon'});             # 688
-ok(! exists $seen{'jerky'});            # 689
+ok($seen{'abel'} == 2);                 # 658
+ok($seen{'baker'} == 2);                # 659
+ok($seen{'camera'} == 2);               # 660
+ok($seen{'delta'} == 3);                # 661
+ok($seen{'edward'} == 2);               # 662
+ok($seen{'fargo'} == 2);                # 663
+ok($seen{'golfer'} == 2);               # 664
+ok($seen{'hilton'} == 1);               # 665
+ok(! exists $seen{'icon'});             # 666
+ok(! exists $seen{'jerky'});            # 667
 %seen = ();
 
 $bag_ref = $lcu->get_bag_ref;
 $seen{$_}++ foreach (@{$bag_ref});
-ok($seen{'abel'} == 2);                 # 690
-ok($seen{'baker'} == 2);                # 691
-ok($seen{'camera'} == 2);               # 692
-ok($seen{'delta'} == 3);                # 693
-ok($seen{'edward'} == 2);               # 694
-ok($seen{'fargo'} == 2);                # 695
-ok($seen{'golfer'} == 2);               # 696
-ok($seen{'hilton'} == 1);               # 697
-ok(! exists $seen{'icon'});             # 698
-ok(! exists $seen{'jerky'});            # 699
+ok($seen{'abel'} == 2);                 # 668
+ok($seen{'baker'} == 2);                # 669
+ok($seen{'camera'} == 2);               # 670
+ok($seen{'delta'} == 3);                # 671
+ok($seen{'edward'} == 2);               # 672
+ok($seen{'fargo'} == 2);                # 673
+ok($seen{'golfer'} == 2);               # 674
+ok($seen{'hilton'} == 1);               # 675
+ok(! exists $seen{'icon'});             # 676
+ok(! exists $seen{'jerky'});            # 677
 %seen = ();
 
 $LR = $lcu->is_LsubsetR;
-ok(! $LR);                              # 700
+ok(! $LR);                              # 678
 
 $LR = $lcu->is_AsubsetB;
-ok(! $LR);                              # 701
+ok(! $LR);                              # 679
 
 $RL = $lcu->is_RsubsetL;
-ok(! $RL);                              # 702
+ok(! $RL);                              # 680
 
 $RL = $lcu->is_BsubsetA;
-ok(! $RL);                              # 703
+ok(! $RL);                              # 681
 
 $eqv = $lcu->is_LequivalentR;
-ok(! $eqv);                             # 704
+ok(! $eqv);                             # 682
 
 $eqv = $lcu->is_LeqvlntR;
-ok(! $eqv);                             # 705
+ok(! $eqv);                             # 683
 
 $return = $lcu->print_subset_chart;
-ok($return);                            # 706
+ok($return);                            # 684
 
 $return = $lcu->print_equivalence_chart;
-ok($return);                            # 707
+ok($return);                            # 685
 
 @memb_arr = $lcu->is_member_which('abel');
-ok(ok_seen_a( \@memb_arr, 'abel',   1, [ qw< 0   > ] ));# 708
+ok(ok_seen_a( \@memb_arr, 'abel',   1, [ qw< 0   > ] ));# 686
 
 @memb_arr = $lcu->is_member_which('baker');
-ok(ok_seen_a( \@memb_arr, 'baker',  2, [ qw< 0 1 > ] ));# 709
+ok(ok_seen_a( \@memb_arr, 'baker',  2, [ qw< 0 1 > ] ));# 687
 
 @memb_arr = $lcu->is_member_which('camera');
-ok(ok_seen_a( \@memb_arr, 'camera', 2, [ qw< 0 1 > ] ));# 710
+ok(ok_seen_a( \@memb_arr, 'camera', 2, [ qw< 0 1 > ] ));# 688
 
 @memb_arr = $lcu->is_member_which('delta');
-ok(ok_seen_a( \@memb_arr, 'delta',  2, [ qw< 0 1 > ] ));# 711
+ok(ok_seen_a( \@memb_arr, 'delta',  2, [ qw< 0 1 > ] ));# 689
 
 @memb_arr = $lcu->is_member_which('edward');
-ok(ok_seen_a( \@memb_arr, 'edward', 2, [ qw< 0 1 > ] ));# 712
+ok(ok_seen_a( \@memb_arr, 'edward', 2, [ qw< 0 1 > ] ));# 690
 
 @memb_arr = $lcu->is_member_which('fargo');
-ok(ok_seen_a( \@memb_arr, 'fargo',  2, [ qw< 0 1 > ] ));# 713
+ok(ok_seen_a( \@memb_arr, 'fargo',  2, [ qw< 0 1 > ] ));# 691
 
 @memb_arr = $lcu->is_member_which('golfer');
-ok(ok_seen_a( \@memb_arr, 'golfer', 2, [ qw< 0 1 > ] ));# 714
+ok(ok_seen_a( \@memb_arr, 'golfer', 2, [ qw< 0 1 > ] ));# 692
 
 @memb_arr = $lcu->is_member_which('hilton');
-ok(ok_seen_a( \@memb_arr, 'hilton', 1, [ qw<   1 > ] ));# 715
+ok(ok_seen_a( \@memb_arr, 'hilton', 1, [ qw<   1 > ] ));# 693
 
 @memb_arr = $lcu->is_member_which('icon');
-ok(ok_seen_a( \@memb_arr, 'icon',   0, [ qw<     > ] ));# 716
+ok(ok_seen_a( \@memb_arr, 'icon',   0, [ qw<     > ] ));# 694
 
 @memb_arr = $lcu->is_member_which('jerky');
-ok(ok_seen_a( \@memb_arr, 'jerky',  0, [ qw<     > ] ));# 717
+ok(ok_seen_a( \@memb_arr, 'jerky',  0, [ qw<     > ] ));# 695
 
 @memb_arr = $lcu->is_member_which('zebra');
-ok(ok_seen_a( \@memb_arr, 'zebra',  0, [ qw<     > ] ));# 718
+ok(ok_seen_a( \@memb_arr, 'zebra',  0, [ qw<     > ] ));# 696
 
 
 
 $memb_arr_ref = $lcu->is_member_which_ref('abel');
-ok(ok_seen_a( $memb_arr_ref, 'abel',   1, [ qw< 0   > ] ));# 719
+ok(ok_seen_a( $memb_arr_ref, 'abel',   1, [ qw< 0   > ] ));# 697
 
 $memb_arr_ref = $lcu->is_member_which_ref('baker');
-ok(ok_seen_a( $memb_arr_ref, 'baker',  2, [ qw< 0 1 > ] ));# 720
+ok(ok_seen_a( $memb_arr_ref, 'baker',  2, [ qw< 0 1 > ] ));# 698
 
 $memb_arr_ref = $lcu->is_member_which_ref('camera');
-ok(ok_seen_a( $memb_arr_ref, 'camera', 2, [ qw< 0 1 > ] ));# 721
+ok(ok_seen_a( $memb_arr_ref, 'camera', 2, [ qw< 0 1 > ] ));# 699
 
 $memb_arr_ref = $lcu->is_member_which_ref('delta');
-ok(ok_seen_a( $memb_arr_ref, 'delta',  2, [ qw< 0 1 > ] ));# 722
+ok(ok_seen_a( $memb_arr_ref, 'delta',  2, [ qw< 0 1 > ] ));# 700
 
 $memb_arr_ref = $lcu->is_member_which_ref('edward');
-ok(ok_seen_a( $memb_arr_ref, 'edward', 2, [ qw< 0 1 > ] ));# 723
+ok(ok_seen_a( $memb_arr_ref, 'edward', 2, [ qw< 0 1 > ] ));# 701
 
 $memb_arr_ref = $lcu->is_member_which_ref('fargo');
-ok(ok_seen_a( $memb_arr_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 724
+ok(ok_seen_a( $memb_arr_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 702
 
 $memb_arr_ref = $lcu->is_member_which_ref('golfer');
-ok(ok_seen_a( $memb_arr_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 725
+ok(ok_seen_a( $memb_arr_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 703
 
 $memb_arr_ref = $lcu->is_member_which_ref('hilton');
-ok(ok_seen_a( $memb_arr_ref, 'hilton', 1, [ qw<   1 > ] ));# 726
+ok(ok_seen_a( $memb_arr_ref, 'hilton', 1, [ qw<   1 > ] ));# 704
 
 $memb_arr_ref = $lcu->is_member_which_ref('icon');
-ok(ok_seen_a( $memb_arr_ref, 'icon',   0, [ qw<     > ] ));# 727
+ok(ok_seen_a( $memb_arr_ref, 'icon',   0, [ qw<     > ] ));# 705
 
 $memb_arr_ref = $lcu->is_member_which_ref('jerky');
-ok(ok_seen_a( $memb_arr_ref, 'jerky',  0, [ qw<     > ] ));# 728
+ok(ok_seen_a( $memb_arr_ref, 'jerky',  0, [ qw<     > ] ));# 706
 
 $memb_arr_ref = $lcu->is_member_which_ref('zebra');
-ok(ok_seen_a( $memb_arr_ref, 'zebra',  0, [ qw<     > ] ));# 729
+ok(ok_seen_a( $memb_arr_ref, 'zebra',  0, [ qw<     > ] ));# 707
 
 
-$memb_hash_ref = $lcu->are_members_which(qw| abel baker camera delta edward fargo 
-    golfer hilton icon jerky zebra |);
-ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0   > ] ));# 730
-ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1 > ] ));# 731
-ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1 > ] ));# 732
-ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1 > ] ));# 733
-ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1 > ] ));# 734
-ok(ok_seen_h( $memb_hash_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 735
-ok(ok_seen_h( $memb_hash_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 736
-ok(ok_seen_h( $memb_hash_ref, 'hilton', 1, [ qw<   1 > ] ));# 737
-ok(ok_seen_h( $memb_hash_ref, 'icon',   0, [ qw<     > ] ));# 738
-ok(ok_seen_h( $memb_hash_ref, 'jerky',  0, [ qw<     > ] ));# 739
-ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<     > ] ));# 740
+#$memb_hash_ref = $lcu->are_members_which(qw| abel baker camera delta edward fargo 
+#    golfer hilton icon jerky zebra |);
+#ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0   > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'fargo',  2, [ qw< 0 1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'golfer', 2, [ qw< 0 1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'hilton', 1, [ qw<   1 > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'icon',   0, [ qw<     > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'jerky',  0, [ qw<     > ] ));
+#ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<     > ] ));
 
 $memb_hash_ref = $lcu->are_members_which( [ qw| abel baker camera delta edward fargo 
     golfer hilton icon jerky zebra | ] );
-ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0   > ] ));# 741
-ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1 > ] ));# 742
-ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1 > ] ));# 743
-ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1 > ] ));# 744
-ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1 > ] ));# 745
-ok(ok_seen_h( $memb_hash_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 746
-ok(ok_seen_h( $memb_hash_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 747
-ok(ok_seen_h( $memb_hash_ref, 'hilton', 1, [ qw<   1 > ] ));# 748
-ok(ok_seen_h( $memb_hash_ref, 'icon',   0, [ qw<     > ] ));# 749
-ok(ok_seen_h( $memb_hash_ref, 'jerky',  0, [ qw<     > ] ));# 750
-ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<     > ] ));# 751
+ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0   > ] ));# 708
+ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1 > ] ));# 709
+ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1 > ] ));# 710
+ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1 > ] ));# 711
+ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1 > ] ));# 712
+ok(ok_seen_h( $memb_hash_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 713
+ok(ok_seen_h( $memb_hash_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 714
+ok(ok_seen_h( $memb_hash_ref, 'hilton', 1, [ qw<   1 > ] ));# 715
+ok(ok_seen_h( $memb_hash_ref, 'icon',   0, [ qw<     > ] ));# 716
+ok(ok_seen_h( $memb_hash_ref, 'jerky',  0, [ qw<     > ] ));# 717
+ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<     > ] ));# 718
 
-ok($lcu->is_member_any('abel'));        # 752
-ok($lcu->is_member_any('baker'));       # 753
-ok($lcu->is_member_any('camera'));      # 754
-ok($lcu->is_member_any('delta'));       # 755
-ok($lcu->is_member_any('edward'));      # 756
-ok($lcu->is_member_any('fargo'));       # 757
-ok($lcu->is_member_any('golfer'));      # 758
-ok($lcu->is_member_any('hilton'));      # 759
-ok(! $lcu->is_member_any('icon' ));     # 760
-ok(! $lcu->is_member_any('jerky'));     # 761
-ok(! $lcu->is_member_any('zebra'));     # 762
+ok($lcu->is_member_any('abel'));        # 719
+ok($lcu->is_member_any('baker'));       # 720
+ok($lcu->is_member_any('camera'));      # 721
+ok($lcu->is_member_any('delta'));       # 722
+ok($lcu->is_member_any('edward'));      # 723
+ok($lcu->is_member_any('fargo'));       # 724
+ok($lcu->is_member_any('golfer'));      # 725
+ok($lcu->is_member_any('hilton'));      # 726
+ok(! $lcu->is_member_any('icon' ));     # 727
+ok(! $lcu->is_member_any('jerky'));     # 728
+ok(! $lcu->is_member_any('zebra'));     # 729
 
-$memb_hash_ref = $lcu->are_members_any(qw| abel baker camera delta edward fargo 
-    golfer hilton icon jerky zebra |);
-
-ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));# 763
-ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));# 764
-ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));# 765
-ok(ok_any_h( $memb_hash_ref, 'delta',  1 ));# 766
-ok(ok_any_h( $memb_hash_ref, 'edward', 1 ));# 767
-ok(ok_any_h( $memb_hash_ref, 'fargo',  1 ));# 768
-ok(ok_any_h( $memb_hash_ref, 'golfer', 1 ));# 769
-ok(ok_any_h( $memb_hash_ref, 'hilton', 1 ));# 770
-ok(ok_any_h( $memb_hash_ref, 'icon',   0 ));# 771
-ok(ok_any_h( $memb_hash_ref, 'jerky',  0 ));# 772
-ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));# 773
+#$memb_hash_ref = $lcu->are_members_any(qw| abel baker camera delta edward fargo 
+#    golfer hilton icon jerky zebra |);
+#
+#ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));
+#ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));
+#ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));
+#ok(ok_any_h( $memb_hash_ref, 'delta',  1 ));
+#ok(ok_any_h( $memb_hash_ref, 'edward', 1 ));
+#ok(ok_any_h( $memb_hash_ref, 'fargo',  1 ));
+#ok(ok_any_h( $memb_hash_ref, 'golfer', 1 ));
+#ok(ok_any_h( $memb_hash_ref, 'hilton', 1 ));
+#ok(ok_any_h( $memb_hash_ref, 'icon',   0 ));
+#ok(ok_any_h( $memb_hash_ref, 'jerky',  0 ));
+#ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));
 
 $memb_hash_ref = $lcu->are_members_any( [ qw| abel baker camera delta edward fargo 
     golfer hilton icon jerky zebra | ] );
 
-ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));# 774
-ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));# 775
-ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));# 776
-ok(ok_any_h( $memb_hash_ref, 'delta',  1 ));# 777
-ok(ok_any_h( $memb_hash_ref, 'edward', 1 ));# 778
-ok(ok_any_h( $memb_hash_ref, 'fargo',  1 ));# 779
-ok(ok_any_h( $memb_hash_ref, 'golfer', 1 ));# 780
-ok(ok_any_h( $memb_hash_ref, 'hilton', 1 ));# 781
-ok(ok_any_h( $memb_hash_ref, 'icon',   0 ));# 782
-ok(ok_any_h( $memb_hash_ref, 'jerky',  0 ));# 783
-ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));# 784
+ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));# 730
+ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));# 731
+ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));# 732
+ok(ok_any_h( $memb_hash_ref, 'delta',  1 ));# 733
+ok(ok_any_h( $memb_hash_ref, 'edward', 1 ));# 734
+ok(ok_any_h( $memb_hash_ref, 'fargo',  1 ));# 735
+ok(ok_any_h( $memb_hash_ref, 'golfer', 1 ));# 736
+ok(ok_any_h( $memb_hash_ref, 'hilton', 1 ));# 737
+ok(ok_any_h( $memb_hash_ref, 'icon',   0 ));# 738
+ok(ok_any_h( $memb_hash_ref, 'jerky',  0 ));# 739
+ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));# 740
 
 $vers = $lcu->get_version;
-ok($vers);                              # 785
+ok($vers);                              # 741
 
 my $lcu_s  = List::Compare->new('-u', \@a2, \@a3);
 
-ok($lcu_s);                             # 786
+ok($lcu_s);                             # 742
 
 $LR = $lcu_s->is_LsubsetR;
-ok(! $LR);                              # 787
+ok(! $LR);                              # 743
 
 $LR = $lcu_s->is_AsubsetB;
-ok(! $LR);                              # 788
+ok(! $LR);                              # 744
 
 $RL = $lcu_s->is_RsubsetL;
-ok($RL);                                # 789
+ok($RL);                                # 745
 
 $RL = $lcu_s->is_BsubsetA;
-ok($RL);                                # 790
+ok($RL);                                # 746
 
 $eqv = $lcu_s->is_LequivalentR;
-ok(! $eqv);                             # 791
+ok(! $eqv);                             # 747
 
 $eqv = $lcu_s->is_LeqvlntR;
-ok(! $eqv);                             # 792
+ok(! $eqv);                             # 748
 
 my $lcu_e  = List::Compare->new('-u', \@a3, \@a4);
 
-ok($lcu_e);                             # 793
+ok($lcu_e);                             # 749
 
 $eqv = $lcu_e->is_LequivalentR;
-ok($eqv);                               # 794
+ok($eqv);                               # 750
 
 $eqv = $lcu_e->is_LeqvlntR;
-ok($eqv);                               # 795
+ok($eqv);                               # 751
 
 ########## BELOW:  Tests for '--unsorted' option ##########
 
 my $lcun    = List::Compare->new('--unsorted', \@a0, \@a1);
-ok($lcun);                              # 796
+ok($lcun);                              # 752
 
 my $lcun_s  = List::Compare->new('--unsorted', \@a2, \@a3);
-ok($lcun_s);                            # 797
+ok($lcun_s);                            # 753
 
 my $lcun_e  = List::Compare->new('--unsorted', \@a3, \@a4);
-ok($lcun_e);                            # 798
+ok($lcun_e);                            # 754

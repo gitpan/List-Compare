@@ -1,6 +1,8 @@
 package List::Compare::Base::Accelerated;
-$VERSION = 0.24;
-# as of:  March 28, 2004
+$VERSION = 0.25;
+# as of:  April 4, 2004
+# functions used in List::Compare::Accelerated and
+# List::Compare::SeenHash::Accelerated
 use strict;
 use Carp;
 use List::Compare::Base::_Engine qw|
@@ -151,12 +153,11 @@ sub is_member_which_ref {
 
 sub are_members_which {
     my $class = shift;
-    croak "Method call needs at least one argument:  $!" unless (@_);
+    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+        unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
     my (@args);
-    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
-        ?  @{$_[0]}
-        :  @_;
+    @args = @{$_[0]};
     return _are_members_which_engine($data{'L'}, $data{'R'}, \@args);
 }
 
@@ -170,12 +171,11 @@ sub is_member_any {
 
 sub are_members_any {
     my $class = shift;
-    croak "Method call needs at least one argument:  $!" unless (@_);
+    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+        unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
     my (@args);
-    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
-        ?  @{$_[0]}
-        :  @_;
+    @args = @{$_[0]};
     return _are_members_any_engine($data{'L'}, $data{'R'}, \@args);
 }    
 

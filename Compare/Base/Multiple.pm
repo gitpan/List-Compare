@@ -1,6 +1,8 @@
 package List::Compare::Base::Multiple;
-$VERSION = 0.24;
-# As of:  March 28, 2004
+$VERSION = 0.25;
+# As of:  April 4, 2004
+# functions used in List::Compare::Multiple and 
+# List::Compare::SeenHash::Multiple
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
@@ -205,13 +207,12 @@ sub is_member_which_ref {
 
 sub are_members_which {
     my $class = shift;
-    croak "Method call needs at least one argument:  $!" unless (@_);
+    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+        unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
     my %seen = %{$data{'seen'}};
     my (@args, %found);
-    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
-        ?  @{$_[0]}
-        :  @_;
+    @args = @{$_[0]};
     for (my $i=0; $i<=$#args; $i++) {
         my (@not_found);
         foreach (sort keys %seen) {
@@ -240,13 +241,12 @@ sub is_member_any {
 
 sub are_members_any {
     my $class = shift;
-    croak "Method call needs at least one argument:  $!" unless (@_);
+    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+        unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
     my %seen = %{$data{'seen'}};
     my (@args, %present);
-    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
-        ?  @{$_[0]}
-        :  @_;
+    @args = @{$_[0]};
     for (my $i=0; $i<=$#args; $i++) {
         foreach (keys %seen) {
             unless (defined $present{$args[$i]}) {

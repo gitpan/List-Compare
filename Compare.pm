@@ -1,46 +1,9 @@
 package List::Compare;
-$VERSION = 0.24;   # March 28, 2004 
+$VERSION = 0.25;   # April 4, 2004 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
 use base qw(List::Compare::Base::Regular);
-
-#sub new {
-#    my $class = shift;
-#    my @args = @_;
-#    my ($unsorted, $accelerated, $self, $dataref, $unsortflag);
-#    $unsorted = ($args[0] eq '-u' or $args[0] eq '--unsorted')
-#                ? shift(@args) : '';
-#    $accelerated = shift(@args) 
-#	if ($args[0] eq '-a' or $args[0] eq '--accelerated');
-#    foreach (@args) {
-#        croak "Must pass array references: $!" unless ref($_) eq 'ARRAY';
-#    }
-#
-#    # bless a ref to an empty hash into the invoking class
-#    if (@args > 2) {
-#        $class .= '::Multiple';
-#        $self = bless {}, ref($class) || $class;
-#    } elsif (@args == 2) {
-#        if ($accelerated) {
-#            $class .= '::Accelerated';
-#            $self = bless {}, ref($class) || $class;
-#        } else {
-#            $self = bless {}, ref($class) || $class;
-#        }
-#    } else {
-#        croak "Must pass at least 2 array references to \&new: $!";
-#    }
-#    
-#    # do necessary calculations and store results in a hash
-#    # take a reference to that hash
-#    $unsortflag = $unsorted ? 1 : 0;
-#    $dataref = $self->_init($unsortflag, @args);
-#    
-#    # initialize the object from the prepared values (Damian, p. 98)
-#    %$self = %$dataref;
-#    return $self;
-#}
 
 sub new {
     my $class = shift;
@@ -401,24 +364,6 @@ package List::Compare::Multiple::Accelerated;
 use Carp;
 use base qw(List::Compare::Base::Multiple::Accelerated);
 
-#### objectives for List::Compare::Multiple::Accelerated #####
-
-# User wants to compare >= 3 lists, but is looking for only 1 comparison in output.
-#
-# &List::Compare::Multiple::Accelerated::_init will resemble 
-# &List::Compare::Accelerated_init in that it will be very small, consisting only of 
-# 1 hash key for each list and 1 for the 'unsortflag'
-#
-# What was &List::Compare::Multiple::_init will be broken up into smaller components
-# and assigned to a chain of smaller 
-# subroutines that only do as much calculation as is needed to return a particular 
-# comparison.
-#
-# Hopefully these smaller subroutines will be placeable within an internal module 
-# that can handle both the object-oriented and functional interfaces to this task.
-
-###############################################################
-
 sub _init {
     my $self = shift;
     my $unsortflag = shift;
@@ -431,11 +376,24 @@ sub _init {
     return \%data;
 }    
 
-#    my @bag = ();
-#    foreach my $aref (@arrayrefs) {
-#        push @bag, $_ foreach @$aref;
-#    }
-#    @bag = sort(@bag) unless $unsortflag;
+sub get_bag {
+    return @{ get_bag_ref(shift) };
+}
+
+sub get_bag_ref {
+    my $class = shift;
+    my %data = %$class;
+    my $unsortflag = $data{'unsort'};
+    my $aref = _prepare_listrefs(\%data);
+    my (@bag);
+    foreach my $m (@$aref) {
+        foreach my $n (@$m) {
+            push(@bag, $n);
+        }
+    }
+    @bag = sort(@bag) unless $unsortflag;
+    return \@bag;
+}
 
 sub get_version {
     return $List::Compare::VERSION;
@@ -452,8 +410,8 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.24 of List::Compare.  This version was
-released March 28, 2004.
+This document refers to version 0.25 of List::Compare.  This version was
+released April 4, 2004.
 
 =head1 SYNOPSIS
 
@@ -614,16 +572,15 @@ more given strings can be found.  Get a reference to a hash of arrays.  The
 key for each element in this hash is the string being tested.  Each element's 
 value is a reference to an anonymous array whose elements are those indices in 
 the constructor's argument list corresponding to lists holding the strings 
-being tested.
-
-    $memb_hash_ref = 
-        $lc->are_members_which(qw| abel baker fargo hilton zebra |);
-
-Instead of passing a list to C<are_members_which()>, you may also pass a 
-reference to an array.
+being tested.  The strings to be tested are placed in an anonymous array, a 
+reference to which is passed to the method.
 
     $memb_hash_ref = 
         $lc->are_members_which([ qw| abel baker fargo hilton zebra | ]);
+
+I<Note:>  In versions of List::Compare prior to 0.25 (April 2004), the 
+strings to be tested could be passed as a flat list.  This is no longer 
+possible; the argument must now be a reference to an anonymous array.
 
 In the two examples above, C<$memb_hash_ref> will be:
 
@@ -657,14 +614,15 @@ or more of the lists passed as arguments to C<new()>.
 Determine whether a specified string or strings can be found in I<any> of the 
 lists passed as arguments to the constructor.  Get a reference to a hash where 
 an element's key is the string being tested and the element's value is 1 if 
-the string can be found in C<any> of the lists and 0 if not.
-
-    $memb_hash_ref = $lc->are_members_any(qw| abel baker fargo hilton zebra |);
-
-Instead of passing a list to C<are_members_any()>, you may also pass a reference 
-to an array.
+the string can be found in C<any> of the lists and 0 if not.  The strings to 
+be tested are placed in an anonymous array, a reference to which is passed to 
+the method.
 
     $memb_hash_ref = $lc->are_members_any([ qw| abel baker fargo hilton zebra | ]);
+
+I<Note:>  In versions of List::Compare prior to 0.25 (April 2004), the 
+strings to be tested could be passed as a flat list.  This is no longer 
+possible; the argument must now be a reference to an anonymous array.
 
 In the two examples above, C<$memb_hash_ref> will be:
 
@@ -736,12 +694,8 @@ the user in the Accelerated case as well.
     @memb_arr         = $lca->is_member_which('abel');
     $memb_arr_ref     = $lca->is_member_which_ref('baker');
     $memb_hash_ref    = $lca->are_members_which(
-                            qw| abel baker fargo hilton zebra |);
-    $memb_hash_ref    = $lca->are_members_which(
                             [ qw| abel baker fargo hilton zebra | ]);
     $found            = $lca->is_member_any('abel');
-    $memb_hash_ref    = $lca->are_members_any(
-                            qw| abel baker fargo hilton zebra |);
     $memb_hash_ref    = $lca->are_members_any(
                             [ qw| abel baker fargo hilton zebra | ]);
     $vers             = $lca->get_version;
@@ -930,16 +884,15 @@ more given strings can be found.  Get a reference to a hash of arrays.  The
 key for each element in this hash is the string being tested.  Each element's 
 value is a reference to an anonymous array whose elements are those indices in 
 the constructor's argument list corresponding to lists holding the strings 
-being tested.
-
-    $memb_hash_ref = 
-        $lcm->are_members_which(qw| abel baker fargo hilton zebra |);
-
-Instead of passing a list to C<are_members_which()>, you may also pass a 
-reference to an array.
+being tested.  The strings to be tested are placed in an anonymous array, a 
+reference to which is passed to the method.
 
     $memb_hash_ref = 
         $lcm->are_members_which([ qw| abel baker fargo hilton zebra | ]);
+
+I<Note:>  In versions of List::Compare prior to 0.25 (April 2004), the 
+strings to be tested could be passed as a flat list.  This is no longer 
+possible; the argument must now be a reference to an anonymous array.
 
 In the two examples above, C<$memb_hash_ref> will be:
 
@@ -973,14 +926,15 @@ or more of the lists passed as arguments to C<new()>.
 Determine whether a specified string or strings can be found in I<any> of the 
 lists passed as arguments to the constructor.  Get a reference to a hash where 
 an element's key is the string being tested and the element's value is 1 if 
-the string can be found in C<any> of the lists and 0 if not.
-
-    $memb_hash_ref = $lcm->are_members_any(qw| abel baker fargo hilton zebra |);
-
-Instead of passing a list to C<are_members_any()>, you may also pass a reference 
-to an array.
+the string can be found in C<any> of the lists and 0 if not.  The strings to 
+be tested are placed in an anonymous array, a reference to which is passed to 
+the method.
 
     $memb_hash_ref = $lcm->are_members_any([ qw| abel baker fargo hilton zebra | ]);
+
+I<Note:>  In versions of List::Compare prior to 0.25 (April 2004), the 
+strings to be tested could be passed as a flat list.  This is no longer 
+possible; the argument must now be a reference to an anonymous array.
 
 In the two examples above, C<$memb_hash_ref> will be:
 
@@ -1033,7 +987,7 @@ full array, use the following alternative methods:
 
 =back
 
-=head2 Multiple Accelerated Case:  Compare Three or More Lists, 
+=head2 Multiple Accelerated Case:  Compare Three or More Lists 
 but Request Only a Single Comparison among the Lists
 
 If you are certain that you will only want the results of a single 
@@ -1172,7 +1126,7 @@ Synopsis above.
 
 Multiple Accelerated Mode
 
-Beginning with version 0.24, introduced in March 2004, List::Compare now 
+Beginning with version 0.25, introduced in March 2004, List::Compare now 
 offers the possibility of accelerated computation of a single comparison 
 among three or more lists at a time.  Simply store the extra lists in 
 arrays and pass references to those arrays to the constructor preceded by 
@@ -1305,12 +1259,8 @@ are supported I<without further modification> by List::Compare::SeenHash.
     @memb_arr         = $lsch->is_member_which('abel');
     $memb_arr_ref     = $lsch->is_member_which_ref('baker');
     $memb_hash_ref    = $lsch->are_members_which(
-                            qw| abel baker fargo hilton zebra |);
-    $memb_hash_ref    = $lsch->are_members_which(
                             [ qw| abel baker fargo hilton zebra | ]);
     $found            = $lsch->is_member_any('abel');
-    $memb_hash_ref    = $lsch->are_members_any(
-                            qw| abel baker fargo hilton zebra |);
     $memb_hash_ref    = $lsch->are_members_any(
                             [ qw| abel baker fargo hilton zebra | ]);
     $vers             = $lcsh->get_version;
@@ -1534,7 +1484,7 @@ you must first install the Want module, also available on CPAN.
 
 James E. Keenan (jkeenan@cpan.org).
 
-Creation date:  May 20, 2002.  Last modification date:  March 28, 2004. 
+Creation date:  May 20, 2002.  Last modification date:  April 4, 2004. 
 Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

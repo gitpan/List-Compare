@@ -1,6 +1,7 @@
 Changes
 Compare.pm
 Compare/Base/Accelerated.pm
+Compare/Base/_Auxiliary.pm
 Compare/Base/_Engine.pm
 Compare/Base/Multiple.pm
 Compare/Base/Regular.pm
@@ -20,6 +21,8 @@ t/07_functional.t
 t/08_functional_sh.t
 t/09_multaccel.t
 t/10_multaccel_sh.t
+t/11_functional_multiple.t
+t/12_functional_multiple_sh.t
 t/Test/ListCompareSpecial.pm
 
 

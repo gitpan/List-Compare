@@ -1,10 +1,14 @@
 package List::Compare::Base::Multiple::Accelerated;
-$VERSION = 0.24;
-# As of:  March 28, 2004
-
+$VERSION = 0.25;
+# As of:  April 4, 2004
 use strict;
-# use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
+use List::Compare::Base::_Auxiliary qw(:calculate);
+use List::Compare::Base::_Auxiliary qw(
+    _subset_subengine
+    _chart_engine
+    _equivalent_subengine
+);
 
 sub get_union {
     return @{ get_union_ref(shift) };
@@ -14,15 +18,10 @@ sub get_union_ref {
     my $class = shift;
     my %data = %$class;
     my $unsortflag = $data{'unsort'};
-    my $aref = _prepare_arrayrefs(\%data);
+    my $aref = _prepare_listrefs(\%data);
 
-    my (%union);
-    for (my $i = 0; $i <= $#{$aref}; $i++) {
-        foreach $_ (@{${$aref}[$i]}) {
-            $union{$_}++;
-        }
-    }
-    my @union = $unsortflag ? keys %union : sort(keys %union);
+    my $unionref = _calculate_union_only($aref);
+    my @union = $unsortflag ? keys %{$unionref} : sort(keys %{$unionref});
     return \@union;
 }
 
@@ -34,27 +33,14 @@ sub get_intersection_ref {
     my $class = shift;
     my %data = %$class;
     my $unsortflag = $data{'unsort'};
-    my $aref = _prepare_arrayrefs(\%data);
-
-    my ($seenref, $xintersectionref) = 
-       _calculate_seen_xintersection_only($aref);
-    my %seen = %{$seenref};
-    my %xintersection = %{$xintersectionref};
+    my $aref = _prepare_listrefs(\%data);
 
     # Calculate overall intersection
     # Inputs:  %xintersection
-    my @xkeys = keys %xintersection;
-    my %intersection = %{$xintersection{$xkeys[0]}};
-    for (my $m = 1; $m <= $#xkeys; $m++) {
-        my %compare = %{$xintersection{$xkeys[$m]}};
-        my %result = ();
-        foreach (keys %compare) {
-            $result{$_}++ if (exists $intersection{$_});
-        }
-        %intersection = %result;
-    }
+    my $xintersectionref = _calculate_xintersection_only($aref);
+    my $intersectionref = _calculate_hash_intersection($xintersectionref);
     my @intersection = 
-        $unsortflag ? keys %intersection : sort(keys %intersection);
+        $unsortflag ? keys %{$intersectionref} : sort(keys %{$intersectionref});
     return \@intersection;
 }
 
@@ -66,29 +52,18 @@ sub get_nonintersection_ref {
     my $class = shift;
     my %data = %$class;
     my $unsortflag = $data{'unsort'};
-    my $aref = _prepare_arrayrefs(\%data);
+    my $aref = _prepare_listrefs(\%data);
 
     my ($unionref, $xintersectionref) = 
         _calculate_union_xintersection_only($aref);
     my @union = $unsortflag ? keys %{$unionref} : sort(keys %{$unionref});
-    my %xintersection = %{$xintersectionref};
-
-    my @xkeys = keys %xintersection;
-    my %intersection = %{$xintersection{$xkeys[0]}};
-    for (my $m = 1; $m <= $#xkeys; $m++) {
-        my %compare = %{$xintersection{$xkeys[$m]}};
-        my %result = ();
-        foreach (keys %compare) {
-            $result{$_}++ if (exists $intersection{$_});
-        }
-        %intersection = %result;
-    }
+    my $intersectionref = _calculate_hash_intersection($xintersectionref);
 
     # Calculate nonintersection
     # Inputs:  @union    %intersection
     my (@nonintersection);
     foreach (@union) {
-        push(@nonintersection, $_) unless (exists $intersection{$_});
+        push(@nonintersection, $_) unless exists ${$intersectionref}{$_};
     }
     return \@nonintersection;
 }
@@ -101,32 +76,13 @@ sub get_shared_ref {
     my $class = shift;
     my %data = %$class;
     my $unsortflag = $data{'unsort'};
-    my $aref = _prepare_arrayrefs(\%data);
+    my $aref = _prepare_listrefs(\%data);
 
-    my (%xintersection);
-    for (my $i = 0; $i <= $#{$aref}; $i++) {
-        my %seenthis = ();
-        foreach $_ (@{${$aref}[$i]}) {
-            $seenthis{$_}++;
-        }
-        for (my $j = $i+1; $j <=$#{$aref}; $j++) {
-            my %seenthat = ();
-            my %seenintersect = ();
-            my $ilabel = $i . '_' . $j;
-            $seenthat{$_}++ foreach (@{${$aref}[$j]});
-            foreach (keys %seenthat) {
-                $seenintersect{$_}++ if (exists $seenthis{$_});
-            }
-            $xintersection{$ilabel} = \%seenintersect;
-        }
-    }
     # Calculate @shared
     # Inputs:  %xintersection
-    my (%shared);
-    foreach my $q (keys %xintersection) {
-        $shared{$_}++ foreach (keys %{$xintersection{$q}});
-    }
-    my @shared = $unsortflag ? keys %shared : sort(keys %shared);
+    my $xintersectionref = _calculate_xintersection_only($aref);
+    my $sharedref = _calculate_hash_shared($xintersectionref);
+    my @shared = $unsortflag ? keys %{$sharedref} : sort(keys %{$sharedref});
     return \@shared;
 }
 
@@ -138,20 +94,16 @@ sub get_symmetric_difference_ref {
     my $class = shift;
     my %data = %$class;
     my $unsortflag = $data{'unsort'};
-    my $aref = _prepare_arrayrefs(\%data);
+    my $aref = _prepare_listrefs(\%data);
 
     my ($unionref, $xintersectionref) = 
         _calculate_union_xintersection_only($aref);
     my @union = $unsortflag ? keys %{$unionref} : sort(keys %{$unionref});
-    my %xintersection = %{$xintersectionref};
 
-    my (%shared);
-    foreach my $q (keys %xintersection) {
-        $shared{$_}++ foreach (keys %{$xintersection{$q}});
-    }
+    my $sharedref = _calculate_hash_shared($xintersectionref);
     my (@symmetric_difference);
     foreach (@union) {
-        push(@symmetric_difference, $_) unless (exists $shared{$_});
+        push(@symmetric_difference, $_) unless exists ${$sharedref}{$_};
     }
     return \@symmetric_difference;
 }
@@ -186,11 +138,11 @@ sub get_unique_ref {
     my $class = shift;
     my %data = %$class;
     my $index = defined $_[0] ? shift : 0;
-    my $aref = _prepare_arrayrefs(\%data);
+    my $aref = _prepare_listrefs(\%data);
     _index_message3($index, $#{$aref});
 
     my ($seenref, $xintersectionref) = 
-        _calculate_seen_xintersection_only(\$aref);
+        _calculate_seen_xintersection_only($aref);
     my %seen = %{$seenref};
     my %xintersection = %{$xintersectionref};
 
@@ -252,22 +204,16 @@ sub get_complement_ref {
     my %data = %$class;
     my $index = defined $_[0] ? shift : 0;
     my $unsortflag = $data{'unsort'};
-    my $aref = _prepare_arrayrefs(\%data);
+    my $aref = _prepare_listrefs(\%data);
     _index_message3($index, $#{$aref});
 
-    my (@union, %union, %seen, %xcomplement);
-    for (my $i = 0; $i <= $#{$aref}; $i++) {
-        my %seenthis = ();
-        foreach $_ (@{${$aref}[$i]}) {
-            $seenthis{$_}++;
-            $union{$_}++;
-        }
-        $seen{$i} = \%seenthis;
-    }
-    @union = $unsortflag ? keys %union : sort(keys %union);
+    my ($unionref, $seenref) = _calculate_union_seen_only($aref);
+    my %seen = %{$seenref};
+    my @union = $unsortflag ? keys %{$unionref} : sort(keys %{$unionref});
 
     # Calculate %xcomplement
-    # Inputs:  $aref @union
+    # Inputs:  $aref @union %seen
+    my (%xcomplement);
     for (my $i = 0; $i <= $#{$aref}; $i++) {
         my %seenthis = %{$seen{$i}};
         my @complementthis = ();
@@ -325,7 +271,7 @@ sub is_RsubsetL {
 sub is_LequivalentR {
     my $class = shift;
     my %data = %$class;
-    my $aref = _prepare_arrayrefs(\%data);
+    my $aref = _prepare_listrefs(\%data);
     my ($index_left, $index_right) = _index_message4($#{$aref}, @_);
 
     my $xequivalentref = _equivalent_subengine($aref);
@@ -343,7 +289,8 @@ sub is_member_which_ref {
     croak "Method call requires exactly 1 argument (no references):  $!"
         unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
     my %data = %{$class};
-    my $seenref = _calculate_seen_only(\%data);
+    my $aref = _prepare_listrefs(\%data);
+    my $seenref = _calculate_seen_only($aref);
     my ($arg, @found);
     $arg = shift;
     foreach (sort keys %{$seenref}) {
@@ -356,7 +303,8 @@ sub are_members_which {
     my $class = shift;
     croak "Method call needs at least one argument:  $!" unless (@_);
     my %data = %{$class};
-    my $seenref = _calculate_seen_only(\%data);
+    my $aref = _prepare_listrefs(\%data);
+    my $seenref = _calculate_seen_only($aref);
     my (@args, %found);
     @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
         ?  @{$_[0]}
@@ -378,7 +326,8 @@ sub is_member_any {
     croak "Method call requires exactly 1 argument (no references):  $!"
         unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
     my %data = %$class;
-    my $seenref = _calculate_seen_only(\%data);
+    my $aref = _prepare_listrefs(\%data);
+    my $seenref = _calculate_seen_only($aref);
     my ($arg, $k);
     $arg = shift;
     while ( $k = each %{$seenref} ) {
@@ -391,7 +340,8 @@ sub are_members_any {
     my $class = shift;
     croak "Method call needs at least one argument:  $!" unless (@_);
     my %data = %$class;
-    my $seenref = _calculate_seen_only(\%data);
+    my $aref = _prepare_listrefs(\%data);
+    my $seenref = _calculate_seen_only($aref);
     my (@args, %present);
     @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
         ?  @{$_[0]}
@@ -410,7 +360,7 @@ sub are_members_any {
 sub print_subset_chart {
     my $class = shift;
     my %data = %$class;
-    my $aref = _prepare_arrayrefs(\%data);
+    my $aref = _prepare_listrefs(\%data);
     my $xsubsetref = _subset_subengine($aref);
     my $title = 'subset';
     _chart_engine($xsubsetref, $title);
@@ -419,49 +369,12 @@ sub print_subset_chart {
 sub print_equivalence_chart {
     my $class = shift;
     my %data = %$class;
-    my $aref = _prepare_arrayrefs(\%data);
+    my $aref = _prepare_listrefs(\%data);
     my $xequivalentref = _equivalent_subengine($aref);
     my $title = 'Equivalence';
     _chart_engine($xequivalentref, $title);
 }
 
-sub _equivalent_subengine {
-    my $aref = shift;
-    my $xsubsetref = _subset_subengine($aref);
-    my @xsubset = @{$xsubsetref};
-    my (@xequivalent);
-    for (my $f = 0; $f <= $#xsubset; $f++) {
-        for (my $g = 0; $g <= $#xsubset; $g++) {
-            $xequivalent[$f][$g] = 0;
-            $xequivalent[$f][$g] = 1
-                if ($xsubset[$f][$g] and $xsubset[$g][$f]);
-        }
-    }
-    return \@xequivalent;
-}
-
-sub get_bag {
-    return @{ get_bag_ref(shift) };
-}
-
-sub get_bag_ref {
-    my $class = shift;
-    my %data = %$class;
-    my $unsortflag = $data{'unsort'};
-    my $aref = _prepare_arrayrefs(\%data);
-    my @bag = ();
-    foreach my $m (@$aref) {
-        foreach my $n (@$m) {
-            push(@bag, $n);
-        }
-    }
-    @bag = sort(@bag) unless $unsortflag;
-    return \@bag;
-}
-
-sub get_version {
-    return $List::Comparea::VERSION;
-}
 
 #########################################################
 ##### INTERNAL SUBROUTINES #####
@@ -501,139 +414,22 @@ sub _index_message4 {
     return ($index_left, $index_right);
 }
 
-sub _prepare_arrayrefs {
+sub _prepare_listrefs {
     my $dataref = shift;
-    my (@arrayrefs);
-    foreach my $listref (sort {$a <=> $b} keys %{$dataref}) {
-        unless ($listref eq 'unsort') {
-            push(@arrayrefs, ${$dataref}{$listref});
-        }
+    my (@listrefs);
+    foreach my $lref (sort {$a <=> $b} keys %{$dataref}) {
+        push(@listrefs, ${$dataref}{$lref}) unless $lref eq 'unsort';
     };
-    return \@arrayrefs;
-}
-
-sub _calculate_union_xintersection_only {
-    my $aref = shift;
-    my (%union, %xintersection);
-    for (my $i = 0; $i <= $#{$aref}; $i++) {
-        my %seenthis = ();
-        foreach my $h (@{${$aref}[$i]}) {
-            $seenthis{$h}++;
-            $union{$h}++;
-        }
-        for (my $j = $i+1; $j <=$#{$aref}; $j++) {
-            my %seenthat = ();
-            my %seenintersect = ();
-            my $ilabel = $i . '_' . $j;
-            $seenthat{$_}++ foreach (@{${$aref}[$j]});
-            foreach my $k (keys %seenthat) {
-                $seenintersect{$k}++ if (exists $seenthis{$k});
-            }
-            $xintersection{$ilabel} = \%seenintersect;
-        }
-    }
-    return (\%union, \%xintersection);
-}
-
-sub _calculate_seen_xintersection_only {
-    my $aref = shift;
-    my (%xintersection, %seen);
-    for (my $i = 0; $i <= $#{$aref}; $i++) {
-        my %seenthis = ();
-        foreach $_ (@{${$aref}[$i]}) {
-            $seenthis{$_}++;
-        }
-        $seen{$i} = \%seenthis;
-        for (my $j = $i+1; $j <=$#{$aref}; $j++) {
-            my %seenthat = ();
-            my %seenintersect = ();
-            my $ilabel = $i . '_' . $j;
-            $seenthat{$_}++ foreach (@{${$aref}[$j]});
-            foreach (keys %seenthat) {
-                $seenintersect{$_}++ if (exists $seenthis{$_});
-            }
-            $xintersection{$ilabel} = \%seenintersect;
-        }
-    }
-    return (\%seen, \%xintersection);
-}
-
-sub _calculate_seen_only {
-    my $dataref = shift;
-    my $aref = _prepare_arrayrefs($dataref);
-
-    my (%seen);
-    for (my $i = 0; $i <= $#{$aref}; $i++) {
-        my %seenthis = ();
-        foreach $_ (@{${$aref}[$i]}) {
-            $seenthis{$_}++;
-        }
-        $seen{$i} = \%seenthis;
-    }
-    return \%seen;
+    return \@listrefs;
 }
 
 sub _subset_engine {
     my $dataref = shift;
-    my $aref = _prepare_arrayrefs($dataref);
+    my $aref = _prepare_listrefs($dataref);
     my ($index_left, $index_right) = _index_message4($#{$aref}, @_);
 
-    my $xsubsetref = _subset_subengine(\$aref);
+    my $xsubsetref = _subset_subengine($aref);
     return ${$xsubsetref}[$index_left][$index_right];
-}
-
-sub _subset_subengine {
-    my $aref = shift;
-    my (%seen, @xsubset);
-    for (my $i = 0; $i <= $#{$aref}; $i++) {
-        my %seenthis = ();
-        foreach my $j (@{${$aref}[$i]}) {
-            $seenthis{$j}++;
-        }
-        $seen{$i} = \%seenthis;
-    }
-    foreach my $i (keys %seen) {
-        my %tempi = %{$seen{$i}};
-        foreach my $j (keys %seen) {
-            my %tempj = %{$seen{$j}};
-            $xsubset[$i][$j] = 1;
-            foreach my $k (keys %tempi) {
-                $xsubset[$i][$j] = 0 if (! $tempj{$k});
-            }
-        }
-    }
-    return \@xsubset;
-}
-
-sub _chart_engine {
-    my $aref = shift;
-    my @sub_or_eqv = @$aref;
-    my $title = shift;
-    my ($v, $w, $t);
-    print "\n";
-    print $title, ' Relationships', "\n\n";
-    print '   Right:';
-    for ($v = 0; $v <= $#sub_or_eqv; $v++) {
-        print '    ', $v;
-    }
-    print "\n\n";
-    print 'Left:  0:';
-    my @firstrow = @{$sub_or_eqv[0]};
-    for ($t = 0; $t <= $#firstrow; $t++) {
-        print '    ', $firstrow[$t];
-    }
-    print "\n\n";
-    for ($w = 1; $w <= $#sub_or_eqv; $w++) {
-        my $length_left = length($w);
-        my $x = '';
-        print ' ' x (8 - $length_left), $w, ':';
-        my @row = @{$sub_or_eqv[$w]};
-        for ($x = 0; $x <= $#row; $x++) {
-            print '    ', $row[$x];
-        }
-        print "\n\n";
-    }
-    1; # force return true value
 }
 
 1;

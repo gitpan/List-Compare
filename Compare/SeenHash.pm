@@ -1,10 +1,13 @@
 package List::Compare::SeenHash;
-$VERSION = 0.24;   # March 28, 2004 
+$VERSION = 0.25;   # April 4, 2004 
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
 use base qw(List::Compare::Base::Regular);
+use List::Compare::Base::_Auxiliary qw|
+    _validate_2_seenhashes
+|;
 
 sub new {
     my $class = shift;
@@ -46,43 +49,15 @@ sub new {
 sub _init {
     my $self = shift;
     my ($unsortflag, $refL, $refR) = @_;
-    my (%data, %seenL, %seenR);
+    my (%data);
 
     my (%intersection, %union, %Lonly, %Ronly, %LorRonly);
     my $LsubsetR_status = my $RsubsetL_status = 1;
     my $LequivalentR_status = 0;
 
-    my (%badentriesL, %badentriesR);
-    foreach (keys %$refL) {
-        if (${$refL}{$_} =~ /^\d+$/ and ${$refL}{$_} > 0) {
-            $seenL{$_} = ${$refL}{$_};
-        } else {
-            $badentriesL{$_} = ${$refL}{$_};
-        }
-    } 
-    foreach (keys %$refR) {
-        if (${$refR}{$_} =~ /^\d+$/ and ${$refR}{$_} > 0) {
-            $seenR{$_} = ${$refR}{$_};
-        } else {
-            $badentriesR{$_} = ${$refR}{$_};
-        }
-    }
-    if ( (keys %badentriesL) or (keys %badentriesR) ) {
-        print "\nValues in a 'seen-hash' may only be positive integers.\n";
-        print "  These elements have invalid values:\n\n";
-        if (keys %badentriesL) {
-            print "  First hash in arguments:\n\n";
-            print "     Key:  $_\tValue:  $badentriesL{$_}\n" 
-                foreach (sort keys %badentriesL);
-        } 
-        if (keys %badentriesR) {
-            print "  First hash in arguments:\n\n";
-            print "     Key:  $_\tValue:  $badentriesR{$_}\n" 
-                foreach (sort keys %badentriesR);
-        }
-        croak "Correct invalid values before proceeding:  $!";
-    }
- 
+    my ($seenLref, $seenRref) =  _validate_2_seenhashes($refL, $refR);
+    my %seenL = %{$seenLref};
+    my %seenR = %{$seenRref};
     foreach (keys %seenL) {
         $union{$_}++;
         if (exists $seenR{$_}) {
@@ -141,45 +116,17 @@ sub get_version {
 package List::Compare::SeenHash::Accelerated;
 use Carp;
 use base qw(List::Compare::Base::Accelerated);
+use List::Compare::Base::_Auxiliary qw|
+    _validate_2_seenhashes
+|;
 
 sub _init {
     my $self = shift;
     my ($unsortflag, $refL, $refR) = @_;
-    my (%data, %seenL, %seenR);
-
-    my (%badentriesL, %badentriesR);
-    foreach (keys %$refL) {
-        if (${$refL}{$_} =~ /^\d+$/ and ${$refL}{$_} > 0) {
-            $seenL{$_} = ${$refL}{$_};
-        } else {
-            $badentriesL{$_} = ${$refL}{$_};
-        }
-    } 
-    foreach (keys %$refR) {
-        if (${$refR}{$_} =~ /^\d+$/ and ${$refR}{$_} > 0) {
-            $seenR{$_} = ${$refR}{$_};
-        } else {
-            $badentriesR{$_} = ${$refR}{$_};
-        }
-    }
-    if ( (keys %badentriesL) or (keys %badentriesR) ) {
-        print "\nValues in a 'seen-hash' may only be positive integers.\n";
-        print "  These elements have invalid values:\n\n";
-        if (keys %badentriesL) {
-            print "  First hash in arguments:\n\n";
-            print "     Key:  $_\tValue:  $badentriesL{$_}\n" 
-                foreach (sort keys %badentriesL);
-        } 
-        if (keys %badentriesR) {
-            print "  Second hash in arguments:\n\n";
-            print "     Key:  $_\tValue:  $badentriesR{$_}\n" 
-                foreach (sort keys %badentriesR);
-        }
-        croak "Correct invalid values before proceeding:  $!";
-    }
-
-    $data{'L'} = \%seenL;
-    $data{'R'} = \%seenR;
+    my (%data);
+    my ($seenLref, $seenRref) =  _validate_2_seenhashes($refL, $refR);
+    $data{'L'} = $seenLref;
+    $data{'R'} = $seenRref; 
     $data{'unsort'} = $unsortflag ? 1 : 0; 
     return \%data;
 }    
@@ -193,6 +140,9 @@ sub get_version {
 package List::Compare::SeenHash::Multiple;
 use Carp;
 use base qw(List::Compare::Base::Multiple);
+use List::Compare::Base::_Auxiliary qw|
+    _validate_multiple_seenhashes   
+|;
 
 sub _init {
     my $self = shift;
@@ -201,29 +151,7 @@ sub _init {
     my %data = ();
     my $maxindex = $#hashrefs;
 
-    # validation of seen-hash values    
-    my (%badentries, $badentriesflag);
-    for (my $i = 0; $i <= $#hashrefs; $i++) {
-        my %seenhash = %{$hashrefs[$i]};
-        foreach (keys %seenhash) {
-            unless ($seenhash{$_} =~ /^\d+$/ and $seenhash{$_} > 0) {
-                $badentries{$i}{$_} = $seenhash{$_};
-                $badentriesflag++;
-            }
-        }
-    }
-    if ($badentriesflag) {
-        print "\nValues in a 'seen-hash' may only be positive integers.\n";
-        print "  These elements have invalid values:\n\n";
-        foreach (sort keys %badentries) {
-            print "    Hash $_:\n";
-            my %pairs = %{$badentries{$_}};
-            foreach my $val (sort keys %pairs) {
-                print "        Bad key-value pair:  $val\t$pairs{$val}\n";
-            }
-        }
-        croak "Correct invalid values before proceeding:  $!";
-    }
+    _validate_multiple_seenhashes(\@hashrefs);
 
     my (@intersection, @union);
         # will hold overall intersection/union
@@ -391,7 +319,32 @@ sub _init {
     return \%data;
 }    
 
+sub get_version {
+    return $List::Compare::SeenHash::VERSION;
+}
 
+package List::Compare::SeenHash::Multiple::Accelerated;
+use Carp;
+use base qw(List::Compare::Base::Multiple::Accelerated);
+use List::Compare::Base::_Auxiliary qw|
+    _validate_multiple_seenhashes   
+|;
+
+sub _init {
+    my $self = shift;
+    my $unsortflag = shift;
+    my @listrefs = @_;
+    my %data = ();
+    my $maxindex = $#listrefs;
+
+    _validate_multiple_seenhashes(\@listrefs);
+
+    for (my $i=0; $i<=$#listrefs; $i++) {
+        $data{$i} = $listrefs[$i];
+    }
+    $data{'unsort'} = $unsortflag ? 1 : 0;
+    return \%data;
+}    
 
 sub get_version {
     return $List::Compare::SeenHash::VERSION;
@@ -407,8 +360,8 @@ List::Compare::SeenHash - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.24 of List::Compare::SeenHash.  This version 
-was released March 28, 2004.
+This document refers to version 0.25 of List::Compare::SeenHash.  This version 
+was released April 4, 2004.
 
 =head1 SYNOPSIS
 
@@ -585,16 +538,15 @@ more given strings can be found.  Get a reference to a hash of arrays.  The
 key for each element in this hash is the string being tested.  Each element's 
 value is a reference to an anonymous array whose elements are those indices in 
 the constructor's argument list corresponding to lists holding the strings 
-being tested.
-
-    $memb_hash_ref = 
-        $lcsh->are_members_which(qw| abel baker fargo hilton zebra |);
-
-Instead of passing a list to C<are_members_which()>, you may also pass a 
-reference to an array.
+being tested.  The strings to be tested are placed in an anonymous array, a 
+reference to which is passed to the method.
 
     $memb_hash_ref = 
         $lcsh->are_members_which([ qw| abel baker fargo hilton zebra | ]);
+
+I<Note:>  In versions of List::Compare prior to 0.25 (April 2004), the 
+strings to be tested could be passed as a flat list.  This is no longer 
+possible; the argument must now be a reference to an anonymous array.
 
 In the two examples above, C<$memb_hash_ref> will be:
 
@@ -628,14 +580,15 @@ or more of the lists passed as arguments to C<new()>.
 Determine whether a specified string or strings can be found in I<any> of the 
 lists passed as arguments to the constructor.  Get a reference to a hash where 
 an element's key is the string being tested and the element's value is 1 if 
-the string can be found in C<any> of the lists and 0 if not.
-
-    $memb_hash_ref = $lcsh->are_members_any(qw| abel baker fargo hilton zebra |);
-
-Instead of passing a list to C<are_members_any()>, you may also pass a reference 
-to an array.
+the string can be found in C<any> of the lists and 0 if not.  The strings to 
+be tested are placed in an anonymous array, a reference to which is passed to 
+the method.
 
     $memb_hash_ref = $lcsh->are_members_any([ qw| abel baker fargo hilton zebra | ]);
+
+I<Note:>  In versions of List::Compare prior to 0.25 (April 2004), the 
+strings to be tested could be passed as a flat list.  This is no longer 
+possible; the argument must now be a reference to an anonymous array.
 
 In the two examples above, C<$memb_hash_ref> will be:
 
@@ -719,12 +672,8 @@ the user in the Accelerated case as well.
     @memb_arr         = $lcsha->is_member_which('abel');
     $memb_arr_ref     = $lcsha->is_member_which_ref('baker');
     $memb_hash_ref    = $lcsha->are_members_which(
-                            qw| abel baker fargo hilton zebra |);
-    $memb_hash_ref    = $lcsha->are_members_which(
                             [ qw| abel baker fargo hilton zebra | ]);
     $found            = $lcsha->is_member_any('abel');
-    $memb_hash_ref    = $lcsha->are_members_any(
-                            qw| abel baker fargo hilton zebra |);
     $memb_hash_ref    = $lcsha->are_members_any(
                             [ qw| abel baker fargo hilton zebra | ]);
     $vers             = $lcsha->get_version;
@@ -942,16 +891,15 @@ more given strings can be found.  Get a reference to a hash of arrays.  The
 key for each element in this hash is the string being tested.  Each element's 
 value is a reference to an anonymous array whose elements are those indices in 
 the constructor's argument list corresponding to lists holding the strings 
-being tested.
-
-    $memb_hash_ref = 
-        $lcshm->are_members_which(qw| abel baker fargo hilton zebra |);
-
-Instead of passing a list to C<are_members_which()>, you may also pass a 
-reference to an array.
+being tested.  The strings to be tested are placed in an anonymous array, a 
+reference to which is passed to the method.
 
     $memb_hash_ref = 
         $lcshm->are_members_which([ qw| abel baker fargo hilton zebra | ]);
+
+I<Note:>  In versions of List::Compare prior to 0.25 (April 2004), the 
+strings to be tested could be passed as a flat list.  This is no longer 
+possible; the argument must now be a reference to an anonymous array.
 
 In the two examples above, C<$memb_hash_ref> will be:
 
@@ -985,14 +933,15 @@ or more of the lists passed as arguments to C<new()>.
 Determine whether a specified string or strings can be found in I<any> of the 
 lists passed as arguments to the constructor.  Get a reference to a hash where 
 an element's key is the string being tested and the element's value is 1 if 
-the string can be found in C<any> of the lists and 0 if not.
-
-    $memb_hash_ref = $lcshm->are_members_any(qw| abel baker fargo hilton zebra |);
-
-Instead of passing a list to C<are_members_any()>, you may also pass a reference 
-to an array.
+the string can be found in C<any> of the lists and 0 if not.  The strings to 
+be tested are placed in an anonymous array, a reference to which is passed to 
+the method.
 
     $memb_hash_ref = $lcshm->are_members_any([ qw| abel baker fargo hilton zebra | ]);
+
+I<Note:>  In versions of List::Compare prior to 0.25 (April 2004), the 
+strings to be tested could be passed as a flat list.  This is no longer 
+possible; the argument must now be a reference to an anonymous array.
 
 In the two examples above, C<$memb_hash_ref> will be:
 
@@ -1224,7 +1173,7 @@ See discussion in the documentation to List::Compare.
 
 James E. Keenan (jkeenan@cpan.org).
 
-Creation date:  May 20, 2002.  Last modification date:  March 28, 2004. 
+Creation date:  May 20, 2002.  Last modification date:  April 4, 2004. 
 Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

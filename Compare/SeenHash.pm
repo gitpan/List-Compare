@@ -1,5 +1,5 @@
 package List::Compare::SeenHash;
-$VERSION = 0.17;   # May 22, 2003 
+$VERSION = 0.18;   # June 1, 2003 
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
@@ -110,8 +110,8 @@ sub _init {
         }
     }
     
-    %seenL = %seenR = ();
- 
+    $data{'seenL'}                = \%seenL; 
+    $data{'seenR'}                = \%seenR; 
     $data{'intersection'}         = [ sort keys %intersection ];
     $data{'union'}                = [ sort keys %union ];
     $data{'unique'}               = [ sort keys %Lonly ];
@@ -344,6 +344,7 @@ sub _init {
         }
     }
     
+    $data{'seen'}                   = \%seen;
     $data{'maxindex'}               = $maxindex;
     $data{'intersection'}           = \@intersection;
     $data{'nonintersection'}        = \@nonintersection;
@@ -365,7 +366,6 @@ sub get_version {
 
 1;
 
-
 __END__
 
 =head1 NAME
@@ -374,8 +374,8 @@ List::Compare::SeenHash - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.17 of List::Compare::SeenHash.  This version 
-was released May 22, 2003.
+This document refers to version 0.18 of List::Compare::SeenHash.  This version 
+was released June 1, 2003.
 
 =head1 SYNOPSIS
 
@@ -475,6 +475,51 @@ elements found at least once in both).
 
     $lcsh->print_equivalence_chart;
 
+Determine in which (if any) of the lists passed to the constructor a given 
+string or strings can be found.  Get a reference to a hash of arrays where 
+an element's key is the string being tested and the element's value is a 
+reference to an anonymous array holding a list of the indices in the list of 
+arguments passed to the constructor corresponding to lists holding that key.
+
+    $memb_hash_ref = $lcsh->member_which(qw| abel baker fargo hilton zebra |);
+
+Instead of passing a list to C<member_which()>, you may also pass a reference 
+to an array.
+
+    $memb_hash_ref = $lcsh->member_which([ qw| abel baker fargo hilton zebra | ]);
+
+In the two examples above, the result will be:
+
+    {
+         abel     => [ 0    ],
+         baker    => [ 0, 1 ],
+         fargo    => [ 0, 1 ],
+         hilton   => [    1 ],
+         zebra    => [      ],
+    };
+
+Similar to the above, but testing only one string at a time.  Determine in 
+which (if any) of the lists passed to the constructor a single given 
+string can be found.  In list context, get an array holding a list of the 
+indices in the list of arguments passed to the constructor corresponding 
+to lists holding that key.
+
+    @memb_arr = $lcsh->single_member_which('abel');
+
+In the example above, C<@memb_arr> will be:
+
+    ( 0 )
+
+In scalar context, get a reference to an anonymous array holding a list of 
+the indices in the list of arguments passed to the constructor corresponding 
+to lists holding that key.
+
+    $memb_arr_ref = $lcsh->single_member_which('baker');
+
+In the example above, C<$memb_arr_ref> will be:
+
+    [ 0, 1 ]
+
 Return current List::Compare::SeenHash version number.
 
     $vers = $lcsh->get_version;
@@ -525,6 +570,12 @@ the user in the Accelerated case as well.
     $eqv              = $lcsha->is_LequivalentR;
                         $lcsha->print_subset_chart;
                         $lcsha->print_equivalence_chart;
+    $memb_hash_ref    = $lcsha->member_which(
+                                  qw| abel baker fargo hilton zebra |);
+    $memb_hash_ref    = $lcsha->member_which(
+                                  [ qw| abel baker fargo hilton zebra | ]);
+    @memb_arr         = $lcsha->single_member_which('abel');
+    $memb_arr_ref     = $lcsha->single_member_which('baker');
     $vers             = $lcsha->get_version;
 
 All the aliases for methods available in the Regular case are available to 
@@ -667,6 +718,51 @@ Pretty-print a chart showing the equivalence relationships among the
 various source lists:
 
     $lcshm->print_equivalence_chart;
+
+Determine in which (if any) of the lists passed to the constructor a given 
+string or strings can be found.  Get a reference to a hash of arrays where 
+an element's key is the string being tested and the element's value is a 
+reference to an anonymous array holding a list of the indices in the list of 
+arguments passed to the constructor corresponding to lists holding that key.
+
+    $memb_hash_ref = $lcshm->member_which(qw| abel baker fargo hilton zebra |);
+
+Instead of passing a list to C<member_which()>, you may also pass a reference 
+to an array.
+
+    $memb_hash_ref = $lcshm->member_which([ qw| abel baker fargo hilton zebra | ]);
+
+In the two examples above, the result will be:
+
+    {
+         abel     => [ 0    ],
+         baker    => [ 0, 1 ],
+         fargo    => [ 0, 1 ],
+         hilton   => [    1 ],
+         zebra    => [      ],
+    };
+
+Similar to the above, but testing only one string at a time.  Determine in 
+which (if any) of the lists passed to the constructor a single given 
+string can be found.  In list context, get an array holding a list of the 
+indices in the list of arguments passed to the constructor corresponding 
+to lists holding that key.
+
+    @memb_arr = $lcshm->single_member_which('abel');
+
+In the example above, C<@memb_arr> will be:
+
+    ( 0 )
+
+In scalar context, get a reference to an anonymous array holding a list of 
+the indices in the list of arguments passed to the constructor corresponding 
+to lists holding that key.
+
+    $memb_arr_ref = $lcshm->single_member_which('baker');
+
+In the example above, C<$memb_arr_ref> will be:
+
+    [ 0, 1 ]
 
 Return current List::Compare::SeenHash version number:
 
@@ -883,19 +979,23 @@ Comments and suggestions were provided there and since by Glenn Maciag,
 Gary Benson, Josh Rabinowitz, Terrence Brannon and Dave Cross.
 
 The inspiration to extend List::Compare to List::Compare::SeenHash emerged 
-as I was preparing to attend the first YAPC::Canada conference, held in 
-Ottawa, Ontario, May 15-26, 2003.  (See L<http://yapc.ca>.)
+as I was preparing to attend the first Yet Another Perl Conference::Canada 
+conference, held in Ottawa, Ontario, May 15-16, 2003.  (See L<http://yapc.ca>.) 
+The placement in the installation tree of Test::ListCompareSpecial came as a 
+result of a question answered by Michael Graham in his talk "Test::More to 
+Test::Extreme" given at that conference.
 
 =head1 AUTHOR
 
 James E. Keenan (jkeenan@cpan.org).
 
-Creation date:  May 20, 2002.  Last modification date:  May 22, 2003. 
+Creation date:  May 20, 2002.  Last modification date:  June 1, 2003. 
 Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.
 
 =cut 
+
 
 
 

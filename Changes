@@ -65,4 +65,6 @@ Revision history for Perl extension List::Compare.
 	- eliminated certain synthetic variables
 	- created List::Compare::SeenHash
 
+0.18  Sun Jun 1 2003
+	- added methods member_which(), single_member_which()
  

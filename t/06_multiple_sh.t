@@ -1,3 +1,5 @@
+# 06_multiple_sh.t
+
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -6,13 +8,16 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $last_test_to_print = 405; $| = 1; print "1..$last_test_to_print\n"; } # 05/18/2003
+BEGIN { $last_test_to_print = 
+449; $| = 1; print "1..$last_test_to_print\n"; } # 06/01/2003
 END {print "not ok 1\n" unless $loaded;}
+use lib ("./t");
 use List::Compare::SeenHash;
-$loaded = 1;
-my $testnum = 1;
-ok($loaded);                            # 1
+use Test::ListCompareSpecial;
+use Test::ListCompareSpecial qw(:seen);
 
+$loaded = 1;
+ok($loaded);                            # 1
 ######################### End of black magic.
 
 my %seen = ();
@@ -21,6 +26,7 @@ my ($unique_ref, $complement_ref, $intersection_ref, $union_ref, $symmetric_diff
 my ($LR, $RL, $eqv, $return);
 my (@nonintersection, @shared);
 my ($nonintersection_ref, @shared_ref);
+my ($memb_hash_ref, $memb_arr_ref, @memb_arr);
 
 my %h0 = (
 	abel     => 2,
@@ -650,14 +656,104 @@ ok($return);                            # 403
 $return = $lcmsh->print_equivalence_chart;
 ok($return);                            # 404
 
+$memb_hash_ref = $lcmsh->member_which(qw| abel baker camera delta edward fargo 
+	golfer hilton icon jerky zebra |);
+ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0         > ] ));# 405
+ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1       > ] ));# 406
+ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1       > ] ));# 407
+ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1       > ] ));# 408
+ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1       > ] ));# 409
+ok(ok_seen_h( $memb_hash_ref, 'fargo',  5, [ qw< 0 1 2 3 4 > ] ));# 410
+ok(ok_seen_h( $memb_hash_ref, 'golfer', 5, [ qw< 0 1 2 3 4 > ] ));# 411
+ok(ok_seen_h( $memb_hash_ref, 'hilton', 4, [ qw<   1 2 3 4 > ] ));# 412
+ok(ok_seen_h( $memb_hash_ref, 'icon',   3, [ qw<     2 3 4 > ] ));# 413
+ok(ok_seen_h( $memb_hash_ref, 'jerky',  1, [ qw<     2     > ] ));# 414
+ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<           > ] ));# 415
+
+$memb_hash_ref = $lcmsh->member_which( [ qw| abel baker camera delta edward fargo 
+	golfer hilton icon jerky zebra | ] );
+ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0         > ] ));# 416
+ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1       > ] ));# 417
+ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1       > ] ));# 418
+ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1       > ] ));# 419
+ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1       > ] ));# 420
+ok(ok_seen_h( $memb_hash_ref, 'fargo',  5, [ qw< 0 1 2 3 4 > ] ));# 421
+ok(ok_seen_h( $memb_hash_ref, 'golfer', 5, [ qw< 0 1 2 3 4 > ] ));# 422
+ok(ok_seen_h( $memb_hash_ref, 'hilton', 4, [ qw<   1 2 3 4 > ] ));# 423
+ok(ok_seen_h( $memb_hash_ref, 'icon',   3, [ qw<     2 3 4 > ] ));# 424
+ok(ok_seen_h( $memb_hash_ref, 'jerky',  1, [ qw<     2     > ] ));# 425
+ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<           > ] ));# 426
+
+
+$memb_arr_ref = $lcmsh->single_member_which('abel');
+ok(ok_seen_a( $memb_arr_ref, 'abel',   1, [ qw< 0        > ] ));# 427
+
+$memb_arr_ref = $lcmsh->single_member_which('baker');
+ok(ok_seen_a( $memb_arr_ref, 'baker',  2, [ qw< 0 1      > ] ));# 428
+
+$memb_arr_ref = $lcmsh->single_member_which('camera');
+ok(ok_seen_a( $memb_arr_ref, 'camera', 2, [ qw< 0 1      > ] ));# 429
+
+$memb_arr_ref = $lcmsh->single_member_which('delta');
+ok(ok_seen_a( $memb_arr_ref, 'delta',  2, [ qw< 0 1      > ] ));# 430
+
+$memb_arr_ref = $lcmsh->single_member_which('edward');
+ok(ok_seen_a( $memb_arr_ref, 'edward', 2, [ qw< 0 1      > ] ));# 431
+
+$memb_arr_ref = $lcmsh->single_member_which('fargo');
+ok(ok_seen_a( $memb_arr_ref, 'fargo',  5, [ qw< 0 1 2 3 4 > ] ));# 432
+
+$memb_arr_ref = $lcmsh->single_member_which('golfer');
+ok(ok_seen_a( $memb_arr_ref, 'golfer', 5, [ qw< 0 1 2 3 4 > ] ));# 433
+
+$memb_arr_ref = $lcmsh->single_member_which('hilton');
+ok(ok_seen_a( $memb_arr_ref, 'hilton', 4, [ qw<   1 2 3 4 > ] ));# 434
+
+$memb_arr_ref = $lcmsh->single_member_which('icon');
+ok(ok_seen_a( $memb_arr_ref, 'icon',   3, [ qw<     2 3 4 > ] ));# 435
+
+$memb_arr_ref = $lcmsh->single_member_which('jerky');
+ok(ok_seen_a( $memb_arr_ref, 'jerky',  1, [ qw<     2     > ] ));# 436
+
+$memb_arr_ref = $lcmsh->single_member_which('zebra');
+ok(ok_seen_a( $memb_arr_ref, 'zebra',  0, [ qw<           > ] ));# 437
+
+
+@memb_arr = $lcmsh->single_member_which('abel');
+ok(ok_seen_a( \@memb_arr, 'abel',   1, [ qw< 0        > ] ));# 438
+
+@memb_arr = $lcmsh->single_member_which('baker');
+ok(ok_seen_a( \@memb_arr, 'baker',  2, [ qw< 0 1      > ] ));# 439
+
+@memb_arr = $lcmsh->single_member_which('camera');
+ok(ok_seen_a( \@memb_arr, 'camera', 2, [ qw< 0 1      > ] ));# 440
+
+@memb_arr = $lcmsh->single_member_which('delta');
+ok(ok_seen_a( \@memb_arr, 'delta',  2, [ qw< 0 1      > ] ));# 441
+
+@memb_arr = $lcmsh->single_member_which('edward');
+ok(ok_seen_a( \@memb_arr, 'edward', 2, [ qw< 0 1      > ] ));# 442
+
+@memb_arr = $lcmsh->single_member_which('fargo');
+ok(ok_seen_a( \@memb_arr, 'fargo',  5, [ qw< 0 1 2 3 4 > ] ));# 443
+
+@memb_arr = $lcmsh->single_member_which('golfer');
+ok(ok_seen_a( \@memb_arr, 'golfer', 5, [ qw< 0 1 2 3 4 > ] ));# 444
+
+@memb_arr = $lcmsh->single_member_which('hilton');
+ok(ok_seen_a( \@memb_arr, 'hilton', 4, [ qw<   1 2 3 4 > ] ));# 445
+
+@memb_arr = $lcmsh->single_member_which('icon');
+ok(ok_seen_a( \@memb_arr, 'icon',   3, [ qw<     2 3 4 > ] ));# 446
+
+@memb_arr = $lcmsh->single_member_which('jerky');
+ok(ok_seen_a( \@memb_arr, 'jerky',  1, [ qw<     2     > ] ));# 447
+
+@memb_arr = $lcmsh->single_member_which('zebra');
+ok(ok_seen_a( \@memb_arr, 'zebra',  0, [ qw<           > ] ));# 448
+
 $vers = $lcmsh->get_version;
-ok($vers);                              # 405
+ok($vers);                              # 449
 
 
-
-sub ok {
-	my $condition = shift;
-	print $condition ? "ok $testnum\n" : "not ok $testnum\n";
-	$testnum++;
-}
 

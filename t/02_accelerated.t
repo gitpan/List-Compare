@@ -1,3 +1,5 @@
+# 02_accelerated.t
+
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -6,11 +8,15 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $last_test_to_print = 321; $| = 1; print "1..$last_test_to_print\n"; } # 03/08/2003 
+BEGIN { $last_test_to_print = 
+365; $| = 1; print "1..$last_test_to_print\n"; } # 06/01/2003 
 END {print "not ok 1\n" unless $loaded;}
+use lib ("./t");
 use List::Compare;
+use Test::ListCompareSpecial;
+use Test::ListCompareSpecial qw(:seen);
+
 $loaded = 1;
-my $testnum = 1;
 ok($loaded);                            # 1
 
 ######################### End of black magic.
@@ -21,7 +27,7 @@ my ($unique_ref, $complement_ref, $intersection_ref, $union_ref, $symmetric_diff
 my ($LR, $RL, $eqv, $return);
 my (@nonintersection, @shared);
 my ($nonintersection_ref, @shared_ref);
-
+my ($memb_hash_ref, $memb_arr_ref, @memb_arr);
 
 my @a0 = qw(abel abel baker camera delta edward fargo golfer);
 my @a1 = qw(baker camera delta delta edward fargo golfer hilton);
@@ -477,45 +483,136 @@ ok($return);                            # 309
 $return = $lca->print_equivalence_chart;
 ok($return);                            # 310
 
+$memb_hash_ref = $lca->member_which(qw| abel baker camera delta edward fargo 
+	golfer hilton icon jerky zebra |);
+ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0   > ] ));# 311
+ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1 > ] ));# 312
+ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1 > ] ));# 313
+ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1 > ] ));# 314
+ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1 > ] ));# 315
+ok(ok_seen_h( $memb_hash_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 316
+ok(ok_seen_h( $memb_hash_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 317
+ok(ok_seen_h( $memb_hash_ref, 'hilton', 1, [ qw<   1 > ] ));# 318
+ok(ok_seen_h( $memb_hash_ref, 'icon',   0, [ qw<     > ] ));# 319
+ok(ok_seen_h( $memb_hash_ref, 'jerky',  0, [ qw<     > ] ));# 320
+ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<     > ] ));# 321
+
+$memb_hash_ref = $lca->member_which( [ qw| abel baker camera delta edward fargo 
+	golfer hilton icon jerky zebra | ] );
+ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0   > ] ));# 322
+ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1 > ] ));# 323
+ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1 > ] ));# 324
+ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1 > ] ));# 325
+ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1 > ] ));# 326
+ok(ok_seen_h( $memb_hash_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 327
+ok(ok_seen_h( $memb_hash_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 328
+ok(ok_seen_h( $memb_hash_ref, 'hilton', 1, [ qw<   1 > ] ));# 329
+ok(ok_seen_h( $memb_hash_ref, 'icon',   0, [ qw<     > ] ));# 330
+ok(ok_seen_h( $memb_hash_ref, 'jerky',  0, [ qw<     > ] ));# 331
+ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<     > ] ));# 332
+
+
+$memb_arr_ref = $lca->single_member_which('abel');
+ok(ok_seen_a( $memb_arr_ref, 'abel',   1, [ qw< 0   > ] ));# 333
+
+$memb_arr_ref = $lca->single_member_which('baker');
+ok(ok_seen_a( $memb_arr_ref, 'baker',  2, [ qw< 0 1 > ] ));# 334
+
+$memb_arr_ref = $lca->single_member_which('camera');
+ok(ok_seen_a( $memb_arr_ref, 'camera', 2, [ qw< 0 1 > ] ));# 335
+
+$memb_arr_ref = $lca->single_member_which('delta');
+ok(ok_seen_a( $memb_arr_ref, 'delta',  2, [ qw< 0 1 > ] ));# 336
+
+$memb_arr_ref = $lca->single_member_which('edward');
+ok(ok_seen_a( $memb_arr_ref, 'edward', 2, [ qw< 0 1 > ] ));# 337
+
+$memb_arr_ref = $lca->single_member_which('fargo');
+ok(ok_seen_a( $memb_arr_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 338
+
+$memb_arr_ref = $lca->single_member_which('golfer');
+ok(ok_seen_a( $memb_arr_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 339
+
+$memb_arr_ref = $lca->single_member_which('hilton');
+ok(ok_seen_a( $memb_arr_ref, 'hilton', 1, [ qw<   1 > ] ));# 340
+
+$memb_arr_ref = $lca->single_member_which('icon');
+ok(ok_seen_a( $memb_arr_ref, 'icon',   0, [ qw<     > ] ));# 341
+
+$memb_arr_ref = $lca->single_member_which('jerky');
+ok(ok_seen_a( $memb_arr_ref, 'jerky',  0, [ qw<     > ] ));# 342
+
+$memb_arr_ref = $lca->single_member_which('zebra');
+ok(ok_seen_a( $memb_arr_ref, 'zebra',  0, [ qw<     > ] ));# 343
+
+
+@memb_arr = $lca->single_member_which('abel');
+ok(ok_seen_a( \@memb_arr, 'abel',   1, [ qw< 0   > ] ));# 344
+
+@memb_arr = $lca->single_member_which('baker');
+ok(ok_seen_a( \@memb_arr, 'baker',  2, [ qw< 0 1 > ] ));# 345
+
+@memb_arr = $lca->single_member_which('camera');
+ok(ok_seen_a( \@memb_arr, 'camera', 2, [ qw< 0 1 > ] ));# 346
+
+@memb_arr = $lca->single_member_which('delta');
+ok(ok_seen_a( \@memb_arr, 'delta',  2, [ qw< 0 1 > ] ));# 347
+
+@memb_arr = $lca->single_member_which('edward');
+ok(ok_seen_a( \@memb_arr, 'edward', 2, [ qw< 0 1 > ] ));# 348
+
+@memb_arr = $lca->single_member_which('fargo');
+ok(ok_seen_a( \@memb_arr, 'fargo',  2, [ qw< 0 1 > ] ));# 349
+
+@memb_arr = $lca->single_member_which('golfer');
+ok(ok_seen_a( \@memb_arr, 'golfer', 2, [ qw< 0 1 > ] ));# 350
+
+@memb_arr = $lca->single_member_which('hilton');
+ok(ok_seen_a( \@memb_arr, 'hilton', 1, [ qw<   1 > ] ));# 351
+
+@memb_arr = $lca->single_member_which('icon');
+ok(ok_seen_a( \@memb_arr, 'icon',   0, [ qw<     > ] ));# 352
+
+@memb_arr = $lca->single_member_which('jerky');
+ok(ok_seen_a( \@memb_arr, 'jerky',  0, [ qw<     > ] ));# 353
+
+@memb_arr = $lca->single_member_which('zebra');
+ok(ok_seen_a( \@memb_arr, 'zebra',  0, [ qw<     > ] ));# 354
+
 $vers = $lca->get_version;
-ok($vers);                              # 311
+ok($vers);                              # 355
 
 my $lca_s  = List::Compare->new(\@a2, \@a3);
 
-ok($lca_s);                             # 312
+ok($lca_s);                             # 356
 
 $LR = $lca_s->is_LsubsetR;
-ok(! $LR);                              # 313
+ok(! $LR);                              # 357
 
 $LR = $lca_s->is_AsubsetB;
-ok(! $LR);                              # 314
+ok(! $LR);                              # 358
 
 $RL = $lca_s->is_RsubsetL;
-ok($RL);                                # 315
+ok($RL);                                # 359
 
 $RL = $lca_s->is_BsubsetA;
-ok($RL);                                # 316
+ok($RL);                                # 360
 
 $eqv = $lca_s->is_LequivalentR;
-ok(! $eqv);                             # 317
+ok(! $eqv);                             # 361
 
 $eqv = $lca_s->is_LeqvlntR;
-ok(! $eqv);                             # 318
+ok(! $eqv);                             # 362
 
 my $lca_e  = List::Compare->new(\@a3, \@a4);
 
-ok($lca_e);                             # 319
+ok($lca_e);                             # 363
 
 $eqv = $lca_e->is_LequivalentR;
-ok($eqv);                               # 320
+ok($eqv);                               # 364
 
 $eqv = $lca_e->is_LeqvlntR;
-ok($eqv);                               # 321
+ok($eqv);                               # 365
 
 
-sub ok {
-	my $condition = shift;
-	print $condition ? "ok $testnum\n" : "not ok $testnum\n";
-	$testnum++;
-}
 

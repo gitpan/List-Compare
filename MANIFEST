@@ -13,4 +13,5 @@ t/03_multiple.t
 t/04_simple_sh.t
 t/05_accelerated_sh.t
 t/06_multiple_sh.t
+t/Test/ListCompareSpecial.pm
 

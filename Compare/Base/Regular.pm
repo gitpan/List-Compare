@@ -1,5 +1,5 @@
 package List::Compare::Base::Regular;
-# As of:  May 22, 2003 
+# As of:  June 1, 2003 
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
@@ -124,6 +124,39 @@ sub is_LequivalentR {
 
 *is_LeqvlntR = \&is_LequivalentR;
 
+sub member_which {
+    my $class = shift;
+    croak "Method call needs at least one argument:  $!" unless (@_);
+    my %data = %$class;
+    my (@args, %found);
+    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
+        ?  @{$_[0]}
+        :  @_;
+    for (my $i=0; $i<=$#args; $i++) {
+        if (exists ${$data{'seenL'}}{$args[$i]}) { push @{$found{$args[$i]}}, 0; }
+        if (exists ${$data{'seenR'}}{$args[$i]}) { push @{$found{$args[$i]}}, 1; }
+        if ( (! exists ${$data{'seenL'}}{$args[$i]}) &&
+             (! exists ${$data{'seenR'}}{$args[$i]}) )
+           { @{$found{$args[$i]}} = (); }
+    }
+    return \%found;
+}    
+
+sub single_member_which {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument (no references):  $!"
+        unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
+    my %data = %$class;
+    my ($arg, @found);
+    $arg = shift;
+    if (exists ${$data{'seenL'}}{$arg}) { push @found, 0; }
+    if (exists ${$data{'seenR'}}{$arg}) { push @found, 1; }
+    if ( (! exists ${$data{'seenL'}}{$arg}) &&
+         (! exists ${$data{'seenR'}}{$arg}) )
+       { @found = (); }
+    return wantarray ? @found : \@found;
+}    
+
 sub print_subset_chart {
     my $class = shift;
     my %data = %$class;
@@ -152,53 +185,5 @@ sub _chart_engine {
     print '       1:    ', $sub_or_eqv[1], '    1', "\n\n";
 }
 
-__END__
-
-=head1 NAME
-
-List::Compare::Base::Regular
-
-=head1 VERSION
-
-This document refers to List::Compare::Base::Regular as packaged with 
-List::Compare version 0.17.  This version was released May 22, 2003.
-
-=head1 DESCRIPTION
-
-List::Compare::Base::Regular is a utility package which holds methods 
-shared between the Regular modes of packages F<List::Compare> and 
-F<List::Compare::SeenHash>.  It has no constructor and is not intended to be 
-publicly accessible.  The methods currently packaged herein include:
-
-Please see the documentation for F<List::Compare> and 
-F<List::Compare::SeenHash> to learn how to use these methods.
-
-    get_intersection()
-    get_union()
-    get_unique()
-    get_complement()
-    get_symmetric_difference()
-    get_intersection_ref()
-    get_union_ref()
-    get_unique_ref()
-    get_complement_ref()
-    get_symmetric_difference_ref()
-    is_LsubsetR()
-    is_RsubsetL()
-    is_LequivalentR()
-    print_subset_chart()
-    print_equivalence_chart()
-
-=head1 AUTHOR
-
-James E. Keenan (jkeenan@cpan.org).
-
-Creation date:  May 20, 2002.  Last modification date:  May 22, 2003. 
-Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
-This is free software and may be distributed under the same terms as Perl
-itself.
-
-=cut 
-
-
+1;
 

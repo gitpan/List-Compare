@@ -1,8 +1,7 @@
 package List::Compare::Base::Accelerated;
-$VERSION = 0.25;
-# as of:  April 4, 2004
-# functions used in List::Compare::Accelerated and
-# List::Compare::SeenHash::Accelerated
+$VERSION = 0.26;
+# as of:  April 11, 2004
+# functions used in List::Compare accelerated mode
 use strict;
 use Carp;
 use List::Compare::Base::_Engine qw|

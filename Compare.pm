@@ -1,9 +1,12 @@
 package List::Compare;
-$VERSION = 0.25;   # April 4, 2004 
+$VERSION = 0.26;   # April 11, 2004 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
 use base qw(List::Compare::Base::Regular);
+use List::Compare::Base::_Auxiliary qw(
+    _validate_2_seenhashes
+);
 
 sub new {
     my $class = shift;
@@ -12,10 +15,22 @@ sub new {
     $unsorted = ($args[0] eq '-u' or $args[0] eq '--unsorted')
                 ? shift(@args) : '';
     $accelerated = shift(@args) 
-	if ($args[0] eq '-a' or $args[0] eq '--accelerated');
-    foreach (@args) {
-        croak "Must pass array references: $!" unless ref($_) eq 'ARRAY';
+        if ($args[0] eq '-a' or $args[0] eq '--accelerated');
+    my $argument_error_status = 1;
+    my ($nextarg);
+    my @testargs = @args[1..$#args];
+    if (ref($args[0]) eq 'ARRAY' or ref($args[0]) eq 'HASH') {
+        while (defined ($nextarg = shift(@testargs))) {
+            unless (ref($nextarg) eq ref($args[0])) {
+                $argument_error_status = 0;
+                last;
+            }
+        }
+    } else {
+        $argument_error_status = 0;
     }
+    croak "Must pass all array references or all hash references: $!"
+        unless $argument_error_status;
 
     # bless a ref to an empty hash into the invoking class
     if (@args > 2) {
@@ -34,14 +49,14 @@ sub new {
             $self = bless {}, ref($class) || $class;
         }
     } else {
-        croak "Must pass at least 2 array references to \&new: $!";
+        croak "Must pass at least 2 references to \&new: $!";
     }
-    
+
     # do necessary calculations and store results in a hash
     # take a reference to that hash
     $unsortflag = $unsorted ? 1 : 0;
     $dataref = $self->_init($unsortflag, @args);
-    
+
     # initialize the object from the prepared values (Damian, p. 98)
     %$self = %$dataref;
     return $self;
@@ -50,15 +65,31 @@ sub new {
 sub _init {
     my $self = shift;
     my ($unsortflag, $refL, $refR) = @_;
-    my (%data, %seenL, %seenR);
-    my @bag = $unsortflag ? (@$refL, @$refR) : sort(@$refL, @$refR);
-
+    my (%data, @left, @right,  %seenL, %seenR);
+    if (ref($refL) eq 'HASH') {
+        my ($seenLref, $seenRref) =  _validate_2_seenhashes($refL, $refR);
+        foreach my $key (keys %{$seenLref}) {
+            for (my $j=1; $j <= ${$seenLref}{$key}; $j++) {
+                push(@left, $key);
+            }
+        }
+        foreach my $key (keys %{$seenRref}) {
+            for (my $j=1; $j <= ${$seenRref}{$key}; $j++) {
+                push(@right, $key);
+            }
+        }
+        %seenL = %{$seenLref};
+        %seenR = %{$seenRref};
+    } else {
+        foreach (@$refL) { $seenL{$_}++ } 
+        foreach (@$refR) { $seenR{$_}++ }
+        @left  = @$refL;
+        @right = @$refR;
+    } 
+    my @bag = $unsortflag ? (@left, @right) : sort(@left, @right);
     my (%intersection, %union, %Lonly, %Ronly, %LorRonly);
     my $LsubsetR_status = my $RsubsetL_status = 1;
     my $LequivalentR_status = 0;
-
-    foreach (@$refL) { $seenL{$_}++ } 
-    foreach (@$refR) { $seenR{$_}++ } 
 
     foreach (keys %seenL) {
         $union{$_}++;
@@ -68,7 +99,7 @@ sub _init {
             $Lonly{$_}++;
         }
     }
-    
+
     foreach (keys %seenR) {
         $union{$_}++;
         $Ronly{$_}++ unless (exists $intersection{$_});
@@ -78,19 +109,19 @@ sub _init {
 
     $LequivalentR_status = 1 if ( (keys %LorRonly) == 0);
 
-    foreach (@$refL) {
+    foreach (@left) {
         if (! exists $seenR{$_}) {
             $LsubsetR_status = 0;
             last;
         }
     }
-    foreach (@$refR) {
+    foreach (@right) {
         if (! exists $seenL{$_}) {
             $RsubsetL_status = 0;
             last;
         }
     }
-    
+
     $data{'seenL'}                = \%seenL; 
     $data{'seenR'}                = \%seenR; 
     $data{'intersection'}         = $unsortflag ? [      keys %intersection ] 
@@ -131,13 +162,16 @@ sub get_version {
 package List::Compare::Accelerated;
 use Carp;
 use base qw(List::Compare::Base::Accelerated);
+use List::Compare::Base::_Auxiliary qw(
+    _validate_2_seenhashes
+    _argument_checker_0
+);
 
 sub _init {
     my $self = shift;
     my ($unsortflag, $refL, $refR) = @_;
     my %data = ();
-    $data{'L'} = $refL;
-    $data{'R'} = $refR;
+    ($data{'L'}, $data{'R'}) = _argument_checker_0($refL, $refR);
     $data{'unsort'} = $unsortflag ? 1 : 0;
     return \%data;
 }    
@@ -149,8 +183,24 @@ sub get_bag {
 sub get_bag_ref {
     my $class = shift;
     my %data = %$class;
-    $data{'unsort'} ? return [      @{$data{'L'}}, @{$data{'R'}}  ]
-                    : return [ sort(@{$data{'L'}}, @{$data{'R'}}) ]; 
+    if (ref($data{'L'}) eq 'ARRAY') {
+        $data{'unsort'} ? return [      @{$data{'L'}}, @{$data{'R'}}  ]
+                        : return [ sort(@{$data{'L'}}, @{$data{'R'}}) ];
+    } else {
+        my (@left, @right);
+        foreach my $key (keys %{$data{'L'}}) {
+            for (my $j=1; $j <= ${$data{'L'}}{$key}; $j++) {
+                push(@left, $key);
+            }
+        }
+        foreach my $key (keys %{$data{'R'}}) {
+            for (my $j=1; $j <= ${$data{'R'}}{$key}; $j++) {
+                push(@right, $key);
+            }
+        }
+        $data{'unsort'} ? return [      @left, @right  ]
+                        : return [ sort(@left, @right) ];
+    }
 }
 
 sub get_version {
@@ -164,14 +214,31 @@ sub get_version {
 package List::Compare::Multiple;
 use Carp;
 use base qw(List::Compare::Base::Multiple);
+use List::Compare::Base::_Auxiliary qw(
+    _validate_seen_hash
+);
 
 sub _init {
     my $self = shift;
     my $unsortflag = shift;
-    my @arrayrefs = @_;
-    my %data = ();
-    my $maxindex = $#arrayrefs;
-    
+    my @listrefs = @_;
+    my (@arrayrefs);
+    my $maxindex = $#listrefs;
+    if (ref($listrefs[0]) eq 'ARRAY') {
+        @arrayrefs = @listrefs;
+    } else {
+        _validate_seen_hash(@listrefs);
+        foreach my $href (@listrefs) {
+            my (@temp);
+            foreach my $key (keys %{$href}) {
+               for (my $j=1; $j <= ${$href}{$key}; $j++) {
+                   push(@temp, $key);
+               }
+            }
+            push(@arrayrefs, \@temp);
+        }
+    }
+
     my @bag = ();
     foreach my $aref (@arrayrefs) {
         push @bag, $_ foreach @$aref;
@@ -246,13 +313,13 @@ sub _init {
         %intersection = %result;
     }
     @intersection = $unsortflag ? keys %intersection : sort(keys %intersection);
-    
+
     # Calculate nonintersection
     # Inputs:  @union    %intersection
     foreach (@union) {
         push(@nonintersection, $_) unless (exists $intersection{$_});
     }
-    
+
     # Calculate %xunique
     # Inputs:  @arrayrefs    %seen    %xintersection
     for (my $i = 0; $i <= $#arrayrefs; $i++) {
@@ -303,8 +370,8 @@ sub _init {
         push(@symmetric_difference, $_) unless (exists $shared{$_});
     }
     # @shared and @symmetric_difference are now available.
-    
-    
+
+
     my @xsubset = ();
     foreach my $i (keys %seen) {
         my %tempi = %{$seen{$i}};
@@ -317,7 +384,7 @@ sub _init {
         }
     }
     # @xsubset is now available
-    
+
     my @xequivalent = ();
     for (my $f = 0; $f <= $#xsubset; $f++) {
         for (my $g = 0; $g <= $#xsubset; $g++) {
@@ -326,7 +393,8 @@ sub _init {
                 if ($xsubset[$f][$g] and $xsubset[$g][$f]);
         }
     }
-    
+
+    my (%data);
     $data{'seen'}                   = \%seen;
     $data{'maxindex'}               = $maxindex;
     $data{'intersection'}           = \@intersection;
@@ -363,14 +431,18 @@ sub get_version {
 package List::Compare::Multiple::Accelerated;
 use Carp;
 use base qw(List::Compare::Base::Multiple::Accelerated);
-
+use List::Compare::Base::_Auxiliary qw(
+    _argument_checker_0
+    _prepare_listrefs
+);
+ 
 sub _init {
     my $self = shift;
     my $unsortflag = shift;
     my @listrefs = @_;
     my %data = ();
     for (my $i=0; $i<=$#listrefs; $i++) {
-        $data{$i} = $listrefs[$i];
+        $data{$i} = _argument_checker_0($listrefs[$i]);
     }
     $data{'unsort'} = $unsortflag ? 1 : 0;
     return \%data;
@@ -386,9 +458,20 @@ sub get_bag_ref {
     my $unsortflag = $data{'unsort'};
     my $aref = _prepare_listrefs(\%data);
     my (@bag);
-    foreach my $m (@$aref) {
-        foreach my $n (@$m) {
-            push(@bag, $n);
+    my @listrefs = @{$aref};
+    if (ref($listrefs[0]) eq 'ARRAY') { 
+        foreach my $lref (@listrefs) {
+            foreach my $el (@{$lref}) {
+                push(@bag, $el);
+            }
+        }
+    } else {
+        foreach my $lref (@listrefs) {
+            foreach my $key (keys %{$lref}) {
+                for (my $j=1; $j <= ${$lref}{$key}; $j++) {
+                    push(@bag, $key);
+                }
+            }
         }
     }
     @bag = sort(@bag) unless $unsortflag;
@@ -410,10 +493,24 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.25 of List::Compare.  This version was
-released April 4, 2004.
+This document refers to version 0.26 of List::Compare.  This version was
+released April 11, 2004.
 
 =head1 SYNOPSIS
+
+The bare essentials:
+
+    @Llist = qw(abel abel baker camera delta edward fargo golfer);
+    @Rlist = qw(baker camera delta delta edward fargo golfer hilton);
+
+    $lc = List::Compare->new(\@Llist, \@Rlist);
+
+    @intersection = $lc->get_intersection;
+    @union = $lc->get_union;
+
+... and so forth.
+
+=head1 DISCUSSION:  Modes and Methods
 
 =head2 Regular Case:  Compare Two Lists
 
@@ -421,8 +518,8 @@ released April 4, 2004.
 
 =item *
 
-Create a List::Compare object.  Put the two lists into arrays and pass
-references to the arrays to the constructor.
+Create a List::Compare object.  Put the two lists into arrays (named or 
+anonymous) and pass references to the arrays to the constructor.
 
     @Llist = qw(abel abel baker camera delta edward fargo golfer);
     @Rlist = qw(baker camera delta delta edward fargo golfer hilton);
@@ -487,7 +584,8 @@ elements as appear in the original lists.
 
 An alternative approach to the above methods:  If you do not immediately 
 require an array as the return value of the method call, but simply need 
-a I<reference> to an array, use one of the following parallel methods:
+a I<reference> to an (anonymous) array, use one of the following 
+parallel methods:
 
     $intersection_ref = $lc->get_intersection_ref;
     $union_ref        = $lc->get_union_ref;
@@ -502,7 +600,9 @@ a I<reference> to an array, use one of the following parallel methods:
 
 =item *
 
-Return a true value if L is a subset of R.
+Return a true value if the first argument passed to the constructor 
+('L' for 'left') is a subset of the second argument passed to the 
+constructor ('R' for 'right').
 
     $LR = $lc->is_LsubsetR;
 
@@ -512,8 +612,9 @@ Return a true value if R is a subset of L.
 
 =item *
 
-Return a true value if L and R are equivalent, I<i.e.> if every element 
-in L appears at least once in R and I<vice versa>.
+Return a true value if the two lists passed to the constructor are 
+equivalent, I<i.e.> if every element in the left-hand list ('L') appears 
+at least once in the right-hand list ('R') and I<vice versa>.
 
     $eqv = $lc->is_LequivalentR;
     $eqv = $lc->is_LeqvlntR;            # alias
@@ -568,12 +669,8 @@ than one string at a time see the next method, C<are_members_which()>.
 =item *
 
 Determine in C<which> (if any) of the lists passed to the constructor one or 
-more given strings can be found.  Get a reference to a hash of arrays.  The 
-key for each element in this hash is the string being tested.  Each element's 
-value is a reference to an anonymous array whose elements are those indices in 
-the constructor's argument list corresponding to lists holding the strings 
-being tested.  The strings to be tested are placed in an anonymous array, a 
-reference to which is passed to the method.
+more given strings can be found.  The strings to be tested are placed in an 
+anonymous array; a reference to that array is passed to the method.
 
     $memb_hash_ref = 
         $lc->are_members_which([ qw| abel baker fargo hilton zebra | ]);
@@ -582,7 +679,11 @@ I<Note:>  In versions of List::Compare prior to 0.25 (April 2004), the
 strings to be tested could be passed as a flat list.  This is no longer 
 possible; the argument must now be a reference to an anonymous array.
 
-In the two examples above, C<$memb_hash_ref> will be:
+The return value is a reference to a hash of arrays.  The 
+key for each element in this hash is the string being tested.  Each element's 
+value is a reference to an anonymous array whose elements are those indices in 
+the constructor's argument list corresponding to lists holding the strings 
+being tested.  In the examples above, C<$memb_hash_ref> will be:
 
     {
          abel     => [ 0    ],
@@ -594,15 +695,13 @@ In the two examples above, C<$memb_hash_ref> will be:
 
 B<Note:>  C<are_members_which()> can take more than one argument; 
 C<is_member_which()> and C<is_member_which_ref()> each take only one argument.  
-C<are_members_which()> returns a hash reference; the other methods return 
-either a list or a reference to an array holding that list, depending on 
-context.
+Unlike those two methods, C<are_members_which()> returns a hash reference.
 
 =item *
 
 Determine whether a given string can be found in I<any> of the lists passed as 
 arguments to the constructor.  Return 1 if a specified string can be found in 
-I<any> of the lists and 0 if not.
+any of the lists and 0 if not.
 
     $found = $lc->is_member_any('abel');
 
@@ -612,11 +711,8 @@ or more of the lists passed as arguments to C<new()>.
 =item *
 
 Determine whether a specified string or strings can be found in I<any> of the 
-lists passed as arguments to the constructor.  Get a reference to a hash where 
-an element's key is the string being tested and the element's value is 1 if 
-the string can be found in C<any> of the lists and 0 if not.  The strings to 
-be tested are placed in an anonymous array, a reference to which is passed to 
-the method.
+lists passed as arguments to the constructor.  The strings to be tested are 
+placed in an anonymous array; a reference to that array is passed to the method.
 
     $memb_hash_ref = $lc->are_members_any([ qw| abel baker fargo hilton zebra | ]);
 
@@ -624,7 +720,10 @@ I<Note:>  In versions of List::Compare prior to 0.25 (April 2004), the
 strings to be tested could be passed as a flat list.  This is no longer 
 possible; the argument must now be a reference to an anonymous array.
 
-In the two examples above, C<$memb_hash_ref> will be:
+The return value is a reference to a hash where an element's key is the 
+string being tested and the element's value is 1 if the string can be 
+found in I<any> of the lists and 0 if not.  In the examples above, 
+C<$memb_hash_ref> will be:
 
     {
          abel     => 1,
@@ -634,8 +733,8 @@ In the two examples above, C<$memb_hash_ref> will be:
          zebra    => 0,
     };
 
-because, I<e.g.,> C<'zebra'> is not found in either of the lists passed as 
-arguments to C<new()>.
+C<zebra>'s value is C<0> because C<zebra> is not found in either of the lists 
+passed as arguments to C<new()>.
 
 =item *
 
@@ -647,9 +746,9 @@ Return current List::Compare version number.
 
 =head2 Accelerated Case:  When User Only Wants a Single Comparison
 
-If you are certain that you will only want the results of a single 
-comparison, computation may be accelerated by passing C<'-a'> as the first 
-argument to the constructor.
+If you are certain that you will only want the results of a I<single> 
+comparison, computation may be accelerated by passing C<'-a'> or 
+C<'--accelerated> as the first argument to the constructor.
 
     @Llist = qw(abel abel baker camera delta edward fargo golfer);
     @Rlist = qw(baker camera delta delta edward fargo golfer hilton);
@@ -736,24 +835,24 @@ usually require more careful specification.
 
 =item *
 
-Get those items found in each of the lists passed to the constructor 
+Get those items found in I<each> of the lists passed to the constructor 
 (their intersection):
 
     @intersection = $lcm->get_intersection;
 
 =item *
 
-Get those items found in any of the lists passed to the constructor 
+Get those items found in I<any> of the lists passed to the constructor 
 (their union):
 
     @union = $lcm->get_union;
 
 =item *
 
-To get those items which appear only in one particular list, pass to 
-C<get_unique()> that list's index position in the list of arguments passed 
-to the constructor.  Example:  C<@Carmen> has index position 2 in the 
-constructor's C<@_>.  To get elements unique to C<@Carmen>:  
+To get those items which appear only in I<one particular list,> provide 
+C<get_unique()> with that list's index position in the list of arguments 
+passed to the constructor.  Example:  C<@Carmen> has index position 2 
+in the constructor's C<@_>.  To get elements unique to C<@Carmen>:  
 
     @Lonly = $lcm->get_unique(2);
 
@@ -762,11 +861,11 @@ and report items unique to the first list passed to the constructor.
 
 =item *
 
-To get those items which appear in any list other than one particular 
-list, pass to C<get_complement()> that list's index position in the list 
-of arguments passed to the constructor.  Example:  C<@Don> has index 
-position 3 in the constructor's C<@_>.  To get elements not found in 
-C<@Don>:  
+To get those items which appear in any list I<other than one particular 
+list,> provide C<get_complement()> with that list's index position in 
+the list of arguments passed to the constructor.  Example:  C<@Don> 
+has index position 3 in the constructor's C<@_>.  To get elements not 
+found in C<@Don>:  
 
     @Ronly = $lcm->get_complement(3);
 
@@ -776,7 +875,7 @@ to the constructor.
 
 =item *
 
-Get those items which do not appear in more than one of the lists 
+Get those items each of which appears in I<only one> of the lists 
 passed to the constructor (their symmetric_difference);
 
     @LorRonly = $lcm->get_symmetric_difference;
@@ -805,11 +904,12 @@ a I<reference> to an array, use one of the following parallel methods:
 =item *
 
 To determine whether one particular list is a subset of another list 
-passed to the constructor, pass to C<is_LsubsetR()> the index position of 
-the presumed subset, followed by the index position of the presumed 
-superset.  A true value (1) is returned if the left-hand list is a 
-subset of the right-hand list; a false value (0) is returned otherwise.
-Example:  To determine whether C<@Ed> is a subset of C<@Carmen>, call:
+passed to the constructor, provide C<is_LsubsetR()> with the index 
+position of the presumed subset, followed by the index position of 
+the presumed superset.  A true value (1) is returned if the left-hand 
+list is a subset of the right-hand list; a false value (0) is returned 
+otherwise.  Example:  To determine whether C<@Ed> is a subset of 
+C<@Carmen>, call:
 
     $LR = $lcm->is_LsubsetR(4,2);
 
@@ -819,10 +919,10 @@ compares the first two lists passed to the constructor.
 =item *
 
 To determine whether any two particular lists are equivalent to each 
-other, pass their index positions in the list of arguments passed to 
-the constructor to C<is_LequivalentR>. A true value (1) is returned if 
-the lists are equivalent; a false value (0) otherwise. Example:  To 
-determine whether C<@Don> and C<@Ed> are equivalent, call:
+other, provide C<is_LequivalentR> with their index positions in the 
+list of arguments passed to the constructor to A true value (1) 
+is returned if the lists are equivalent; a false value (0) otherwise. 
+Example:  To determine whether C<@Don> and C<@Ed> are equivalent, call:
 
     $eqv = $lcm->is_LequivalentR(3,4);
 
@@ -880,12 +980,8 @@ than one string at a time see the next method, C<are_members_which()>.
 =item *
 
 Determine in C<which> (if any) of the lists passed to the constructor one or 
-more given strings can be found.  Get a reference to a hash of arrays.  The 
-key for each element in this hash is the string being tested.  Each element's 
-value is a reference to an anonymous array whose elements are those indices in 
-the constructor's argument list corresponding to lists holding the strings 
-being tested.  The strings to be tested are placed in an anonymous array, a 
-reference to which is passed to the method.
+more given strings can be found.  The strings to be tested are placed in an 
+anonymous array, a reference to which is passed to the method.
 
     $memb_hash_ref = 
         $lcm->are_members_which([ qw| abel baker fargo hilton zebra | ]);
@@ -893,6 +989,12 @@ reference to which is passed to the method.
 I<Note:>  In versions of List::Compare prior to 0.25 (April 2004), the 
 strings to be tested could be passed as a flat list.  This is no longer 
 possible; the argument must now be a reference to an anonymous array.
+
+The return value is a reference to a hash of arrays.  The 
+key for each element in this hash is the string being tested.  Each element's 
+value is a reference to an anonymous array whose elements are those indices in 
+the constructor's argument list corresponding to lists holding the strings 
+being tested.  
 
 In the two examples above, C<$memb_hash_ref> will be:
 
@@ -924,11 +1026,8 @@ or more of the lists passed as arguments to C<new()>.
 =item *
 
 Determine whether a specified string or strings can be found in I<any> of the 
-lists passed as arguments to the constructor.  Get a reference to a hash where 
-an element's key is the string being tested and the element's value is 1 if 
-the string can be found in C<any> of the lists and 0 if not.  The strings to 
-be tested are placed in an anonymous array, a reference to which is passed to 
-the method.
+lists passed as arguments to the constructor.  The strings to be tested are 
+placed in an anonymous array, a reference to which is passed to the method.
 
     $memb_hash_ref = $lcm->are_members_any([ qw| abel baker fargo hilton zebra | ]);
 
@@ -936,6 +1035,9 @@ I<Note:>  In versions of List::Compare prior to 0.25 (April 2004), the
 strings to be tested could be passed as a flat list.  This is no longer 
 possible; the argument must now be a reference to an anonymous array.
 
+The return value is a reference to a hash where an element's key is the 
+string being tested and the element's value is 1 if the string can be 
+found in C<any> of the lists and 0 if not.  
 In the two examples above, C<$memb_hash_ref> will be:
 
     {
@@ -946,8 +1048,8 @@ In the two examples above, C<$memb_hash_ref> will be:
          zebra    => 0,
     };
 
-because, I<e.g.,> C<'zebra'> is not found in any of the lists passed as 
-arguments to C<new()>.
+C<zebra>'s value will be C<0> because C<zebra> is not found in any of the 
+lists passed as arguments to C<new()>.
 
 =item *
 
@@ -992,7 +1094,8 @@ but Request Only a Single Comparison among the Lists
 
 If you are certain that you will only want the results of a single 
 comparison among three or more lists, computation may be accelerated 
-by passing C<'-a'> as the first argument to the constructor.
+by passing C<'-a'> or C<'--accelerated> as the first argument to 
+the constructor.
 
     @Al     = qw(abel abel baker camera delta edward fargo golfer);
     @Bob    = qw(baker camera delta delta edward fargo golfer hilton);
@@ -1012,10 +1115,106 @@ speed boost by constructing the object with the unsorted option:
 
 or
 
-    $lcma = List::Compare->new('--unsorted', '-a',
+    $lcma = List::Compare->new('--unsorted', '--accelerated',
                 \@Al, \@Bob, \@Carmen, \@Don, \@Ed);
 
-=head1 DESCRIPTION
+=head2 Passing Seen-hashes to the Constructor Instead of Arrays
+
+Heretofore we have not asked the question:  How much work did we have 
+to do to build the lists which are passed to C<List::Compare::new()> 
+in the form of array references?
+
+    @Llist = qw(abel abel baker camera delta edward fargo golfer);
+    @Rlist = qw(baker camera delta delta edward fargo golfer hilton);
+
+    $lc = List::Compare->new(\@Llist, \@Rlist);
+
+Suppose, however, that we had to do extensive munging of data from an external 
+source and that, once we had correctly parsed a line of data, it was just as 
+easy to assign that datum to a hash as to an array.  More specifically, suppose 
+that we used each datum as the key to an element of a lookup table in the form 
+of a I<seen-hash>:
+
+   my %Llist = (
+       abel     => 2,
+       baker    => 1,
+       camera   => 1,
+       delta    => 1,
+       edward   => 1,
+       fargo    => 1,
+       golfer   => 1,
+   );
+
+   my %Rlist = (
+       baker    => 1,
+       camera   => 1,
+       delta    => 2,
+       edward   => 1,
+       fargo    => 1,
+       golfer   => 1,
+       hilton   => 1,
+   );
+
+Since in almost all cases List::Compare takes the elements in the arrays 
+passed to its constructor and I<internally> assigns them to elements in a 
+seen-hash, why shouldn't we be able to pass (references to) seen-hashes 
+I<directly> to the constructor and avoid possibly unnecessary array 
+assignments before the constructor is called?
+
+We can now do so:
+
+    $lcsh = List::Compare->new(\%Llist, \%Rlist);
+
+I<All> of List::Compare's output methods are supported I<without further 
+modification> when references to seen-hashes are passed to the constructor.
+
+    @intersection     = $lcsh->get_intersection;
+    @union            = $lcsh->get_union;
+    @Lonly            = $lcsh->get_unique;
+    @Ronly            = $lcsh->get_complement;
+    @LorRonly         = $lcsh->get_symmetric_difference;
+    @bag              = $lcsh->get_bag;
+    $intersection_ref = $lcsh->get_intersection_ref;
+    $union_ref        = $lcsh->get_union_ref;
+    $Lonly_ref        = $lcsh->get_unique_ref;
+    $Ronly_ref        = $lcsh->get_complement_ref;
+    $LorRonly_ref     = $lcsh->get_symmetric_difference_ref;
+    $bag_ref          = $lcsh->get_bag_ref;
+    $LR               = $lcsh->is_LsubsetR;
+    $RL               = $lcsh->is_RsubsetL;
+    $eqv              = $lcsh->is_LequivalentR;
+                        $lcsh->print_subset_chart;
+                        $lcsh->print_equivalence_chart;
+    @memb_arr         = $lsch->is_member_which('abel');
+    $memb_arr_ref     = $lsch->is_member_which_ref('baker');
+    $memb_hash_ref    = $lsch->are_members_which(
+                            [ qw| abel baker fargo hilton zebra | ]);
+    $found            = $lsch->is_member_any('abel');
+    $memb_hash_ref    = $lsch->are_members_any(
+                            [ qw| abel baker fargo hilton zebra | ]);
+    $vers             = $lcsh->get_version;
+
+To accelerate processing when we want only a single comparison among two or 
+more lists, we can pass C<'-a'> or C<'--accelerated> to the constructor 
+before passing references to seen-hashes.
+
+    $lcsha = List::Compare->new('-a', \%Llist, \%Rlist);
+
+To compare three or more lists simultaneously, pass three or more references 
+to seen-hashes.  Thus,
+
+    $lcshm = List::Compare->new(\%Alpha, \%Beta, \%Gamma);
+
+will generate meaningful comparisons of three or more lists simultaneously.
+
+If you do not need sorted lists returned, pass C<'-u'> or C<--unsorted> to the 
+constructor before passing references to seen-hashes.
+
+    $lcshu  = List::Compare->new('-u', \%Llist, \%Rlist);
+    $lcshau = List::Compare->new('-u', '-a', \%Llist, \%Rlist);
+    $lcshmu = List::Compare->new('--unsorted', \%Alpha, \%Beta, \%Gamma);
+
+=head1 DISCUSSION:  Principles 
 
 =head2 General Comments
 
@@ -1033,15 +1232,14 @@ two lists are equivalent to each other (b) methods to pretty-print very
 simple charts displaying the subset and equivalence relationships among 
 lists.
 
-In its current implementation List::Compare, with one exception (C<get_bag()>), 
-generates its results by means of hash look-up tables ('seen hashes').  
-Hence, B<multiple instances of an element in a given list count only once with 
+Except for List::Compare's C<get_bag()> method, B<multiple instances of 
+an element in a given list count only once with 
 respect to computing the intersection, union, etc. of the two lists.>  In 
 particular, List::Compare considers two lists as equivalent if each element 
 of the first list can be found in the second list and I<vice versa>.  
 'Equivalence' in this usage takes no note of the frequency with which 
 elements occur in either list or their order within the lists.  List::Compare 
-asks the question:  Did I see this item in this list at all?  Only when 
+asks the question:  I<Did I see this item in this list at all?>  Only when 
 we use C<List::Compare::get_bag()> to compute a bag holding the two lists do we 
 ask the question:  How many times did this item occur in this list?
 
@@ -1065,7 +1263,7 @@ results.
 This approach has the advantage that if the user needs to examine more 
 than one form of comparison between two lists (I<e.g.,> the union, 
 intersection and symmetric difference of two lists), the comparisons are 
-already available.  This approach is efficient because certain types of 
+pre-calculated.  This approach is efficient because certain types of 
 comparison presuppose that other types have already been calculated.  
 For example, to calculate the symmetric difference of two lists, one must 
 first determine the items unique to each of the two lists.
@@ -1077,7 +1275,7 @@ Accelerated Mode
 The current implementation of List::Compare offers the user the option of 
 getting even faster results I<provided> that the user only needs the 
 result from a I<single> form of comparison between two lists. (I<e.g.,> only 
-the union -- nothing else).  In this Accelerated mode, List::Compare's 
+the union -- nothing else).  In the Accelerated mode, List::Compare's 
 initializer does no computation and its constructor stores only references 
 to the two source lists.  All computation needed to report results is 
 deferred to the method calls.
@@ -1126,7 +1324,7 @@ Synopsis above.
 
 Multiple Accelerated Mode
 
-Beginning with version 0.25, introduced in March 2004, List::Compare now 
+Beginning with version 0.25, introduced in April 2004, List::Compare 
 offers the possibility of accelerated computation of a single comparison 
 among three or more lists at a time.  Simply store the extra lists in 
 arrays and pass references to those arrays to the constructor preceded by 
@@ -1156,7 +1354,7 @@ Accelerated mode I<and> wish to have the lists returned in unsorted order,
 you I<first> pass the argument for the unsorted option 
 (C<'-u'> or C<'--unsorted'>) and I<then> pass the argument for the 
 Accelerated mode (C<'-a'> or C<'--accelerated'>).
- 
+
 =back
 
 =head2 Miscellaneous Methods
@@ -1189,24 +1387,16 @@ for the vast audience of Perl programmers using earlier versions of
 List::Compare (all 10e1 of you) these and similar methods for subset 
 relationships are still defined.
 
-=head2 An Alternative Approach:  List::Compare::SeenHash
+=head2 List::Compare::SeenHash Discontinued Beginning with Version 0.26
 
-With this version of List::Compare we introduce an alternative approach that 
-may prove fruitful for some users.  Heretofore we have not asked the question:  
-How much work did we have to do to build the lists which are passed to 
-C<List::Compare::new> in the form of array references?
+Prior to v0.26, introduced April 11, 2004, if a user wished to pass 
+references to seen-hashes to List::Compare's constructor rather than 
+references to arrays, he or she had to call a different, parallel module:  
+List::Compare::SeenHash.  The code for that looked like this:
 
-    @Llist = qw(abel abel baker camera delta edward fargo golfer);
-    @Rlist = qw(baker camera delta delta edward fargo golfer hilton);
+    use List::Compare::SeenHash;
 
-    $lc = List::Compare->new(\@Llist, \@Rlist);
-
-Suppose, however, that we had to do extensive munging of data from an external 
-source and that, once we had correctly parsed a line of data, it was just as 
-easy to assign that datum to a hash as to an array.  More specifically, suppose 
-that we used each datum as the key to an element of a 'seen-hash':
-
-   my %Llist = (
+    my %Llist = (
        abel     => 2,
        baker    => 1,
        camera   => 1,
@@ -1214,9 +1404,9 @@ that we used each datum as the key to an element of a 'seen-hash':
        edward   => 1,
        fargo    => 1,
        golfer   => 1,
-   );
+    );
 
-   my %Rlist = (
+    my %Rlist = (
        baker    => 1,
        camera   => 1,
        delta    => 2,
@@ -1224,78 +1414,33 @@ that we used each datum as the key to an element of a 'seen-hash':
        fargo    => 1,
        golfer   => 1,
        hilton   => 1,
-   );
+    );
 
-Since in almost all cases List::Compare takes the elements in the arrays 
-passed to its constructor and I<internally> assigns them to elements in a 
-seen-hash, why shouldn't we be able to pass (references to) seen-hashes 
-I<directly> to the constructor and avoid possibly unnecessary array 
-assignments before the constructor is called?
+    my $lcsh = List::Compare::SeenHash->new(\%Llist, \%Rlist);
 
-We can now do so with F<List::Compare::Seenhash>:
+B<List::Compare::SeenHash is deprecated beginning with version 0.26.>  All 
+its functionality (and more) has been implemented in List::Compare itself, 
+since a user can now pass I<either> a series of array references I<or> a 
+series of seen-hash references to List::Compare's constructor.
 
-    $lcsh = List::Compare::SeenHash->new(\%Llist, \%Rlist);
+To simplify future maintenance of List::Compare, List::Compare::SeenHash.pm 
+will no longer be distributed with List::Compare, nor will the files in the 
+test suite which tested List::Compare::SeenHash upon installation be distributed.
 
-With the exception of C<get_bag()>, I<all> of List::Compare's output methods 
-are supported I<without further modification> by List::Compare::SeenHash.
+Should you still need List::Compare::SeenHash, use version 0.25 from CPAN, or 
+simply edit your Perl programs which used List::Compare::SeenHash.  Those 
+scripts may be edited quickly with, for example, this editing command in 
+Unix text editor F<vi>:
 
-    @intersection     = $lcsh->get_intersection;
-    @union            = $lcsh->get_union;
-    @Lonly            = $lcsh->get_unique;
-    @Ronly            = $lcsh->get_complement;
-    @LorRonly         = $lcsh->get_symmetric_difference;
-    @bag              = $lcsh->get_bag;
-    $intersection_ref = $lcsh->get_intersection_ref;
-    $union_ref        = $lcsh->get_union_ref;
-    $Lonly_ref        = $lcsh->get_unique_ref;
-    $Ronly_ref        = $lcsh->get_complement_ref;
-    $LorRonly_ref     = $lcsh->get_symmetric_difference_ref;
-    $bag_ref          = $lcsh->get_bag_ref;
-    $LR               = $lcsh->is_LsubsetR;
-    $RL               = $lcsh->is_RsubsetL;
-    $eqv              = $lcsh->is_LequivalentR;
-                        $lcsh->print_subset_chart;
-                        $lcsh->print_equivalence_chart;
-    @memb_arr         = $lsch->is_member_which('abel');
-    $memb_arr_ref     = $lsch->is_member_which_ref('baker');
-    $memb_hash_ref    = $lsch->are_members_which(
-                            [ qw| abel baker fargo hilton zebra | ]);
-    $found            = $lsch->is_member_any('abel');
-    $memb_hash_ref    = $lsch->are_members_any(
-                            [ qw| abel baker fargo hilton zebra | ]);
-    $vers             = $lcsh->get_version;
-
-List::Compare::SeenHash has Accelerated and Multiple modes which similarly 
-correspond directly to those of List::Compare.  
-
-    $lcsha = List::Compare::SeenHash->new('-a', \%Llist, \%Rlist);
-
-will generate faster results when you are only seeking one form of comparison 
-between the two lists represented as seen-hashes.  And
-
-    $lcshm = List::Compare::SeenHash->new(\%Alpha, \%Beta, \%Gamma);
-
-will generate meaningful comparisons of three or more lists simultaneously.
-
-List::Compare::SeenHash's constructor may be called with the unsorted 
-option when the user does not need a sorted list returned as the result of 
-a List::Compare::SeenHash method call.
-
-    $lcshu = List::Compare::SeenHash->new('-u', \%Llist, \%Rlist);
-    $lcshau = List::Compare::SeenHash->new('-u', '-a', \%Llist, \%Rlist);
-    $lcshmu = List::Compare::SeenHash->new('-u', \%Alpha, \%Beta, \%Gamma);
-
-Please see the documentation for List::Compare::SeenHash for a more detailed 
-explanation.
+    :1,$s/List::Compare::SeenHash/List::Compare/gc
 
 =head2 A Non-Object-Oriented Interface:  List::Compare::Functional
 
 Version 0.21 of List::Compare introduced List::Compare::Functional, 
 a functional (I<i.e.>, non-object-oriented) interface to list comparison 
-functions.  List::Compare::Functional supports all the functions currently 
-supported in List::Compare's Accelerated mode (described above).  Like the 
-Accelerated mode, it compares only two lists at a time and yields only one 
-comparison at a time.  Unlike the Accelerated mode, however, it does not 
+functions.  List::Compare::Functional supports the same functions currently 
+supported by List::Compare.  It works similar to List::Compare's Accelerated 
+and Multiple Accelerated modes (described above), bit it does not 
 require use of the C<'-a'> flag in the function call.  
 List::Compare::Functional will return unsorted comparisons of two lists by 
 passing C<'-u'> or C<'--unsorted'> as the first argument to the function.  
@@ -1310,9 +1455,8 @@ module.  This has been commented out in the actual module as the code
 appears to be compatible with earlier versions of Perl; how earlier the 
 author cannot say.  In particular, the author would like the module to 
 be installable on older versions of MacPerl.  As is, the author has 
-successfully installed the module on Linux (RedHat 7.2, Perl 5.6.0), 
-Windows95 and Windows98 (ActivePerl 6/Perl 5.6.1) and Windows2000 
-(ActivePerl 8/Perl 5.8.0).  See the CPAN home page for this module for 
+successfully installed the module on Linux, Windows 9x and Windows 2000.  
+See L<http://testers.cpan.org/show/List-Compare.html> for 
 a list of other systems on which this version of List::Compare has been 
 tested and installed.
 
@@ -1336,10 +1480,11 @@ object-oriented framework.  That framework, not surprisingly, is taken mostly
 from Damian Conway's I<Object Oriented Perl> 
 L<http://www.manning.com/Conway/index.html>, Manning Publications, 2000.
 
-With the addition of the Accelerated and Multiple modes, List::Compare 
+With the addition of the Accelerated, Multiple and Multiple Accelerated 
+ modes, List::Compare 
 expands considerably in both size and capabilities.  Nonetheless,  Tom and 
-Nat's Cookbook code still lies at its core:  the use of hashes as look-up 
-tables to record elements seen in lists.  This approach means that 
+Nat's I<Cookbook> code still lies at its core:  the use of hashes as look-up 
+tables to record elements seen in lists.  Please note:   
 List::Compare is not concerned with any concept of 'equality' among lists 
 which hinges upon the frequency with which, or the order in which, elements 
 appear in the lists to be compared.  If this does not meet your needs, you 
@@ -1356,7 +1501,7 @@ I learned the truth of the mantra ''Repeated Code is a Mistake'' from a
 2001 talk by Mark-Jason Dominus L<http://perl.plover.com/> to the New York 
 Perlmongers L<http://ny.pm.org/>.  
 See L<http://www.perl.com/pub/a/2000/11/repair3.html>. 
- 
+
 The first public presentation of this module took place at Perl Seminar 
 New York L<http://groups.yahoo.com/group/perlsemny> on May 21, 2002.  
 Comments and suggestions were provided there and since by Glenn Maciag, 
@@ -1364,22 +1509,31 @@ Gary Benson, Josh Rabinowitz, Terrence Brannon and Dave Cross.
 
 The placement in the installation tree of Test::ListCompareSpecial came 
 as a result of a question answered by Michael Graham in his talk 
-"Test::More to Test::Extreme" given at Yet Another Perl Conference::Canada 
+''Test::More to Test::Extreme'' given at Yet Another Perl Conference::Canada 
 in Ottawa, Ontario, on May 16, 2003.  
 
 In May-June 2003, Glenn Maciag made valuable suggestions which led to 
-changes in method names and in documentation in v0.20.  
+changes in method names and documentation in v0.20.  
 
 Another presentation at Perl Seminar New York in 
 October 2003 prompted me to begin planning List::Compare::Functional.  
 
 In a November 2003 Perl Seminar New York presentation, Ben Holtzman 
 discussed the performance costs entailed in Perl's C<sort> function.  
-This led me to ask, "Why should a user of List::Compare pay this performance 
+This led me to ask, ''Why should a user of List::Compare pay this performance 
 cost if he or she doesn't need a human-readable list as a result (as 
 would be the case if the list returned were used as the input into some 
-other function)?"  This led to the development of List::Compare's 
+other function)?''  This led to the development of List::Compare's 
 unsorted option.
+
+An April 2004 offer by Kevin Carlson to write an article for I<The Perl Journal> 
+(L<http://tpj.com>) led me to re-think whether a separate module 
+(the former List::Compare::SeenHash) was truly needed when a user wanted 
+to provide the constructor with references to seen-hashes rather than 
+references to arrays.  Since I had already adapted List::Compare::Functional 
+to accept both kinds of arguments, I adapted List::Compare in the same 
+manner.  This meant that List::Compare::SeenHash and its related installation 
+tests could be deprecated and deleted from the CPAN distribution.
 
 =head2 If You Like List::Compare, You'll Love ...
 
@@ -1388,8 +1542,8 @@ study a number of other modules already available on CPAN.  Each of these
 modules is more sophisticated than List::Compare -- which is not surprising
 since all that List::Compare originally aspired to do was to avoid typing
 Cookbook code repeatedly.  Here is a brief description of the features of
-these modules.  (Warning:  This description is only valid as of June 2002.  
-Some of these modules may have changed since then.)
+these modules.  (B<Warning:>  The following discussion is only valid as 
+of June 2002.  Some of these modules may have changed since then.)
 
 =over 4
 
@@ -1401,9 +1555,9 @@ Algorithm::Diff - Compute 'intelligent' differences between two files/lists
 Algorithm::Diff is a sophisticated module originally written by Mark-Jason
 Dominus and now maintained by Ned Konz. Think of the Unix C<diff> utility 
 and you're on the right track.  Algorithm::Diff exports methods such as 
-C<diff>, which "computes the smallest set of additions and deletions necessary 
+C<diff>, which ''computes the smallest set of additions and deletions necessary 
 to turn the first sequence into the second, and returns a description of these
-changes."  Algorithm::Diff is mainly concerned with the sequence of
+changes.''  Algorithm::Diff is mainly concerned with the sequence of
 elements within two lists.  It does not export functions for intersection,
 union, subset status, etc.
 
@@ -1472,9 +1626,9 @@ Set::Array - Arrays as objects with lots of handy methods (including set
 comparisons) and support for method chaining.
 (L<http://search.cpan.org/author/DJBERG/Set-Array-0.08/Array.pm>)
 
-Set::Array, by Daniel Berger, "aims to provide
+Set::Array, by Daniel Berger, ''aims to provide
 built-in methods for operations that people are always asking how to do,and
-which already exist in languages like Ruby."  Among the many methods in
+which already exist in languages like Ruby.''  Among the many methods in
 this module are some for intersection, union, etc.  To install Set::Array,
 you must first install the Want module, also available on CPAN.
 
@@ -1482,10 +1636,11 @@ you must first install the Want module, also available on CPAN.
 
 =head1 AUTHOR
 
-James E. Keenan (jkeenan@cpan.org).
+James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please 
+include 'List::Compare' or 'List-Compare' in your subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  April 4, 2004. 
-Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
+Creation date:  May 20, 2002.  Last modification date:  April 11, 2004. 
+Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.
 

@@ -7,7 +7,7 @@
 
 END {print "not ok 1\n" unless $loaded;} # 3/28/2004
 use Test::Simple tests =>
-763;
+765;
 use lib ("./t");
 use List::Compare;
 use Test::ListCompareSpecial;
@@ -1337,4 +1337,19 @@ ok($lcaccu_s);                          # 762
 
 my $lcaccu_e  = List::Compare->new('-u', '--accelerated', \@a3, \@a4);
 ok($lcaccu_e);                          # 763
+
+########## BELOW:  Test for bad arguments to constructor ##########
+
+my ($lca_bad);
+my %h5 = (
+	golfer   => 1,
+	lambda   => 0,
+);
+
+eval { $lca_bad = List::Compare->new('-a', \@a0, \%h5) };
+ok(ok_capture_error($@));               # 764
+
+eval { $lca_bad = List::Compare->new('-a', \%h5, \@a0) };
+ok(ok_capture_error($@));               # 765
+
 

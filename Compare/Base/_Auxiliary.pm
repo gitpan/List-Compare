@@ -1,6 +1,6 @@
 package List::Compare::Base::_Auxiliary;
-$VERSION = 0.25;
-# Holds subroutines used within various List::Compare::SeenHash
+$VERSION = 0.26;
+# Holds subroutines used within various List::Compare
 # and List::Compare::Functional
 use Carp;
 @ISA = qw(Exporter);
@@ -17,8 +17,24 @@ use Carp;
     _calculate_hash_intersection
     _calculate_hash_shared
     _subset_subengine
-    _chart_engine
+    _chart_engine_regular 
+    _chart_engine_multiple
     _equivalent_subengine
+    _index_message1
+    _index_message2
+    _index_message3
+    _index_message4
+    _prepare_listrefs 
+    _subset_engine_multaccel 
+    _calc_seen
+    _calc_seen1
+    _equiv_engine 
+    _argument_checker_0 
+    _argument_checker 
+    _argument_checker_1 
+    _argument_checker_2 
+    _argument_checker_3 
+    _argument_checker_4
 |;
 %EXPORT_TAGS = (
     calculate => [ qw(
@@ -34,7 +50,7 @@ use Carp;
 );
 use strict;
 
-# L::C::SH::Regular and L::C::SH::Accelerated
+# L:C, L:C:B:_Auxiliary
 sub _validate_2_seenhashes {
     my ($refL, $refR) = @_;
     my (%seenL, %seenR);
@@ -71,7 +87,7 @@ sub _validate_2_seenhashes {
     return (\%seenL, \%seenR);
 }
 
-# L::C::Functional
+# L:C, L:C:F, L:C:B:_Auxiliary 
 sub _validate_seen_hash {
     if (@_ > 2) {
         _validate_multiple_seenhashes( [@_] );
@@ -104,7 +120,7 @@ sub _validate_seen_hash {
     }
 }
 
-# L::C::SH::Multiple and L::C::Functional
+# L:C:B:_Auxiliary
 sub _validate_multiple_seenhashes {
     my $hashrefsref = shift;
     my @hashrefs = @{$hashrefsref};
@@ -132,6 +148,7 @@ sub _validate_multiple_seenhashes {
     }
 }
 
+# L:C:B:_Auxiliary
 sub _list_builder {
     my ($aref, $x) = @_;
     if (ref(${$aref}[$x]) eq 'HASH') {
@@ -141,6 +158,7 @@ sub _list_builder {
     }
 }
 
+# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_union_xintersection_only {
     my $aref = shift;
     my (%union, %xintersection);
@@ -164,6 +182,7 @@ sub _calculate_union_xintersection_only {
     return (\%union, \%xintersection);
 }
 
+# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_seen_xintersection_only {
     my $aref = shift;
     my (%xintersection, %seen);
@@ -187,6 +206,7 @@ sub _calculate_seen_xintersection_only {
     return (\%seen, \%xintersection);
 }
 
+# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_seen_only {
     my $aref = shift;
     my (%seen);
@@ -200,6 +220,7 @@ sub _calculate_seen_only {
     return \%seen;
 }
 
+# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_xintersection_only {
     my $aref = shift;
     my (%xintersection);
@@ -222,6 +243,7 @@ sub _calculate_xintersection_only {
     return \%xintersection;
 }
 
+# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_union_only {
     my $aref = shift;
     my (%union);
@@ -233,6 +255,7 @@ sub _calculate_union_only {
     return \%union;
 }
 
+# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_union_seen_only {
     my $aref = shift;
     my (%union, %seen);
@@ -247,6 +270,7 @@ sub _calculate_union_seen_only {
     return (\%union, \%seen);
 }
 
+# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_hash_intersection {
     my $xintersectionref = shift;
     my @xkeys = keys %{$xintersectionref};
@@ -262,6 +286,7 @@ sub _calculate_hash_intersection {
     return \%intersection;
 }
 
+# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_hash_shared {
     my $xintersectionref = shift;
     my (%shared);
@@ -271,6 +296,7 @@ sub _calculate_hash_shared {
     return \%shared;
 }
 
+# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _subset_subengine {
     my $aref = shift;
     my (@xsubset);
@@ -289,7 +315,21 @@ sub _subset_subengine {
     return \@xsubset;
 }
 
-sub _chart_engine {
+# L:C:B:Regular, L:C:B:_Auxiliary, L:C:B:_Engine
+sub _chart_engine_regular {
+    my $aref = shift;
+    my @sub_or_eqv = @$aref;
+    my $title = shift;
+    my ($v, $w, $t);
+    print "\n";
+    print $title, ' Relationships', "\n\n";
+    print '   Right:    0    1', "\n\n";
+    print 'Left:  0:    1    ', $sub_or_eqv[0], "\n\n";
+    print '       1:    ', $sub_or_eqv[1], '    1', "\n\n";
+}
+
+# L:C:Functional, L:C:B:Multiple, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
+sub _chart_engine_multiple {
     my $aref = shift;
     my @sub_or_eqv = @$aref;
     my $title = shift;
@@ -320,6 +360,7 @@ sub _chart_engine {
     1; # force return true value
 }
 
+# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _equivalent_subengine {
     my $aref = shift;
     my $xsubsetref = _subset_subengine($aref);
@@ -334,5 +375,234 @@ sub _equivalent_subengine {
     }
     return \@xequivalent;
 }
+
+# L:C:B:Multiple, L:C:B:_Auxiliary
+sub _index_message1 {
+    my ($index, $dataref) = @_;
+    my %data = %$dataref;
+    my $method = (caller(1))[3];
+    croak "Argument to method $method must be the array index of the target list \n  in list of arrays passed as arguments to the constructor: $!"
+        unless (
+                $index =~ /^\d+$/ 
+           and  0 <= $index 
+           and  $index <= $data{'maxindex'}
+        );
+}
+
+# L:C:B:Multiple, L:C:B:_Auxiliary
+sub _index_message2 {
+    my $dataref = shift;
+    my %data =%$dataref;
+    my ($index_left, $index_right);
+    my $method = (caller(1))[3];
+    croak "Method $method requires 2 arguments: $!"
+        unless (@_ == 0 || @_ == 2);
+    if (@_ == 0) {
+        $index_left = 0;
+        $index_right = 1;
+    } else {
+        ($index_left, $index_right) = @_;
+        foreach ($index_left, $index_right) {
+            croak "Each argument to method $method must be a valid array index for the target list \n  in list of arrays passed as arguments to the constructor: $!"
+                unless (
+                        $_ =~ /^\d+$/ 
+                   and  0 <= $_ 
+                   and  $_ <= $data{'maxindex'}
+                );
+        }
+    }
+    return ($index_left, $index_right);
+}
+
+# L:C:B:_Auxiliary, L:C:B:Multiple::Accelerated 
+sub _index_message3 {
+    my ($index, $maxindex) = @_;
+    my $method = (caller(1))[3];
+    croak "Argument to method $method must be the array index of the target list \n  in list of arrays passed as arguments to the constructor: $!"
+        unless (
+                $index =~ /^\d+$/ 
+           and  0 <= $index 
+           and  $index <= $maxindex
+        );
+}
+
+# L:C:B:_Auxiliary, L:C:B:Multiple::Accelerated 
+sub _index_message4 {
+    my $maxindex = shift;
+    my ($index_left, $index_right);
+    my $method = (caller(1))[3];
+    croak "Method $method requires 2 arguments: $!"
+        unless (@_ == 0 || @_ == 2);
+    if (@_ == 0) {
+        $index_left = 0;
+        $index_right = 1;
+    } else {
+        ($index_left, $index_right) = @_;
+        foreach ($index_left, $index_right) {
+            croak "Each argument to method $method must be a valid array index for the target list \n  in list of arrays passed as arguments to the constructor: $!"
+                unless (
+                        $_ =~ /^\d+$/ 
+                   and  0 <= $_ 
+                   and  $_ <= $maxindex
+                );
+        }
+    }
+    return ($index_left, $index_right);
+}
+
+# L:C, L:C:B:_Auxiliary, L:C:B:Multiple::Accelerated 
+sub _prepare_listrefs {
+    my $dataref = shift;
+    my (@listrefs);
+    foreach my $lref (sort {$a <=> $b} keys %{$dataref}) {
+        push(@listrefs, ${$dataref}{$lref}) unless $lref eq 'unsort';
+    };
+    return \@listrefs;
+}
+
+# L:C:B:_Auxiliary, L:C:B:Multiple::Accelerated 
+sub _subset_engine_multaccel {
+    my $dataref = shift;
+    my $aref = _prepare_listrefs($dataref);
+    my ($index_left, $index_right) = _index_message4($#{$aref}, @_);
+
+    my $xsubsetref = _subset_subengine($aref);
+    return ${$xsubsetref}[$index_left][$index_right];
+}
+
+# L:C:Functional, L:C:B:_Engine, L:C:B:_Auxiliary
+sub _calc_seen {
+    my ($refL, $refR) = @_;
+    if (ref($refL) eq 'HASH' and ref($refR) eq 'HASH') {
+        return ($refL, $refR);
+    } elsif (ref($refL) eq 'ARRAY' and ref($refR) eq 'ARRAY') {
+        my (%seenL, %seenR);
+        foreach (@$refL) { $seenL{$_}++ }
+        foreach (@$refR) { $seenR{$_}++ }
+        return (\%seenL, \%seenR); 
+    } else {
+        croak "Improper mixing of arguments; accelerated calculation not possible:  $!";
+    }
+}
+
+# L:C:B:_Engine, L:C:B:_Auxiliary
+sub _equiv_engine {
+    my ($hrefL, $hrefR) = @_;
+    my (%intersection, %Lonly, %Ronly, %LorRonly);
+    my $LequivalentR_status = 0;
+    
+    foreach (keys %{$hrefL}) {
+        if (exists ${$hrefR}{$_}) {
+            $intersection{$_}++;
+        } else {
+            $Lonly{$_}++;
+        }
+    }
+
+    foreach (keys %{$hrefR}) {
+        $Ronly{$_}++ unless (exists $intersection{$_});
+    }
+
+    $LorRonly{$_}++ foreach ( (keys %Lonly), (keys %Ronly) );
+    $LequivalentR_status = 1 if ( (keys %LorRonly) == 0);
+    return $LequivalentR_status;
+}
+
+# L:C, L:C:B:_Auxiliary
+sub _argument_checker_0 {
+    my @args = @_;
+    my $first_ref = ref($args[0]);
+    die "Improper argument: $!" 
+        unless ($first_ref eq 'ARRAY' or $first_ref eq 'HASH');
+    my @temp = @args[1..$#args];
+    my ($testing);
+    my $condition = 1;
+    while (defined ($testing = shift(@temp)) ) {
+        unless (ref($testing) eq $first_ref) {
+            $condition = 0;
+            last;
+        }
+    }
+    croak "Arguments must be either all array references or all hash references: $!"
+        unless $condition;
+    _validate_seen_hash(@args) if $first_ref eq 'HASH';
+    return (@args);
+}
+
+# L:C, L:C:Functional, L:C:B:_Auxiliary
+sub _argument_checker {
+    my $argref = shift;
+    my @args = _argument_checker_0(@{$argref});
+    return (@args);
+}
+
+# L:C:Functional, L:C:B:_Auxiliary
+sub _argument_checker_1 {
+    my @argrefs = @_;
+    croak "Subroutine call requires 2 references as arguments:  $!"
+        unless @argrefs == 2;
+    return (_argument_checker($argrefs[0]), ${$argrefs[1]}[0]);
+}
+
+# L:C:Functional, L:C:B:_Auxiliary
+sub _argument_checker_2 {
+    my @argrefs = @_;
+    croak "Subroutine call requires 2 references as arguments:  $!"
+        unless @argrefs == 2;
+    return (_argument_checker($argrefs[0]), $argrefs[1]);
+}
+
+# L:C:Functional, L:C:B:_Auxiliary
+sub _argument_checker_3 {
+    my @argrefs = @_;
+    if (@argrefs == 1) {
+        return (_argument_checker($argrefs[0]), 0);
+    } elsif (@argrefs == 2) {
+        return (_argument_checker($argrefs[0]), ${$argrefs[1]}[0]);
+    } else {
+        croak "Subroutine call requires 1 or 2 references as arguments:  $!"
+            unless (@argrefs == 1 or @argrefs == 2);
+    }
+}
+
+# L:C:Functional, L:C:B:_Auxiliary
+sub _argument_checker_4 {
+    my @argrefs = @_;
+    if (@argrefs == 1) {
+        return (_argument_checker($argrefs[0]), [0,1]);
+    } elsif (@argrefs == 2) {
+        return (_argument_checker($argrefs[0]), $argrefs[1]); 
+    } else {
+        croak "Subroutine call requires 1 or 2 references as arguments:  $!"
+            unless (@argrefs == 1 or @argrefs == 2);
+    }
+}
+
+# L:C:Functional, L:C:B:_Auxiliary
+sub _calc_seen1 {
+    my @listrefs = @_;
+    # _calc_seen1() is applied after _argument_checker(), which checks to make
+    # sure that the references in its output are either all arrayrefs 
+    # or all seenhashrefs
+    # hence, _calc_seen1 only needs to determine whether it's dealing with 
+    # arrayrefs or seenhashrefs, then, if arrayrefs, calculate seenhashes
+    if (ref($listrefs[0]) eq 'HASH') {
+        return \@listrefs;
+    } elsif (ref($listrefs[0]) eq 'ARRAY') {
+        my (@seenrefs);
+        foreach my $aref (@listrefs) {
+            my (%seenthis);
+            foreach my $j (@{$aref}) {
+                $seenthis{$j}++;
+            }
+            push(@seenrefs, \%seenthis);
+        }
+        return \@seenrefs;
+    } else {
+        croak "Indeterminate case in _calc_seen1: $!";
+    }
+}
+
+
 1;
 

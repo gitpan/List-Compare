@@ -5,9 +5,9 @@
 
 ######################### We start with some black magic to print on failure.
 
-END {print "not ok 1\n" unless $loaded;} # 3/28/2004
+END {print "not ok 1\n" unless $loaded;} 
 use Test::Simple tests =>
-960;
+962;
 use lib ("./t");
 use List::Compare;
 use Test::ListCompareSpecial;
@@ -1642,9 +1642,24 @@ ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));# 958
 $vers = $lcmu->get_version;
 ok($vers);                              # 959
 
-########## BELOW:  Tests for '--unsorted' option ##########
+########## BELOW:  Test for '--unsorted' option ##########
 
 my $lcmun   = List::Compare->new('--unsorted', \@a0, \@a1, \@a2, \@a3, \@a4);
 
 ok($lcmun);                             # 960
+
+########## BELOW:  Testfor bad arguments to constructor ##########
+
+my ($lcm_bad);
+my %h5 = (
+	golfer   => 1,
+	lambda   => 0,
+);
+
+eval { $lcm_bad = List::Compare->new('-a', \@a0, \@a1, \@a2, \@a3, \%h5) };
+ok(ok_capture_error($@));               # 961
+
+eval { $lcm_bad = List::Compare->new('-a', \%h5, \@a0, \@a1, \@a2, \@a3) };
+ok(ok_capture_error($@));               # 962
+
 

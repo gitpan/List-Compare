@@ -1,9 +1,14 @@
 package List::Compare::Base::_Engine;
-$VERSION = 0.25;
+$VERSION = 0.26;
 # Holds subroutines used within both 
 # List::Compare::Base::Accelerated and List::Compare::Functional
-# As of April 4, 2004
+# As of April 11, 2004
 use Carp;
+use List::Compare::Base::_Auxiliary qw(
+    _chart_engine_regular
+    _calc_seen
+    _equiv_engine 
+);
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
     _intersection_engine
@@ -172,7 +177,7 @@ sub _print_subset_chart_engine {
     }
     my @subset_array = ($LsubsetR_status, $RsubsetL_status);
     my $title = 'Subset';
-    _chart_engine(\@subset_array, $title);
+    _chart_engine_regular(\@subset_array, $title);
 }
 
 sub _is_LequivalentR_engine {
@@ -187,59 +192,8 @@ sub _print_equivalence_chart_engine {
     my $LequivalentR_status = _equiv_engine($hrefL, $hrefR);
     my @equivalent_array = ($LequivalentR_status, $LequivalentR_status);
     my $title = 'Equivalence';
-    _chart_engine(\@equivalent_array, $title);
+    _chart_engine_regular(\@equivalent_array, $title);
 }    
-
-
-######################### INTERNAL SUBROUTINES #########################
-
-sub _calc_seen {
-    my ($refL, $refR) = @_;
-    if (ref($refL) eq 'HASH' and ref($refR) eq 'HASH') {
-        return ($refL, $refR);
-    } elsif (ref($refL) eq 'ARRAY' and ref($refR) eq 'ARRAY') {
-        my (%seenL, %seenR);
-        foreach (@$refL) { $seenL{$_}++ }
-        foreach (@$refR) { $seenR{$_}++ }
-        return (\%seenL, \%seenR); 
-    } else {
-        croak "Improper mixing of arguments; accelerated calculation not possible:  $!";
-    }
-}
-
-sub _chart_engine {
-    my $aref = shift;
-    my @sub_or_eqv = @$aref;
-    my $title = shift;
-    my ($v, $w, $t);
-    print "\n";
-    print $title, ' Relationships', "\n\n";
-    print '   Right:    0    1', "\n\n";
-    print 'Left:  0:    1    ', $sub_or_eqv[0], "\n\n";
-    print '       1:    ', $sub_or_eqv[1], '    1', "\n\n";
-}
-
-sub _equiv_engine {
-    my ($hrefL, $hrefR) = @_;
-    my (%intersection, %Lonly, %Ronly, %LorRonly);
-    my $LequivalentR_status = 0;
-    
-    foreach (keys %{$hrefL}) {
-        if (exists ${$hrefR}{$_}) {
-            $intersection{$_}++;
-        } else {
-            $Lonly{$_}++;
-        }
-    }
-
-    foreach (keys %{$hrefR}) {
-        $Ronly{$_}++ unless (exists $intersection{$_});
-    }
-
-    $LorRonly{$_}++ foreach ( (keys %Lonly), (keys %Ronly) );
-    $LequivalentR_status = 1 if ( (keys %LorRonly) == 0);
-    return $LequivalentR_status;
-}
 
 1;
 

@@ -1,11 +1,10 @@
 package List::Compare::Base::Regular;
-$VERSION = 0.25;
-# As of:  April 4, 2004 
-# functions used in List::Compare and List::Compare::SeenHash
-
+$VERSION = 0.26;
+# As of:  April 11, 2004 
+# functions used in List::Compare regular mode
 use strict;
-# use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
+use List::Compare::Base::_Auxiliary qw( _chart_engine_regular );
 
 sub get_intersection {
     return @{ get_intersection_ref(shift) };
@@ -191,27 +190,16 @@ sub print_subset_chart {
     my %data = %$class;
     my @subset_array = ($data{'LsubsetR_status'}, $data{'RsubsetL_status'});
     my $title = 'Subset';
-    _chart_engine(\@subset_array, $title);
+    _chart_engine_regular(\@subset_array, $title);
 }
 
 sub print_equivalence_chart {
     my $class = shift;
     my %data = %$class;
-    my @equivalent_array = ($data{'LequivalentR_status'}, $data{'LequivalentR_status'});
+    my @equivalent_array = ($data{'LequivalentR_status'}, 
+                            $data{'LequivalentR_status'});
     my $title = 'Equivalence';
-    _chart_engine(\@equivalent_array, $title);
-}
-
-sub _chart_engine {
-    my $aref = shift;
-    my @sub_or_eqv = @$aref;
-    my $title = shift;
-    my ($v, $w, $t);
-    print "\n";
-    print $title, ' Relationships', "\n\n";
-    print '   Right:    0    1', "\n\n";
-    print 'Left:  0:    1    ', $sub_or_eqv[0], "\n\n";
-    print '       1:    ', $sub_or_eqv[1], '    1', "\n\n";
+    _chart_engine_regular(\@equivalent_array, $title);
 }
 
 1;

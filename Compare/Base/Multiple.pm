@@ -1,13 +1,14 @@
 package List::Compare::Base::Multiple;
-$VERSION = 0.25;
-# As of:  April 4, 2004
-# functions used in List::Compare::Multiple and 
-# List::Compare::SeenHash::Multiple
-
+$VERSION = 0.26;
+# As of:  April 11, 2004
+# functions used in List::Compare multiple mode
 use strict;
-# use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
-use Data::Dumper;
+use List::Compare::Base::_Auxiliary qw(
+    _index_message1
+    _index_message2
+    _chart_engine_multiple
+);
 
 sub get_intersection {
     return @{ get_intersection_ref(shift) };
@@ -263,7 +264,7 @@ sub print_subset_chart {
     my %data = %$class;
     my @subset_array = @{$data{'xsubset'}};
     my $title = 'subset';
-    _chart_engine(\@subset_array, $title);
+    _chart_engine_multiple(\@subset_array, $title);
 }
 
 sub print_equivalence_chart {
@@ -271,74 +272,7 @@ sub print_equivalence_chart {
     my %data = %$class;
     my @equivalent_array = @{$data{'xequivalent'}};
     my $title = 'Equivalence';
-    _chart_engine(\@equivalent_array, $title);
-}
-
-sub _chart_engine {
-    my $aref = shift;
-    my @sub_or_eqv = @$aref;
-    my $title = shift;
-    my ($v, $w, $t);
-    print "\n";
-    print $title, ' Relationships', "\n\n";
-    print '   Right:';
-    for ($v = 0; $v <= $#sub_or_eqv; $v++) {
-        print '    ', $v;
-    }
-    print "\n\n";
-    print 'Left:  0:';
-    my @firstrow = @{$sub_or_eqv[0]};
-    for ($t = 0; $t <= $#firstrow; $t++) {
-        print '    ', $firstrow[$t];
-    }
-    print "\n\n";
-    for ($w = 1; $w <= $#sub_or_eqv; $w++) {
-        my $length_left = length($w);
-        my $x = '';
-        print ' ' x (8 - $length_left), $w, ':';
-        my @row = @{$sub_or_eqv[$w]};
-        for ($x = 0; $x <= $#row; $x++) {
-            print '    ', $row[$x];
-        }
-        print "\n\n";
-    }
-    1; # force return true value
-}
-
-sub _index_message1 {
-    my ($index, $dataref) = @_;
-    my %data = %$dataref;
-    my $method = (caller(1))[3];
-    croak "Argument to method $method must be the array index of the target list \n  in list of arrays passed as arguments to the constructor: $!"
-        unless (
-                $index =~ /^\d+$/ 
-           and  0 <= $index 
-           and  $index <= $data{'maxindex'}
-        );
-}
-
-sub _index_message2 {
-    my $dataref = shift;
-    my %data =%$dataref;
-    my ($index_left, $index_right);
-    my $method = (caller(1))[3];
-    croak "Method $method requires 2 arguments: $!"
-        unless (@_ == 0 || @_ == 2);
-    if (@_ == 0) {
-        $index_left = 0;
-        $index_right = 1;
-    } else {
-        ($index_left, $index_right) = @_;
-        foreach ($index_left, $index_right) {
-            croak "Each argument to method $method must be a valid array index for the target list \n  in list of arrays passed as arguments to the constructor: $!"
-                unless (
-                        $_ =~ /^\d+$/ 
-                   and  0 <= $_ 
-                   and  $_ <= $data{'maxindex'}
-                );
-        }
-    }
-    return ($index_left, $index_right);
+    _chart_engine_multiple(\@equivalent_array, $title);
 }
 
 1;

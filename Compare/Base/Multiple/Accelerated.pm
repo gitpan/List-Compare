@@ -1,13 +1,17 @@
 package List::Compare::Base::Multiple::Accelerated;
-$VERSION = 0.25;
-# As of:  April 4, 2004
+$VERSION = 0.26;
+# As of:  April 11, 2004
 use strict;
 use Carp;
 use List::Compare::Base::_Auxiliary qw(:calculate);
 use List::Compare::Base::_Auxiliary qw(
     _subset_subengine
-    _chart_engine
+    _chart_engine_multiple
     _equivalent_subengine
+    _index_message3
+    _index_message4
+    _prepare_listrefs 
+    _subset_engine_multaccel 
 );
 
 sub get_union {
@@ -247,7 +251,7 @@ sub get_Ronly_ref {
 sub is_LsubsetR {
     my $class = shift;
     my %data = %$class;
-    my $subset_status = _subset_engine(\%data, @_);
+    my $subset_status = _subset_engine_multaccel(\%data, @_);
     return $subset_status;
 }
 
@@ -262,7 +266,7 @@ sub is_RsubsetL {
     carp "When comparing 3 or more lists, \&$method or its alias is restricted to \n  asking if the list which is the 2nd argument to the constructor \n    is a subset of the list which is the 1st argument.\n      For greater flexibility, please re-code with \&is_LsubsetR: $!";
     @_ = (1,0);
 
-    my $subset_status = _subset_engine(\%data, @_);
+    my $subset_status = _subset_engine_multaccel(\%data, @_);
     return $subset_status;
 }
 
@@ -363,7 +367,7 @@ sub print_subset_chart {
     my $aref = _prepare_listrefs(\%data);
     my $xsubsetref = _subset_subengine($aref);
     my $title = 'subset';
-    _chart_engine($xsubsetref, $title);
+    _chart_engine_multiple($xsubsetref, $title);
 }
 
 sub print_equivalence_chart {
@@ -372,64 +376,7 @@ sub print_equivalence_chart {
     my $aref = _prepare_listrefs(\%data);
     my $xequivalentref = _equivalent_subengine($aref);
     my $title = 'Equivalence';
-    _chart_engine($xequivalentref, $title);
-}
-
-
-#########################################################
-##### INTERNAL SUBROUTINES #####
-#########################################################
-
-sub _index_message3 {
-    my ($index, $maxindex) = @_;
-    my $method = (caller(1))[3];
-    croak "Argument to method $method must be the array index of the target list \n  in list of arrays passed as arguments to the constructor: $!"
-        unless (
-                $index =~ /^\d+$/ 
-           and  0 <= $index 
-           and  $index <= $maxindex
-        );
-}
-
-sub _index_message4 {
-    my $maxindex = shift;
-    my ($index_left, $index_right);
-    my $method = (caller(1))[3];
-    croak "Method $method requires 2 arguments: $!"
-        unless (@_ == 0 || @_ == 2);
-    if (@_ == 0) {
-        $index_left = 0;
-        $index_right = 1;
-    } else {
-        ($index_left, $index_right) = @_;
-        foreach ($index_left, $index_right) {
-            croak "Each argument to method $method must be a valid array index for the target list \n  in list of arrays passed as arguments to the constructor: $!"
-                unless (
-                        $_ =~ /^\d+$/ 
-                   and  0 <= $_ 
-                   and  $_ <= $maxindex
-                );
-        }
-    }
-    return ($index_left, $index_right);
-}
-
-sub _prepare_listrefs {
-    my $dataref = shift;
-    my (@listrefs);
-    foreach my $lref (sort {$a <=> $b} keys %{$dataref}) {
-        push(@listrefs, ${$dataref}{$lref}) unless $lref eq 'unsort';
-    };
-    return \@listrefs;
-}
-
-sub _subset_engine {
-    my $dataref = shift;
-    my $aref = _prepare_listrefs($dataref);
-    my ($index_left, $index_right) = _index_message4($#{$aref}, @_);
-
-    my $xsubsetref = _subset_subengine($aref);
-    return ${$xsubsetref}[$index_left][$index_right];
+    _chart_engine_multiple($xequivalentref, $title);
 }
 
 1;

@@ -5,9 +5,9 @@
 
 ######################### We start with some black magic to print on failure.
 
-END {print "not ok 1\n" unless $loaded;} # 3/28/2004
+END {print "not ok 1\n" unless $loaded;} 
 use Test::Simple tests =>
-754;
+756;
 use lib ("./t");
 use List::Compare;
 use Test::ListCompareSpecial;
@@ -1312,3 +1312,19 @@ ok($lcun_s);                            # 753
 
 my $lcun_e  = List::Compare->new('--unsorted', \@a3, \@a4);
 ok($lcun_e);                            # 754
+
+########## BELOW:  Test for bad arguments to constructor ##########
+
+my ($lc_bad);
+my %h5 = (
+	golfer   => 1,
+	lambda   => 0,
+);
+
+eval { $lc_bad = List::Compare->new(\@a0, \%h5) };
+ok(ok_capture_error($@));               # 755
+
+eval { $lc_bad = List::Compare->new(\%h5, \@a0) };
+ok(ok_capture_error($@));               # 756
+
+

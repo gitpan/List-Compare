@@ -93,5 +93,8 @@ Revision history for Perl extension List::Compare.
 0.25 Sun Apr 4 2004
 	- continued implementation of 'multiple accelerated' mode; applied to List::Compare::SeenHash and List::Compare::Functional
 	- modification of interfaces to methods/functions are_members_which() and are_members_any throughout; items to be tested must be passed (by reference) as an anonymous array rather than as a flat list
- 
+
+0.26  Sun Apr 11 2004
+	- corrections to POD
+
 

@@ -7,7 +7,7 @@
 
 END {print "not ok 1\n" unless $loaded;} 
 use Test::Simple tests =>
-729;
+749;
 use lib ("./t");
 use List::Compare;
 use List::Compare::Functional qw(:originals :aliases);
@@ -1106,4 +1106,36 @@ ok($seen{'hilton'} == 4);               # 727
 ok($seen{'icon'} == 5);                 # 728
 ok($seen{'jerky'} == 1);                # 729
 %seen = ();
+
+########## Tests of passing refs to named arrays to functions ##########
+
+my @allarrays = (\@a0, \@a1, \@a2, \@a3, \@a4); 
+@intersection = get_intersection('--unsorted', \@allarrays );
+$seen{$_}++ foreach (@intersection);
+ok(! exists $seen{'abel'});             # 730
+ok(! exists $seen{'baker'});            # 731
+ok(! exists $seen{'camera'});           # 732
+ok(! exists $seen{'delta'});            # 733
+ok(! exists $seen{'edward'});           # 734
+ok(exists $seen{'fargo'});              # 735
+ok(exists $seen{'golfer'});             # 736
+ok(! exists $seen{'hilton'});           # 737
+ok(! exists $seen{'icon'});             # 738
+ok(! exists $seen{'jerky'});            # 739
+%seen = ();
+
+@unique = get_unique('--unsorted', \@allarrays, [2] );
+$seen{$_}++ foreach (@unique);
+ok(! exists $seen{'abel'});             # 740
+ok(! exists $seen{'baker'});            # 741
+ok(! exists $seen{'camera'});           # 742
+ok(! exists $seen{'delta'});            # 743
+ok(! exists $seen{'edward'});           # 744
+ok(! exists $seen{'fargo'});            # 745
+ok(! exists $seen{'golfer'});           # 746
+ok(! exists $seen{'hilton'});           # 747
+ok(! exists $seen{'icon'});             # 748
+ok(exists $seen{'jerky'});              # 749
+%seen = ();
+
 

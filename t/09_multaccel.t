@@ -1,11 +1,11 @@
-# 09_multaccel.t
+# 09_multaccel.t.raw # 04/25/2004
 
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
 ######################### We start with some black magic to print on failure.
 
-END {print "not ok 1\n" unless $loaded;} # 3/28/2004
+END {print "not ok 1\n" unless $loaded;} 
 use Test::Simple tests =>
 960;
 use lib ("./t");
@@ -32,7 +32,7 @@ my @a2 = qw(fargo golfer hilton icon icon jerky);
 my @a3 = qw(fargo golfer hilton icon icon);
 my @a4 = qw(fargo fargo golfer hilton icon);
 
-my $lcma   = List::Compare->new(\@a0, \@a1, \@a2, \@a3, \@a4);
+my $lcma   = List::Compare->new('-a', \@a0, \@a1, \@a2, \@a3, \@a4);
 
 ok($lcma);                              # 2
 
@@ -149,8 +149,8 @@ ok(exists $seen{'jerky'});              # 82
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$unique_ref = $lcma->get_Lonly_ref(2);
+    local $SIG{__WARN__} = \&_capture;
+    $unique_ref = $lcma->get_Lonly_ref(2);
 }
 $seen{$_}++ foreach (@{$unique_ref});
 ok(! exists $seen{'abel'});             # 83
@@ -166,8 +166,8 @@ ok(exists $seen{'jerky'});              # 92
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@unique = $lcma->get_Aonly(2);
+    local $SIG{__WARN__} = \&_capture;
+    @unique = $lcma->get_Aonly(2);
 }
 $seen{$_}++ foreach (@unique);
 ok(! exists $seen{'abel'});             # 93
@@ -183,8 +183,8 @@ ok(exists $seen{'jerky'});              # 102
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$unique_ref = $lcma->get_Aonly_ref(2);
+    local $SIG{__WARN__} = \&_capture;
+    $unique_ref = $lcma->get_Aonly_ref(2);
 }
 $seen{$_}++ foreach (@{$unique_ref});
 ok(! exists $seen{'abel'});             # 103
@@ -228,8 +228,8 @@ ok(! exists $seen{'jerky'});            # 132
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@unique = $lcma->get_Lonly;
+    local $SIG{__WARN__} = \&_capture;
+    @unique = $lcma->get_Lonly;
 }
 $seen{$_}++ foreach (@unique);
 ok(exists $seen{'abel'});               # 133
@@ -245,8 +245,8 @@ ok(! exists $seen{'jerky'});            # 142
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$unique_ref = $lcma->get_Lonly_ref;
+    local $SIG{__WARN__} = \&_capture;
+    $unique_ref = $lcma->get_Lonly_ref;
 }
 $seen{$_}++ foreach (@{$unique_ref});
 ok(exists $seen{'abel'});               # 143
@@ -262,8 +262,8 @@ ok(! exists $seen{'jerky'});            # 152
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@unique = $lcma->get_Aonly;
+    local $SIG{__WARN__} = \&_capture;
+    @unique = $lcma->get_Aonly;
 }
 $seen{$_}++ foreach (@unique);
 ok(exists $seen{'abel'});               # 153
@@ -279,8 +279,8 @@ ok(! exists $seen{'jerky'});            # 162
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$unique_ref = $lcma->get_Aonly_ref;
+    local $SIG{__WARN__} = \&_capture;
+    $unique_ref = $lcma->get_Aonly_ref;
 }
 $seen{$_}++ foreach (@{$unique_ref});
 ok(exists $seen{'abel'});               # 163
@@ -324,8 +324,8 @@ ok(exists $seen{'jerky'});              # 192
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@complement = $lcma->get_Ronly(1);
+    local $SIG{__WARN__} = \&_capture;
+    @complement = $lcma->get_Ronly(1);
 }
 $seen{$_}++ foreach (@complement);
 ok(exists $seen{'abel'});               # 193
@@ -341,8 +341,8 @@ ok(exists $seen{'jerky'});              # 202
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$complement_ref = $lcma->get_Ronly_ref(1);
+    local $SIG{__WARN__} = \&_capture;
+    $complement_ref = $lcma->get_Ronly_ref(1);
 }
 $seen{$_}++ foreach (@{$complement_ref});
 ok(exists $seen{'abel'});               # 203
@@ -358,8 +358,8 @@ ok(exists $seen{'jerky'});              # 212
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@complement = $lcma->get_Bonly(1);
+    local $SIG{__WARN__} = \&_capture;
+    @complement = $lcma->get_Bonly(1);
 }
 $seen{$_}++ foreach (@complement);
 ok(exists $seen{'abel'});               # 213
@@ -375,8 +375,8 @@ ok(exists $seen{'jerky'});              # 222
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$complement_ref = $lcma->get_Bonly_ref(1);
+    local $SIG{__WARN__} = \&_capture;
+    $complement_ref = $lcma->get_Bonly_ref(1);
 }
 $seen{$_}++ foreach (@{$complement_ref});
 ok(exists $seen{'abel'});               # 223
@@ -420,8 +420,8 @@ ok(exists $seen{'jerky'});              # 252
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@complement = $lcma->get_Ronly;
+    local $SIG{__WARN__} = \&_capture;
+    @complement = $lcma->get_Ronly;
 }
 $seen{$_}++ foreach (@complement);
 ok(! exists $seen{'abel'});             # 253
@@ -437,8 +437,8 @@ ok(exists $seen{'jerky'});              # 262
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$complement_ref = $lcma->get_Ronly_ref;
+    local $SIG{__WARN__} = \&_capture;
+    $complement_ref = $lcma->get_Ronly_ref;
 }
 $seen{$_}++ foreach (@{$complement_ref});
 ok(! exists $seen{'abel'});             # 263
@@ -454,8 +454,8 @@ ok(exists $seen{'jerky'});              # 272
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@complement = $lcma->get_Bonly;
+    local $SIG{__WARN__} = \&_capture;
+    @complement = $lcma->get_Bonly;
 }
 $seen{$_}++ foreach (@complement);
 ok(! exists $seen{'abel'});             # 273
@@ -471,8 +471,8 @@ ok(exists $seen{'jerky'});              # 282
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$complement_ref = $lcma->get_Bonly_ref;
+    local $SIG{__WARN__} = \&_capture;
+    $complement_ref = $lcma->get_Bonly_ref;
 }
 $seen{$_}++ foreach (@{$complement_ref});
 ok(! exists $seen{'abel'});             # 283
@@ -544,8 +544,8 @@ ok(exists $seen{'jerky'});              # 332
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@symmetric_difference = $lcma->get_LorRonly;
+    local $SIG{__WARN__} = \&_capture;
+    @symmetric_difference = $lcma->get_LorRonly;
 }
 $seen{$_}++ foreach (@symmetric_difference);
 ok(exists $seen{'abel'});               # 333
@@ -561,8 +561,8 @@ ok(exists $seen{'jerky'});              # 342
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$symmetric_difference_ref = $lcma->get_LorRonly_ref;
+    local $SIG{__WARN__} = \&_capture;
+    $symmetric_difference_ref = $lcma->get_LorRonly_ref;
 }
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
 ok(exists $seen{'abel'});               # 343
@@ -578,8 +578,8 @@ ok(exists $seen{'jerky'});              # 352
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@symmetric_difference = $lcma->get_AorBonly;
+    local $SIG{__WARN__} = \&_capture;
+    @symmetric_difference = $lcma->get_AorBonly;
 }
 $seen{$_}++ foreach (@symmetric_difference);
 ok(exists $seen{'abel'});               # 353
@@ -595,8 +595,8 @@ ok(exists $seen{'jerky'});              # 362
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$symmetric_difference_ref = $lcma->get_AorBonly_ref;
+    local $SIG{__WARN__} = \&_capture;
+    $symmetric_difference_ref = $lcma->get_AorBonly_ref;
 }
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
 ok(exists $seen{'abel'});               # 363
@@ -683,14 +683,14 @@ $LR = $lcma->is_LsubsetR;
 ok(! $LR);                              # 417
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$RL = $lcma->is_RsubsetL;
+    local $SIG{__WARN__} = \&_capture;
+    $RL = $lcma->is_RsubsetL;
 }
 ok(! $RL);                              # 418
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$RL = $lcma->is_BsubsetA;
+    local $SIG{__WARN__} = \&_capture;
+    $RL = $lcma->is_BsubsetA;
 }
 ok(! $RL);                              # 419
 
@@ -742,7 +742,6 @@ ok(ok_seen_a( \@memb_arr, 'jerky',  1, [ qw<     2     > ] ));# 434
 @memb_arr = $lcma->is_member_which('zebra');
 ok(ok_seen_a( \@memb_arr, 'zebra',  0, [ qw<           > ] ));# 435
 
-
 $memb_arr_ref = $lcma->is_member_which_ref('abel');
 ok(ok_seen_a( $memb_arr_ref, 'abel',   1, [ qw< 0        > ] ));# 436
 
@@ -776,23 +775,9 @@ ok(ok_seen_a( $memb_arr_ref, 'jerky',  1, [ qw<     2     > ] ));# 445
 $memb_arr_ref = $lcma->is_member_which_ref('zebra');
 ok(ok_seen_a( $memb_arr_ref, 'zebra',  0, [ qw<           > ] ));# 446
 
-
-#$memb_hash_ref = $lcma->are_members_which(qw| abel baker camera delta edward fargo 
-#	golfer hilton icon jerky zebra |);
-#ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0         > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1       > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1       > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1       > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1       > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'fargo',  5, [ qw< 0 1 2 3 4 > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'golfer', 5, [ qw< 0 1 2 3 4 > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'hilton', 4, [ qw<   1 2 3 4 > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'icon',   3, [ qw<     2 3 4 > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'jerky',  1, [ qw<     2     > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<           > ] ));
-
-$memb_hash_ref = $lcma->are_members_which( [ qw| abel baker camera delta edward fargo 
-	golfer hilton icon jerky zebra | ] );
+$memb_hash_ref = $lcma->are_members_which(
+                     [ qw| abel baker camera delta edward fargo 
+                           golfer hilton icon jerky zebra | ] );
 ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0         > ] ));# 447
 ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1       > ] ));# 448
 ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1       > ] ));# 449
@@ -817,24 +802,9 @@ ok($lcma->is_member_any('icon' ));      # 466
 ok($lcma->is_member_any('jerky'));      # 467
 ok(! $lcma->is_member_any('zebra'));    # 468
 
-#$memb_hash_ref = $lcma->are_members_any(qw| abel baker camera delta edward fargo 
-#    golfer hilton icon jerky zebra |);
-#
-#ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));
-#ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));
-#ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));
-#ok(ok_any_h( $memb_hash_ref, 'delta',  1 ));
-#ok(ok_any_h( $memb_hash_ref, 'edward', 1 ));
-#ok(ok_any_h( $memb_hash_ref, 'fargo',  1 ));
-#ok(ok_any_h( $memb_hash_ref, 'golfer', 1 ));
-#ok(ok_any_h( $memb_hash_ref, 'hilton', 1 ));
-#ok(ok_any_h( $memb_hash_ref, 'icon',   1 ));
-#ok(ok_any_h( $memb_hash_ref, 'jerky',  1 ));
-#ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));
-
-$memb_hash_ref = $lcma->are_members_any( [ qw| abel baker camera delta edward fargo 
-    golfer hilton icon jerky zebra | ] );
-
+$memb_hash_ref = $lcma->are_members_any(
+                     [ qw| abel baker camera delta edward fargo 
+                           golfer hilton icon jerky zebra | ] );
 ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));# 469
 ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));# 470
 ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));# 471
@@ -852,7 +822,7 @@ ok($vers);                              # 480
 
 ########## BELOW:  Tests for '-u' option ##########
 
-my $lcmau   = List::Compare->new('-u', \@a0, \@a1, \@a2, \@a3, \@a4);
+my $lcmau   = List::Compare->new('-u', '-a', \@a0, \@a1, \@a2, \@a3, \@a4);
 
 ok($lcmau);                             # 481
 
@@ -969,8 +939,8 @@ ok(exists $seen{'jerky'});              # 561
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$unique_ref = $lcmau->get_Lonly_ref(2);
+    local $SIG{__WARN__} = \&_capture;
+    $unique_ref = $lcmau->get_Lonly_ref(2);
 }
 $seen{$_}++ foreach (@{$unique_ref});
 ok(! exists $seen{'abel'});             # 562
@@ -986,8 +956,8 @@ ok(exists $seen{'jerky'});              # 571
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@unique = $lcmau->get_Aonly(2);
+    local $SIG{__WARN__} = \&_capture;
+    @unique = $lcmau->get_Aonly(2);
 }
 $seen{$_}++ foreach (@unique);
 ok(! exists $seen{'abel'});             # 572
@@ -1003,8 +973,8 @@ ok(exists $seen{'jerky'});              # 581
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$unique_ref = $lcmau->get_Aonly_ref(2);
+    local $SIG{__WARN__} = \&_capture;
+    $unique_ref = $lcmau->get_Aonly_ref(2);
 }
 $seen{$_}++ foreach (@{$unique_ref});
 ok(! exists $seen{'abel'});             # 582
@@ -1048,8 +1018,8 @@ ok(! exists $seen{'jerky'});            # 611
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@unique = $lcmau->get_Lonly;
+    local $SIG{__WARN__} = \&_capture;
+    @unique = $lcmau->get_Lonly;
 }
 $seen{$_}++ foreach (@unique);
 ok(exists $seen{'abel'});               # 612
@@ -1065,8 +1035,8 @@ ok(! exists $seen{'jerky'});            # 621
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$unique_ref = $lcmau->get_Lonly_ref;
+    local $SIG{__WARN__} = \&_capture;
+    $unique_ref = $lcmau->get_Lonly_ref;
 }
 $seen{$_}++ foreach (@{$unique_ref});
 ok(exists $seen{'abel'});               # 622
@@ -1082,8 +1052,8 @@ ok(! exists $seen{'jerky'});            # 631
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@unique = $lcmau->get_Aonly;
+    local $SIG{__WARN__} = \&_capture;
+    @unique = $lcmau->get_Aonly;
 }
 $seen{$_}++ foreach (@unique);
 ok(exists $seen{'abel'});               # 632
@@ -1099,8 +1069,8 @@ ok(! exists $seen{'jerky'});            # 641
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$unique_ref = $lcmau->get_Aonly_ref;
+    local $SIG{__WARN__} = \&_capture;
+    $unique_ref = $lcmau->get_Aonly_ref;
 }
 $seen{$_}++ foreach (@{$unique_ref});
 ok(exists $seen{'abel'});               # 642
@@ -1144,8 +1114,8 @@ ok(exists $seen{'jerky'});              # 671
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@complement = $lcmau->get_Ronly(1);
+    local $SIG{__WARN__} = \&_capture;
+    @complement = $lcmau->get_Ronly(1);
 }
 $seen{$_}++ foreach (@complement);
 ok(exists $seen{'abel'});               # 672
@@ -1161,8 +1131,8 @@ ok(exists $seen{'jerky'});              # 681
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$complement_ref = $lcmau->get_Ronly_ref(1);
+    local $SIG{__WARN__} = \&_capture;
+    $complement_ref = $lcmau->get_Ronly_ref(1);
 }
 $seen{$_}++ foreach (@{$complement_ref});
 ok(exists $seen{'abel'});               # 682
@@ -1178,8 +1148,8 @@ ok(exists $seen{'jerky'});              # 691
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@complement = $lcmau->get_Bonly(1);
+    local $SIG{__WARN__} = \&_capture;
+    @complement = $lcmau->get_Bonly(1);
 }
 $seen{$_}++ foreach (@complement);
 ok(exists $seen{'abel'});               # 692
@@ -1195,8 +1165,8 @@ ok(exists $seen{'jerky'});              # 701
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$complement_ref = $lcmau->get_Bonly_ref(1);
+    local $SIG{__WARN__} = \&_capture;
+    $complement_ref = $lcmau->get_Bonly_ref(1);
 }
 $seen{$_}++ foreach (@{$complement_ref});
 ok(exists $seen{'abel'});               # 702
@@ -1240,8 +1210,8 @@ ok(exists $seen{'jerky'});              # 731
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@complement = $lcmau->get_Ronly;
+    local $SIG{__WARN__} = \&_capture;
+    @complement = $lcmau->get_Ronly;
 }
 $seen{$_}++ foreach (@complement);
 ok(! exists $seen{'abel'});             # 732
@@ -1257,8 +1227,8 @@ ok(exists $seen{'jerky'});              # 741
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$complement_ref = $lcmau->get_Ronly_ref;
+    local $SIG{__WARN__} = \&_capture;
+    $complement_ref = $lcmau->get_Ronly_ref;
 }
 $seen{$_}++ foreach (@{$complement_ref});
 ok(! exists $seen{'abel'});             # 742
@@ -1274,8 +1244,8 @@ ok(exists $seen{'jerky'});              # 751
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@complement = $lcmau->get_Bonly;
+    local $SIG{__WARN__} = \&_capture;
+    @complement = $lcmau->get_Bonly;
 }
 $seen{$_}++ foreach (@complement);
 ok(! exists $seen{'abel'});             # 752
@@ -1291,8 +1261,8 @@ ok(exists $seen{'jerky'});              # 761
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$complement_ref = $lcmau->get_Bonly_ref;
+    local $SIG{__WARN__} = \&_capture;
+    $complement_ref = $lcmau->get_Bonly_ref;
 }
 $seen{$_}++ foreach (@{$complement_ref});
 ok(! exists $seen{'abel'});             # 762
@@ -1364,8 +1334,8 @@ ok(exists $seen{'jerky'});              # 811
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@symmetric_difference = $lcmau->get_LorRonly;
+    local $SIG{__WARN__} = \&_capture;
+    @symmetric_difference = $lcmau->get_LorRonly;
 }
 $seen{$_}++ foreach (@symmetric_difference);
 ok(exists $seen{'abel'});               # 812
@@ -1381,8 +1351,8 @@ ok(exists $seen{'jerky'});              # 821
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$symmetric_difference_ref = $lcmau->get_LorRonly_ref;
+    local $SIG{__WARN__} = \&_capture;
+    $symmetric_difference_ref = $lcmau->get_LorRonly_ref;
 }
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
 ok(exists $seen{'abel'});               # 822
@@ -1398,8 +1368,8 @@ ok(exists $seen{'jerky'});              # 831
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	@symmetric_difference = $lcmau->get_AorBonly;
+    local $SIG{__WARN__} = \&_capture;
+    @symmetric_difference = $lcmau->get_AorBonly;
 }
 $seen{$_}++ foreach (@symmetric_difference);
 ok(exists $seen{'abel'});               # 832
@@ -1415,8 +1385,8 @@ ok(exists $seen{'jerky'});              # 841
 %seen = ();
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$symmetric_difference_ref = $lcmau->get_AorBonly_ref;
+    local $SIG{__WARN__} = \&_capture;
+    $symmetric_difference_ref = $lcmau->get_AorBonly_ref;
 }
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
 ok(exists $seen{'abel'});               # 842
@@ -1503,14 +1473,14 @@ $LR = $lcmau->is_LsubsetR;
 ok(! $LR);                              # 896
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$RL = $lcmau->is_RsubsetL;
+    local $SIG{__WARN__} = \&_capture;
+    $RL = $lcmau->is_RsubsetL;
 }
 ok(! $RL);                              # 897
 
 {
-	local $SIG{__WARN__} = \&_capture;
-	$RL = $lcmau->is_BsubsetA;
+    local $SIG{__WARN__} = \&_capture;
+    $RL = $lcmau->is_BsubsetA;
 }
 ok(! $RL);                              # 898
 
@@ -1562,7 +1532,6 @@ ok(ok_seen_a( \@memb_arr, 'jerky',  1, [ qw<     2     > ] ));# 913
 @memb_arr = $lcmau->is_member_which('zebra');
 ok(ok_seen_a( \@memb_arr, 'zebra',  0, [ qw<           > ] ));# 914
 
-
 $memb_arr_ref = $lcmau->is_member_which_ref('abel');
 ok(ok_seen_a( $memb_arr_ref, 'abel',   1, [ qw< 0        > ] ));# 915
 
@@ -1596,23 +1565,9 @@ ok(ok_seen_a( $memb_arr_ref, 'jerky',  1, [ qw<     2     > ] ));# 924
 $memb_arr_ref = $lcmau->is_member_which_ref('zebra');
 ok(ok_seen_a( $memb_arr_ref, 'zebra',  0, [ qw<           > ] ));# 925
 
-
-#$memb_hash_ref = $lcmau->are_members_which(qw| abel baker camera delta edward fargo 
-#	golfer hilton icon jerky zebra |);
-#ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0         > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1       > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1       > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1       > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1       > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'fargo',  5, [ qw< 0 1 2 3 4 > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'golfer', 5, [ qw< 0 1 2 3 4 > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'hilton', 4, [ qw<   1 2 3 4 > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'icon',   3, [ qw<     2 3 4 > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'jerky',  1, [ qw<     2     > ] ));
-#ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<           > ] ));
-
-$memb_hash_ref = $lcmau->are_members_which( [ qw| abel baker camera delta edward fargo 
-	golfer hilton icon jerky zebra | ] );
+$memb_hash_ref = $lcmau->are_members_which(
+                     [ qw| abel baker camera delta edward fargo 
+                           golfer hilton icon jerky zebra | ] );
 ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0         > ] ));# 926
 ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1       > ] ));# 927
 ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1       > ] ));# 928
@@ -1624,7 +1579,6 @@ ok(ok_seen_h( $memb_hash_ref, 'hilton', 4, [ qw<   1 2 3 4 > ] ));# 933
 ok(ok_seen_h( $memb_hash_ref, 'icon',   3, [ qw<     2 3 4 > ] ));# 934
 ok(ok_seen_h( $memb_hash_ref, 'jerky',  1, [ qw<     2     > ] ));# 935
 ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<           > ] ));# 936
-
 
 ok($lcmau->is_member_any('abel'));      # 937
 ok($lcmau->is_member_any('baker'));     # 938
@@ -1638,24 +1592,9 @@ ok($lcmau->is_member_any('icon' ));     # 945
 ok($lcmau->is_member_any('jerky'));     # 946
 ok(! $lcmau->is_member_any('zebra'));   # 947
 
-#$memb_hash_ref = $lcmau->are_members_any(qw| abel baker camera delta edward fargo 
-#    golfer hilton icon jerky zebra |);
-#
-#ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));
-#ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));
-#ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));
-#ok(ok_any_h( $memb_hash_ref, 'delta',  1 ));
-#ok(ok_any_h( $memb_hash_ref, 'edward', 1 ));
-#ok(ok_any_h( $memb_hash_ref, 'fargo',  1 ));
-#ok(ok_any_h( $memb_hash_ref, 'golfer', 1 ));
-#ok(ok_any_h( $memb_hash_ref, 'hilton', 1 ));
-#ok(ok_any_h( $memb_hash_ref, 'icon',   1 ));
-#ok(ok_any_h( $memb_hash_ref, 'jerky',  1 ));
-#ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));
-
-$memb_hash_ref = $lcmau->are_members_any( [ qw| abel baker camera delta edward fargo 
-    golfer hilton icon jerky zebra | ] );
-
+$memb_hash_ref = $lcmau->are_members_any(
+                     [ qw| abel baker camera delta edward fargo 
+                           golfer hilton icon jerky zebra | ] );
 ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));# 948
 ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));# 949
 ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));# 950
@@ -1673,7 +1612,8 @@ ok($vers);                              # 959
 
 ########## BELOW:  Tests for '--unsorted' option ##########
 
-my $lcmaun   = List::Compare->new('--unsorted', \@a0, \@a1, \@a2, \@a3, \@a4);
+my $lcmaun   = List::Compare->new('--unsorted', '--accelerated', 
+                   \@a0, \@a1, \@a2, \@a3, \@a4);
 
 ok($lcmaun);                            # 960
 

@@ -1,26 +1,20 @@
+# MANIFEST for List::Compare
+# $VERSION = 0.28;
+# as of:  04/25/2004
 Changes
 Compare.pm
-Compare/Base/Accelerated.pm
 Compare/Base/_Auxiliary.pm
 Compare/Base/_Engine.pm
-Compare/Base/Multiple.pm
-Compare/Base/Regular.pm
-Compare/Base/Multiple/Accelerated.pm
 Compare/Functional.pm
-# Compare/SeenHash.pm     # deprecated starting v0.26
 MANIFEST
 Makefile.PL
 README
 t/01_simple.t
 t/02_accelerated.t
 t/03_multiple.t
-# t/04_simple_sh.t        # deprecated starting v0.26
-# t/05_accelerated_sh.t   # deprecated starting v0.26
-# t/06_multiple_sh.t      # deprecated starting v0.26
 t/07_functional.t
 t/08_functional_sh.t
 t/09_multaccel.t
-# t/10_multaccel_sh.t     # deprecated starting v0.26
 t/11_functional_multiple.t
 t/12_functional_multiple_sh.t
 t/13_simple_sh_rev.t

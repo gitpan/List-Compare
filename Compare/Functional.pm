@@ -1,5 +1,5 @@
 package List::Compare::Functional;
-$VERSION = 0.27;   # April 18, 2004 
+$VERSION = 0.28;   # April 25, 2004 
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
     get_intersection
@@ -14,13 +14,14 @@ $VERSION = 0.27;   # April 18, 2004
     get_symmetric_difference_ref
     is_LsubsetR
     is_RsubsetL
+    is_LequivalentR
+    is_LdisjointR
     is_member_which
     is_member_which_ref
     are_members_which
     is_member_any
     are_members_any
     print_subset_chart
-    is_LequivalentR
     print_equivalence_chart
     get_shared
     get_shared_ref
@@ -65,13 +66,14 @@ $VERSION = 0.27;   # April 18, 2004
         get_nonintersection_ref
         is_LsubsetR
         is_RsubsetL
+        is_LequivalentR
+        is_LdisjointR
         is_member_which
         is_member_which_ref
         are_members_which
         is_member_any
         are_members_any
         print_subset_chart
-        is_LequivalentR
         print_equivalence_chart
         get_bag
         get_bag_ref
@@ -90,13 +92,8 @@ use List::Compare::Base::_Auxiliary qw(
     _chart_engine_multiple
     _equivalent_subengine
     _calc_seen1
-    _argument_checker 
-    _argument_checker_1 
-    _argument_checker_2 
-    _argument_checker_3 
-    _argument_checker_4
 );
-use List::Compare::Base::_Auxiliary qw(:calculate);
+use List::Compare::Base::_Auxiliary qw(:calculate :checker);
 
 
 sub get_union {
@@ -222,9 +219,6 @@ sub get_symmetric_difference_ref {
         : return [ sort @{_symmetric_difference_engine(_argument_checker(@args))} ];
 }
 
-*get_symdiff  = \&get_symmetric_difference;
-*get_symdiff_ref  = \&get_symmetric_difference_ref;
-
 sub _symmetric_difference_engine {
     my $seenrefsref = _calc_seen1(@_);
     my ($unionref, $xintersectionref) = 
@@ -238,6 +232,9 @@ sub _symmetric_difference_engine {
     }
     return \@symmetric_difference;
 }
+
+*get_symdiff  = \&get_symmetric_difference;
+*get_symdiff_ref  = \&get_symmetric_difference_ref;
 
 sub get_shared {
     return @{ get_shared_ref(@_) };
@@ -285,6 +282,88 @@ sub _nonintersection_engine {
     }
     return \@nonintersection;
 }
+
+sub is_LsubsetR {
+    return _is_LsubsetR_engine(_argument_checker_4(@_));
+}
+
+sub _is_LsubsetR_engine {
+    my $testedref = pop(@_);
+    my $xsubsetref = _subset_engine(@_);
+    return ${$xsubsetref}[${$testedref}[0]][${$testedref}[1]];
+}
+
+sub is_RsubsetL {
+    return _is_RsubsetL_engine(_argument_checker_4(@_));
+}
+
+sub _is_RsubsetL_engine {
+    my $testedref = pop(@_);
+    my $xsubsetref = _subset_engine(@_);
+    return ${$xsubsetref}[${$testedref}[1]][${$testedref}[0]];
+}
+
+sub _subset_engine {
+    my $seenrefsref = _calc_seen1(@_);
+    my $xsubsetref = _subset_subengine($seenrefsref);
+    return $xsubsetref;
+}
+
+sub is_LequivalentR {
+    return _is_LequivalentR_engine(_argument_checker_4(@_));
+}
+
+*is_LeqvlntR = \&is_LequivalentR;
+
+sub _is_LequivalentR_engine {
+    my $testedref = pop(@_);
+    my $seenrefsref = _calc_seen1(@_);
+    my $xequivalentref = _equivalent_subengine($seenrefsref);
+    return ${$xequivalentref}[${$testedref}[1]][${$testedref}[0]];
+}
+
+sub is_LdisjointR {
+    return _is_LdisjointR_engine(_argument_checker_4(@_));
+}
+
+sub _is_LdisjointR_engine {
+    my $testedref = pop(@_);
+    my $seenrefsref = _calc_seen1(@_);
+    my $xintersectionref = _calculate_xintersection_only($seenrefsref);
+    my (@xdisjoint);
+    for (my $i = 0; $i <= @{$seenrefsref}; $i++) {
+        foreach (keys %{$xintersectionref}) {
+            my ($left, $right) = split /_/, $_;
+            $xdisjoint[$left][$right] = $xdisjoint[$right][$left] = 
+                ! scalar(keys %{${$xintersectionref}{$_}}) ? 1 : 0;
+        }
+        $xdisjoint[$i][$i] = 0; 
+    }
+    my $disjoint_status = $xdisjoint[${$testedref}[1]][${$testedref}[0]];
+    return $disjoint_status;
+}
+
+sub print_subset_chart {
+    _print_subset_chart_engine(_argument_checker(@_));
+}
+
+sub _print_subset_chart_engine {
+    my $seenrefsref = _calc_seen1(@_);
+    my $xsubsetref = _subset_subengine($seenrefsref);
+    my $title = 'Subset';
+    _chart_engine_multiple($xsubsetref, $title);
+}
+
+sub print_equivalence_chart {
+    _print_equivalence_chart_engine(_argument_checker(@_));
+}
+
+sub _print_equivalence_chart_engine {
+    my $seenrefsref = _calc_seen1(@_);
+    my $xequivalentref = _equivalent_subengine($seenrefsref);
+    my $title = 'Subset';
+    _chart_engine_multiple($xequivalentref, $title);
+}    
 
 sub is_member_which {
     return @{ is_member_which_ref(@_) };
@@ -363,67 +442,6 @@ sub _are_members_any_engine {
     return \%present;
 }
 
-sub is_LsubsetR {
-    return _is_LsubsetR_engine(_argument_checker_4(@_));
-}
-
-sub _is_LsubsetR_engine {
-    my $testedref = pop(@_);
-    my $xsubsetref = _subset_engine(@_);
-    return ${$xsubsetref}[${$testedref}[0]][${$testedref}[1]];
-}
-
-sub is_RsubsetL {
-    return _is_RsubsetL_engine(_argument_checker_4(@_));
-}
-
-sub _is_RsubsetL_engine {
-    my $testedref = pop(@_);
-    my $xsubsetref = _subset_engine(@_);
-    return ${$xsubsetref}[${$testedref}[1]][${$testedref}[0]];
-}
-
-sub _subset_engine {
-    my $seenrefsref = _calc_seen1(@_);
-    my $xsubsetref = _subset_subengine($seenrefsref);
-    return $xsubsetref;
-}
-
-sub print_subset_chart {
-    _print_subset_chart_engine(_argument_checker(@_));
-}
-
-sub _print_subset_chart_engine {
-    my $seenrefsref = _calc_seen1(@_);
-    my $xsubsetref = _subset_subengine($seenrefsref);
-    my $title = 'Subset';
-    _chart_engine_multiple($xsubsetref, $title);
-}
-
-sub is_LequivalentR {
-    return _is_LequivalentR_engine(_argument_checker_4(@_));
-}
-
-*is_LeqvlntR = \&is_LequivalentR;
-
-sub _is_LequivalentR_engine {
-    my $testedref = pop(@_);
-    my $seenrefsref = _calc_seen1(@_);
-    my $xequivalentref = _equivalent_subengine($seenrefsref);
-    return ${$xequivalentref}[${$testedref}[1]][${$testedref}[0]];
-}
-
-sub print_equivalence_chart {
-    _print_equivalence_chart_engine(_argument_checker(@_));
-}
-
-sub _print_equivalence_chart_engine {
-    my $seenrefsref = _calc_seen1(@_);
-    my $xequivalentref = _equivalent_subengine($seenrefsref);
-    my $title = 'Subset';
-    _chart_engine_multiple($xequivalentref, $title);
-}    
-
 sub get_bag {
     return @{ get_bag_ref(@_) };
 }
@@ -472,8 +490,8 @@ List::Compare::Functional - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.27 of List::Compare::Functional.  
-This version was released April 18, 2004.  The first released 
+This document refers to version 0.28 of List::Compare::Functional.  
+This version was released April 25, 2004.  The first released 
 version of List::Compare::Functional was v0.21.  Its version numbers 
 are set to be consistent with the other parts of the List::Compare 
 distribution.
@@ -599,11 +617,18 @@ Return a true value if R is a subset of L.
 
 =item *
 
-Return a true value if L and R are equivalent, I<i.e.> if every element 
+Return a true value if L and R are equivalent, I<i.e.,> if every element 
 in L appears at least once in R and I<vice versa>.
 
     $eqv = is_LequivalentR( [ \@Llist, \@Rlist ] );
     $eqv = is_LeqvlntR( [ \@Llist, \@Rlist ] );            # alias
+
+=item *
+
+Return a true value if L and R are disjoint, I<i.e.,> if L and R have 
+no common elements.
+
+    $disj = is_LdisjointR( [ \@Llist, \@Rlist ] );
 
 =item *
 
@@ -931,6 +956,24 @@ compares the first two lists passed to the function. So,
 
 =item *
 
+To determine whether any two of the lists passed to the function are 
+disjoint from one another (I<i.e.,> have no common members), provide 
+C<is_LdisjointR()> with two array references.
+The first is a reference to an array of array 
+references, the arrays holding the lists under consideration.  The 
+second of these is a reference to a two-element array consisting of the 
+two lists being tested for disjointedness.  A true value (C<1>) is returned if 
+the lists are disjoint; a false value (C<0>) is returned otherwise.
+
+Example:  To determine whether C<@Don> and C<@Ed> are disjoint, call:
+
+    $disj = is_LdisjointR(
+               [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ], 
+               [3,4]
+           );
+
+=item *
+
 Pretty-print a chart showing the subset relationships among the various 
 source lists:
 
@@ -1222,13 +1265,14 @@ in their 'original' form, I<i.e.>, no aliases for those subroutines:
     get_nonintersection_ref
     is_LsubsetR
     is_RsubsetL
+    is_LequivalentR
+    is_LdisjointR
     is_member_which
     is_member_which_ref
     are_members_which
     is_member_any
     are_members_any
     print_subset_chart
-    is_LequivalentR
     print_equivalence_chart
     get_bag
     get_bag_ref
@@ -1321,7 +1365,7 @@ James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please
 include 'List::Compare::Functional' or 'List-Compare-Functional' in your 
 subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  April 18, 2004. 
+Creation date:  May 20, 2002.  Last modification date:  April 25, 2004. 
 Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

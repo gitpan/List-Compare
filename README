@@ -1,14 +1,14 @@
 List::Compare - Compare elements of two or more lists
 
-This document refers to version 0.27 of List::Compare.  This version was
-released April 18, 2004.
+This document refers to version 0.28 of List::Compare.  This version was
+released April 25, 2004.
 
 To install this module on your system, place the tarball archive file in a 
 temporary directory and call the following:
 
-% gunzip List-Compare-0.27.tar.gz
-% tar xf List-Compare-0.27.tar
-% cd List-Compare-0.27
+% gunzip List-Compare-0.28.tar.gz
+% tar xf List-Compare-0.28.tar
+% cd List-Compare-0.28
 % perl Makefile.PL
 % make
 % make test

@@ -1,4 +1,4 @@
-# 07_functional.t # revised 3/30/04 to accommodate new interface to List::Compare::Functional
+# 07_functional.t # revised 3/30/04 to accommodate new interface to List::Compare::Functional # as of 04/25/2004
 
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
@@ -7,7 +7,7 @@
 
 END {print "not ok 1\n" unless $loaded;} 
 use Test::Simple tests =>
-609;
+612;
 use lib ("./t");
 use List::Compare;
 use List::Compare::Functional qw(:originals :aliases);
@@ -22,7 +22,7 @@ ok($loaded);                            # 1
 my %seen = ();
 my (@unique, @complement, @intersection, @union, @symmetric_difference, @bag);
 my ($unique_ref, $complement_ref, $intersection_ref, $union_ref, $symmetric_difference_ref, $bag_ref);
-my ($LR, $RL, $eqv, $return);
+my ($LR, $RL, $eqv, $disj, $return);
 my (@nonintersection, @shared);
 my ($nonintersection_ref, @shared_ref);
 my ($memb_hash_ref, $memb_arr_ref, @memb_arr);
@@ -32,6 +32,7 @@ my @a1 = qw(baker camera delta delta edward fargo golfer hilton);
 my @a2 = qw(fargo golfer hilton icon icon jerky);
 my @a3 = qw(fargo golfer hilton icon icon);
 my @a4 = qw(fargo fargo golfer hilton icon);
+my @a8 = qw(kappa lambda mu);
 
 @union = get_union( [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@union);
@@ -297,646 +298,655 @@ ok(! $eqv);                             # 184
 $eqv = is_LeqvlntR( [ \@a0, \@a1 ] );
 ok(! $eqv);                             # 185
 
-$return = print_subset_chart( [ \@a0, \@a1 ] );
-ok($return);                            # 186
+$disj = is_LdisjointR( [ \@a0, \@a1 ] );
+ok(! $disj);                            # 186
 
-$return = print_equivalence_chart( [ \@a0, \@a1 ] );
+$return = print_subset_chart( [ \@a0, \@a1 ] );
 ok($return);                            # 187
 
+$return = print_equivalence_chart( [ \@a0, \@a1 ] );
+ok($return);                            # 188
+
 @memb_arr = is_member_which( [ \@a0, \@a1 ] , [ 'abel' ] );
-ok(ok_seen_a( \@memb_arr, 'abel',   1, [ qw< 0   > ] ));# 188
+ok(ok_seen_a( \@memb_arr, 'abel',   1, [ qw< 0   > ] ));# 189
 
 @memb_arr = is_member_which( [ \@a0, \@a1 ] , [ 'baker' ] );
-ok(ok_seen_a( \@memb_arr, 'baker',  2, [ qw< 0 1 > ] ));# 189
+ok(ok_seen_a( \@memb_arr, 'baker',  2, [ qw< 0 1 > ] ));# 190
 
 @memb_arr = is_member_which( [ \@a0, \@a1 ] , [ 'camera' ] );
-ok(ok_seen_a( \@memb_arr, 'camera', 2, [ qw< 0 1 > ] ));# 190
+ok(ok_seen_a( \@memb_arr, 'camera', 2, [ qw< 0 1 > ] ));# 191
 
 @memb_arr = is_member_which( [ \@a0, \@a1 ] , [ 'delta' ] );
-ok(ok_seen_a( \@memb_arr, 'delta',  2, [ qw< 0 1 > ] ));# 191
+ok(ok_seen_a( \@memb_arr, 'delta',  2, [ qw< 0 1 > ] ));# 192
 
 @memb_arr = is_member_which( [ \@a0, \@a1 ] , [ 'edward' ] );
-ok(ok_seen_a( \@memb_arr, 'edward', 2, [ qw< 0 1 > ] ));# 192
+ok(ok_seen_a( \@memb_arr, 'edward', 2, [ qw< 0 1 > ] ));# 193
 
 @memb_arr = is_member_which( [ \@a0, \@a1 ] , [ 'fargo' ] );
-ok(ok_seen_a( \@memb_arr, 'fargo',  2, [ qw< 0 1 > ] ));# 193
+ok(ok_seen_a( \@memb_arr, 'fargo',  2, [ qw< 0 1 > ] ));# 194
 
 @memb_arr = is_member_which( [ \@a0, \@a1 ] , [ 'golfer' ] );
-ok(ok_seen_a( \@memb_arr, 'golfer', 2, [ qw< 0 1 > ] ));# 194
+ok(ok_seen_a( \@memb_arr, 'golfer', 2, [ qw< 0 1 > ] ));# 195
 
 @memb_arr = is_member_which( [ \@a0, \@a1 ] , [ 'hilton' ] );
-ok(ok_seen_a( \@memb_arr, 'hilton', 1, [ qw<   1 > ] ));# 195
+ok(ok_seen_a( \@memb_arr, 'hilton', 1, [ qw<   1 > ] ));# 196
 
 @memb_arr = is_member_which( [ \@a0, \@a1 ] , [ 'icon' ] );
-ok(ok_seen_a( \@memb_arr, 'icon',   0, [ qw<     > ] ));# 196
+ok(ok_seen_a( \@memb_arr, 'icon',   0, [ qw<     > ] ));# 197
 
 @memb_arr = is_member_which( [ \@a0, \@a1 ] , [ 'jerky' ] );
-ok(ok_seen_a( \@memb_arr, 'jerky',  0, [ qw<     > ] ));# 197
+ok(ok_seen_a( \@memb_arr, 'jerky',  0, [ qw<     > ] ));# 198
 
 @memb_arr = is_member_which( [ \@a0, \@a1 ] , [ 'zebra' ] );
-ok(ok_seen_a( \@memb_arr, 'zebra',  0, [ qw<     > ] ));# 198
-
+ok(ok_seen_a( \@memb_arr, 'zebra',  0, [ qw<     > ] ));# 199
 
 $memb_arr_ref = is_member_which_ref( [ \@a0, \@a1 ] , [ 'abel' ] );
-ok(ok_seen_a( $memb_arr_ref, 'abel',   1, [ qw< 0   > ] ));# 199
+ok(ok_seen_a( $memb_arr_ref, 'abel',   1, [ qw< 0   > ] ));# 200
 
 $memb_arr_ref = is_member_which_ref( [ \@a0, \@a1 ] , [ 'baker' ] );
-ok(ok_seen_a( $memb_arr_ref, 'baker',  2, [ qw< 0 1 > ] ));# 200
+ok(ok_seen_a( $memb_arr_ref, 'baker',  2, [ qw< 0 1 > ] ));# 201
 
 $memb_arr_ref = is_member_which_ref( [ \@a0, \@a1 ] , [ 'camera' ] );
-ok(ok_seen_a( $memb_arr_ref, 'camera', 2, [ qw< 0 1 > ] ));# 201
+ok(ok_seen_a( $memb_arr_ref, 'camera', 2, [ qw< 0 1 > ] ));# 202
 
 $memb_arr_ref = is_member_which_ref( [ \@a0, \@a1 ] , [ 'delta' ] );
-ok(ok_seen_a( $memb_arr_ref, 'delta',  2, [ qw< 0 1 > ] ));# 202
+ok(ok_seen_a( $memb_arr_ref, 'delta',  2, [ qw< 0 1 > ] ));# 203
 
 $memb_arr_ref = is_member_which_ref( [ \@a0, \@a1 ] , [ 'edward' ] );
-ok(ok_seen_a( $memb_arr_ref, 'edward', 2, [ qw< 0 1 > ] ));# 203
+ok(ok_seen_a( $memb_arr_ref, 'edward', 2, [ qw< 0 1 > ] ));# 204
 
 $memb_arr_ref = is_member_which_ref( [ \@a0, \@a1 ] , [ 'fargo' ] );
-ok(ok_seen_a( $memb_arr_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 204
+ok(ok_seen_a( $memb_arr_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 205
 
 $memb_arr_ref = is_member_which_ref( [ \@a0, \@a1 ] , [ 'golfer' ] );
-ok(ok_seen_a( $memb_arr_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 205
+ok(ok_seen_a( $memb_arr_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 206
 
 $memb_arr_ref = is_member_which_ref( [ \@a0, \@a1 ] , [ 'hilton' ] );
-ok(ok_seen_a( $memb_arr_ref, 'hilton', 1, [ qw<   1 > ] ));# 206
+ok(ok_seen_a( $memb_arr_ref, 'hilton', 1, [ qw<   1 > ] ));# 207
 
 $memb_arr_ref = is_member_which_ref( [ \@a0, \@a1 ] , [ 'icon' ] );
-ok(ok_seen_a( $memb_arr_ref, 'icon',   0, [ qw<     > ] ));# 207
+ok(ok_seen_a( $memb_arr_ref, 'icon',   0, [ qw<     > ] ));# 208
 
 $memb_arr_ref = is_member_which_ref( [ \@a0, \@a1 ] , [ 'jerky' ] );
-ok(ok_seen_a( $memb_arr_ref, 'jerky',  0, [ qw<     > ] ));# 208
+ok(ok_seen_a( $memb_arr_ref, 'jerky',  0, [ qw<     > ] ));# 209
 
 $memb_arr_ref = is_member_which_ref( [ \@a0, \@a1 ] , [ 'zebra' ] );
-ok(ok_seen_a( $memb_arr_ref, 'zebra',  0, [ qw<     > ] ));# 209
+ok(ok_seen_a( $memb_arr_ref, 'zebra',  0, [ qw<     > ] ));# 210
 
-$memb_hash_ref = are_members_which(  [ \@a0, \@a1 ] , 
-	[ qw| abel baker camera delta edward fargo golfer hilton icon jerky zebra | ] );
-ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0   > ] ));# 210
-ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1 > ] ));# 211
-ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1 > ] ));# 212
-ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1 > ] ));# 213
-ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1 > ] ));# 214
-ok(ok_seen_h( $memb_hash_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 215
-ok(ok_seen_h( $memb_hash_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 216
-ok(ok_seen_h( $memb_hash_ref, 'hilton', 1, [ qw<   1 > ] ));# 217
-ok(ok_seen_h( $memb_hash_ref, 'icon',   0, [ qw<     > ] ));# 218
-ok(ok_seen_h( $memb_hash_ref, 'jerky',  0, [ qw<     > ] ));# 219
-ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<     > ] ));# 220
+$memb_hash_ref = are_members_which(
+     [ \@a0, \@a1 ] , 
+[ qw| abel baker camera delta edward fargo golfer hilton icon jerky zebra | ] );
+ok(ok_seen_h( $memb_hash_ref, 'abel',   1, [ qw< 0   > ] ));# 211
+ok(ok_seen_h( $memb_hash_ref, 'baker',  2, [ qw< 0 1 > ] ));# 212
+ok(ok_seen_h( $memb_hash_ref, 'camera', 2, [ qw< 0 1 > ] ));# 213
+ok(ok_seen_h( $memb_hash_ref, 'delta',  2, [ qw< 0 1 > ] ));# 214
+ok(ok_seen_h( $memb_hash_ref, 'edward', 2, [ qw< 0 1 > ] ));# 215
+ok(ok_seen_h( $memb_hash_ref, 'fargo',  2, [ qw< 0 1 > ] ));# 216
+ok(ok_seen_h( $memb_hash_ref, 'golfer', 2, [ qw< 0 1 > ] ));# 217
+ok(ok_seen_h( $memb_hash_ref, 'hilton', 1, [ qw<   1 > ] ));# 218
+ok(ok_seen_h( $memb_hash_ref, 'icon',   0, [ qw<     > ] ));# 219
+ok(ok_seen_h( $memb_hash_ref, 'jerky',  0, [ qw<     > ] ));# 220
+ok(ok_seen_h( $memb_hash_ref, 'zebra',  0, [ qw<     > ] ));# 221
 
-ok(is_member_any( [ \@a0, \@a1 ] , [ 'abel' ] ));# 221
-ok(is_member_any( [ \@a0, \@a1 ] , [ 'baker' ] ));# 222
-ok(is_member_any( [ \@a0, \@a1 ] , [ 'camera' ] ));# 223
-ok(is_member_any( [ \@a0, \@a1 ] , [ 'delta' ] ));# 224
-ok(is_member_any( [ \@a0, \@a1 ] , [ 'edward' ] ));# 225
-ok(is_member_any( [ \@a0, \@a1 ] , [ 'fargo' ] ));# 226
-ok(is_member_any( [ \@a0, \@a1 ] , [ 'golfer' ] ));# 227
-ok(is_member_any( [ \@a0, \@a1 ] , [ 'hilton' ] ));# 228
-ok(! is_member_any( [ \@a0, \@a1 ] , [ 'icon' ] ));# 229
-ok(! is_member_any( [ \@a0, \@a1 ] , [ 'jerky' ] ));# 230
-ok(! is_member_any( [ \@a0, \@a1 ] , [ 'zebra' ] ));# 231
+ok(is_member_any( [ \@a0, \@a1 ] , [ 'abel' ] ));# 222
+ok(is_member_any( [ \@a0, \@a1 ] , [ 'baker' ] ));# 223
+ok(is_member_any( [ \@a0, \@a1 ] , [ 'camera' ] ));# 224
+ok(is_member_any( [ \@a0, \@a1 ] , [ 'delta' ] ));# 225
+ok(is_member_any( [ \@a0, \@a1 ] , [ 'edward' ] ));# 226
+ok(is_member_any( [ \@a0, \@a1 ] , [ 'fargo' ] ));# 227
+ok(is_member_any( [ \@a0, \@a1 ] , [ 'golfer' ] ));# 228
+ok(is_member_any( [ \@a0, \@a1 ] , [ 'hilton' ] ));# 229
+ok(! is_member_any( [ \@a0, \@a1 ] , [ 'icon' ] ));# 230
+ok(! is_member_any( [ \@a0, \@a1 ] , [ 'jerky' ] ));# 231
+ok(! is_member_any( [ \@a0, \@a1 ] , [ 'zebra' ] ));# 232
 
 $memb_hash_ref = are_members_any(  [ \@a0, \@a1 ] , 
-	[ qw| abel baker camera delta edward fargo golfer hilton icon jerky zebra | ] );
-
-ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));# 232
-ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));# 233
-ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));# 234
-ok(ok_any_h( $memb_hash_ref, 'delta',  1 ));# 235
-ok(ok_any_h( $memb_hash_ref, 'edward', 1 ));# 236
-ok(ok_any_h( $memb_hash_ref, 'fargo',  1 ));# 237
-ok(ok_any_h( $memb_hash_ref, 'golfer', 1 ));# 238
-ok(ok_any_h( $memb_hash_ref, 'hilton', 1 ));# 239
-ok(ok_any_h( $memb_hash_ref, 'icon',   0 ));# 240
-ok(ok_any_h( $memb_hash_ref, 'jerky',  0 ));# 241
-ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));# 242
+    [ qw| abel baker camera delta edward fargo 
+          golfer hilton icon jerky zebra | ] );
+ok(ok_any_h( $memb_hash_ref, 'abel',   1 ));# 233
+ok(ok_any_h( $memb_hash_ref, 'baker',  1 ));# 234
+ok(ok_any_h( $memb_hash_ref, 'camera', 1 ));# 235
+ok(ok_any_h( $memb_hash_ref, 'delta',  1 ));# 236
+ok(ok_any_h( $memb_hash_ref, 'edward', 1 ));# 237
+ok(ok_any_h( $memb_hash_ref, 'fargo',  1 ));# 238
+ok(ok_any_h( $memb_hash_ref, 'golfer', 1 ));# 239
+ok(ok_any_h( $memb_hash_ref, 'hilton', 1 ));# 240
+ok(ok_any_h( $memb_hash_ref, 'icon',   0 ));# 241
+ok(ok_any_h( $memb_hash_ref, 'jerky',  0 ));# 242
+ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));# 243
 
 $vers = get_version;
-ok($vers);                              # 243
+ok($vers);                              # 244
 
 $LR = is_LsubsetR( [ \@a2, \@a3 ] );
-ok(! $LR);                              # 244
+ok(! $LR);                              # 245
 
 $RL = is_RsubsetL( [ \@a2, \@a3 ] );
-ok($RL);                                # 245
+ok($RL);                                # 246
 
 $eqv = is_LequivalentR( [ \@a2, \@a3 ] );
-ok(! $eqv);                             # 246
-
-$eqv = is_LeqvlntR( [ \@a2, \@a3 ] );
 ok(! $eqv);                             # 247
 
+$eqv = is_LeqvlntR( [ \@a2, \@a3 ] );
+ok(! $eqv);                             # 248
+
 $eqv = is_LequivalentR( [ \@a3, \@a4 ] );
-ok($eqv);                               # 248
+ok($eqv);                               # 249
 
 $eqv = is_LeqvlntR( [ \@a3, \@a4 ] );
-ok($eqv);                               # 249
+ok($eqv);                               # 250
+
+$disj = is_LdisjointR( [ \@a3, \@a4 ] );
+ok(! $disj);                            # 251
+
+$disj = is_LdisjointR( [ \@a4, \@a8 ] );
+ok($disj);                              # 252
 
 ########## BELOW:  Tests for '-u' option ##########
 
 @union = get_union('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@union);
-ok(exists $seen{'abel'});               # 250
-ok(exists $seen{'baker'});              # 251
-ok(exists $seen{'camera'});             # 252
-ok(exists $seen{'delta'});              # 253
-ok(exists $seen{'edward'});             # 254
-ok(exists $seen{'fargo'});              # 255
-ok(exists $seen{'golfer'});             # 256
-ok(exists $seen{'hilton'});             # 257
-ok(! exists $seen{'icon'});             # 258
-ok(! exists $seen{'jerky'});            # 259
+ok(exists $seen{'abel'});               # 253
+ok(exists $seen{'baker'});              # 254
+ok(exists $seen{'camera'});             # 255
+ok(exists $seen{'delta'});              # 256
+ok(exists $seen{'edward'});             # 257
+ok(exists $seen{'fargo'});              # 258
+ok(exists $seen{'golfer'});             # 259
+ok(exists $seen{'hilton'});             # 260
+ok(! exists $seen{'icon'});             # 261
+ok(! exists $seen{'jerky'});            # 262
 %seen = ();
 
 $union_ref = get_union_ref('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$union_ref});
-ok(exists $seen{'abel'});               # 260
-ok(exists $seen{'baker'});              # 261
-ok(exists $seen{'camera'});             # 262
-ok(exists $seen{'delta'});              # 263
-ok(exists $seen{'edward'});             # 264
-ok(exists $seen{'fargo'});              # 265
-ok(exists $seen{'golfer'});             # 266
-ok(exists $seen{'hilton'});             # 267
-ok(! exists $seen{'icon'});             # 268
-ok(! exists $seen{'jerky'});            # 269
+ok(exists $seen{'abel'});               # 263
+ok(exists $seen{'baker'});              # 264
+ok(exists $seen{'camera'});             # 265
+ok(exists $seen{'delta'});              # 266
+ok(exists $seen{'edward'});             # 267
+ok(exists $seen{'fargo'});              # 268
+ok(exists $seen{'golfer'});             # 269
+ok(exists $seen{'hilton'});             # 270
+ok(! exists $seen{'icon'});             # 271
+ok(! exists $seen{'jerky'});            # 272
 %seen = ();
 
 @shared = get_shared('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@shared);
-ok(! exists $seen{'abel'});             # 270
-ok(exists $seen{'baker'});              # 271
-ok(exists $seen{'camera'});             # 272
-ok(exists $seen{'delta'});              # 273
-ok(exists $seen{'edward'});             # 274
-ok(exists $seen{'fargo'});              # 275
-ok(exists $seen{'golfer'});             # 276
-ok(! exists $seen{'hilton'});           # 277
-ok(! exists $seen{'icon'});             # 278
-ok(! exists $seen{'jerky'});            # 279
+ok(! exists $seen{'abel'});             # 273
+ok(exists $seen{'baker'});              # 274
+ok(exists $seen{'camera'});             # 275
+ok(exists $seen{'delta'});              # 276
+ok(exists $seen{'edward'});             # 277
+ok(exists $seen{'fargo'});              # 278
+ok(exists $seen{'golfer'});             # 279
+ok(! exists $seen{'hilton'});           # 280
+ok(! exists $seen{'icon'});             # 281
+ok(! exists $seen{'jerky'});            # 282
 %seen = ();
 
 $shared_ref = get_shared_ref('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$shared_ref});
-ok(! exists $seen{'abel'});             # 280
-ok(exists $seen{'baker'});              # 281
-ok(exists $seen{'camera'});             # 282
-ok(exists $seen{'delta'});              # 283
-ok(exists $seen{'edward'});             # 284
-ok(exists $seen{'fargo'});              # 285
-ok(exists $seen{'golfer'});             # 286
-ok(! exists $seen{'hilton'});           # 287
-ok(! exists $seen{'icon'});             # 288
-ok(! exists $seen{'jerky'});            # 289
+ok(! exists $seen{'abel'});             # 283
+ok(exists $seen{'baker'});              # 284
+ok(exists $seen{'camera'});             # 285
+ok(exists $seen{'delta'});              # 286
+ok(exists $seen{'edward'});             # 287
+ok(exists $seen{'fargo'});              # 288
+ok(exists $seen{'golfer'});             # 289
+ok(! exists $seen{'hilton'});           # 290
+ok(! exists $seen{'icon'});             # 291
+ok(! exists $seen{'jerky'});            # 292
 %seen = ();
 
 @intersection = get_intersection('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@intersection);
-ok(! exists $seen{'abel'});             # 290
-ok(exists $seen{'baker'});              # 291
-ok(exists $seen{'camera'});             # 292
-ok(exists $seen{'delta'});              # 293
-ok(exists $seen{'edward'});             # 294
-ok(exists $seen{'fargo'});              # 295
-ok(exists $seen{'golfer'});             # 296
-ok(! exists $seen{'hilton'});           # 297
-ok(! exists $seen{'icon'});             # 298
-ok(! exists $seen{'jerky'});            # 299
+ok(! exists $seen{'abel'});             # 293
+ok(exists $seen{'baker'});              # 294
+ok(exists $seen{'camera'});             # 295
+ok(exists $seen{'delta'});              # 296
+ok(exists $seen{'edward'});             # 297
+ok(exists $seen{'fargo'});              # 298
+ok(exists $seen{'golfer'});             # 299
+ok(! exists $seen{'hilton'});           # 300
+ok(! exists $seen{'icon'});             # 301
+ok(! exists $seen{'jerky'});            # 302
 %seen = ();
 
 $intersection_ref = get_intersection_ref('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$intersection_ref});
-ok(! exists $seen{'abel'});             # 300
-ok(exists $seen{'baker'});              # 301
-ok(exists $seen{'camera'});             # 302
-ok(exists $seen{'delta'});              # 303
-ok(exists $seen{'edward'});             # 304
-ok(exists $seen{'fargo'});              # 305
-ok(exists $seen{'golfer'});             # 306
-ok(! exists $seen{'hilton'});           # 307
-ok(! exists $seen{'icon'});             # 308
-ok(! exists $seen{'jerky'});            # 309
+ok(! exists $seen{'abel'});             # 303
+ok(exists $seen{'baker'});              # 304
+ok(exists $seen{'camera'});             # 305
+ok(exists $seen{'delta'});              # 306
+ok(exists $seen{'edward'});             # 307
+ok(exists $seen{'fargo'});              # 308
+ok(exists $seen{'golfer'});             # 309
+ok(! exists $seen{'hilton'});           # 310
+ok(! exists $seen{'icon'});             # 311
+ok(! exists $seen{'jerky'});            # 312
 %seen = ();
 
 @unique = get_unique('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@unique);
-ok(exists $seen{'abel'});               # 310
-ok(! exists $seen{'baker'});            # 311
-ok(! exists $seen{'camera'});           # 312
-ok(! exists $seen{'delta'});            # 313
-ok(! exists $seen{'edward'});           # 314
-ok(! exists $seen{'fargo'});            # 315
-ok(! exists $seen{'golfer'});           # 316
-ok(! exists $seen{'hilton'});           # 317
-ok(! exists $seen{'icon'});             # 318
-ok(! exists $seen{'jerky'});            # 319
+ok(exists $seen{'abel'});               # 313
+ok(! exists $seen{'baker'});            # 314
+ok(! exists $seen{'camera'});           # 315
+ok(! exists $seen{'delta'});            # 316
+ok(! exists $seen{'edward'});           # 317
+ok(! exists $seen{'fargo'});            # 318
+ok(! exists $seen{'golfer'});           # 319
+ok(! exists $seen{'hilton'});           # 320
+ok(! exists $seen{'icon'});             # 321
+ok(! exists $seen{'jerky'});            # 322
 %seen = ();
 
 $unique_ref = get_unique_ref('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$unique_ref});
-ok(exists $seen{'abel'});               # 320
-ok(! exists $seen{'baker'});            # 321
-ok(! exists $seen{'camera'});           # 322
-ok(! exists $seen{'delta'});            # 323
-ok(! exists $seen{'edward'});           # 324
-ok(! exists $seen{'fargo'});            # 325
-ok(! exists $seen{'golfer'});           # 326
-ok(! exists $seen{'hilton'});           # 327
-ok(! exists $seen{'icon'});             # 328
-ok(! exists $seen{'jerky'});            # 329
+ok(exists $seen{'abel'});               # 323
+ok(! exists $seen{'baker'});            # 324
+ok(! exists $seen{'camera'});           # 325
+ok(! exists $seen{'delta'});            # 326
+ok(! exists $seen{'edward'});           # 327
+ok(! exists $seen{'fargo'});            # 328
+ok(! exists $seen{'golfer'});           # 329
+ok(! exists $seen{'hilton'});           # 330
+ok(! exists $seen{'icon'});             # 331
+ok(! exists $seen{'jerky'});            # 332
 %seen = ();
 
 @complement = get_complement('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@complement);
-ok(! exists $seen{'abel'});             # 330
-ok(! exists $seen{'baker'});            # 331
-ok(! exists $seen{'camera'});           # 332
-ok(! exists $seen{'delta'});            # 333
-ok(! exists $seen{'edward'});           # 334
-ok(! exists $seen{'fargo'});            # 335
-ok(! exists $seen{'golfer'});           # 336
-ok(exists $seen{'hilton'});             # 337
-ok(! exists $seen{'icon'});             # 338
-ok(! exists $seen{'jerky'});            # 339
+ok(! exists $seen{'abel'});             # 333
+ok(! exists $seen{'baker'});            # 334
+ok(! exists $seen{'camera'});           # 335
+ok(! exists $seen{'delta'});            # 336
+ok(! exists $seen{'edward'});           # 337
+ok(! exists $seen{'fargo'});            # 338
+ok(! exists $seen{'golfer'});           # 339
+ok(exists $seen{'hilton'});             # 340
+ok(! exists $seen{'icon'});             # 341
+ok(! exists $seen{'jerky'});            # 342
 %seen = ();
 
 $complement_ref = get_complement_ref('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$complement_ref});
-ok(! exists $seen{'abel'});             # 340
-ok(! exists $seen{'baker'});            # 341
-ok(! exists $seen{'camera'});           # 342
-ok(! exists $seen{'delta'});            # 343
-ok(! exists $seen{'edward'});           # 344
-ok(! exists $seen{'fargo'});            # 345
-ok(! exists $seen{'golfer'});           # 346
-ok(exists $seen{'hilton'});             # 347
-ok(! exists $seen{'icon'});             # 348
-ok(! exists $seen{'jerky'});            # 349
+ok(! exists $seen{'abel'});             # 343
+ok(! exists $seen{'baker'});            # 344
+ok(! exists $seen{'camera'});           # 345
+ok(! exists $seen{'delta'});            # 346
+ok(! exists $seen{'edward'});           # 347
+ok(! exists $seen{'fargo'});            # 348
+ok(! exists $seen{'golfer'});           # 349
+ok(exists $seen{'hilton'});             # 350
+ok(! exists $seen{'icon'});             # 351
+ok(! exists $seen{'jerky'});            # 352
 %seen = ();
 
 @symmetric_difference = get_symmetric_difference('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@symmetric_difference);
-ok(exists $seen{'abel'});               # 350
-ok(! exists $seen{'baker'});            # 351
-ok(! exists $seen{'camera'});           # 352
-ok(! exists $seen{'delta'});            # 353
-ok(! exists $seen{'edward'});           # 354
-ok(! exists $seen{'fargo'});            # 355
-ok(! exists $seen{'golfer'});           # 356
-ok(exists $seen{'hilton'});             # 357
-ok(! exists $seen{'icon'});             # 358
-ok(! exists $seen{'jerky'});            # 359
+ok(exists $seen{'abel'});               # 353
+ok(! exists $seen{'baker'});            # 354
+ok(! exists $seen{'camera'});           # 355
+ok(! exists $seen{'delta'});            # 356
+ok(! exists $seen{'edward'});           # 357
+ok(! exists $seen{'fargo'});            # 358
+ok(! exists $seen{'golfer'});           # 359
+ok(exists $seen{'hilton'});             # 360
+ok(! exists $seen{'icon'});             # 361
+ok(! exists $seen{'jerky'});            # 362
 %seen = ();
 
 $symmetric_difference_ref = get_symmetric_difference_ref('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
-ok(exists $seen{'abel'});               # 360
-ok(! exists $seen{'baker'});            # 361
-ok(! exists $seen{'camera'});           # 362
-ok(! exists $seen{'delta'});            # 363
-ok(! exists $seen{'edward'});           # 364
-ok(! exists $seen{'fargo'});            # 365
-ok(! exists $seen{'golfer'});           # 366
-ok(exists $seen{'hilton'});             # 367
-ok(! exists $seen{'icon'});             # 368
-ok(! exists $seen{'jerky'});            # 369
+ok(exists $seen{'abel'});               # 363
+ok(! exists $seen{'baker'});            # 364
+ok(! exists $seen{'camera'});           # 365
+ok(! exists $seen{'delta'});            # 366
+ok(! exists $seen{'edward'});           # 367
+ok(! exists $seen{'fargo'});            # 368
+ok(! exists $seen{'golfer'});           # 369
+ok(exists $seen{'hilton'});             # 370
+ok(! exists $seen{'icon'});             # 371
+ok(! exists $seen{'jerky'});            # 372
 %seen = ();
 
 @symmetric_difference = get_symdiff('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@symmetric_difference);
-ok(exists $seen{'abel'});               # 370
-ok(! exists $seen{'baker'});            # 371
-ok(! exists $seen{'camera'});           # 372
-ok(! exists $seen{'delta'});            # 373
-ok(! exists $seen{'edward'});           # 374
-ok(! exists $seen{'fargo'});            # 375
-ok(! exists $seen{'golfer'});           # 376
-ok(exists $seen{'hilton'});             # 377
-ok(! exists $seen{'icon'});             # 378
-ok(! exists $seen{'jerky'});            # 379
+ok(exists $seen{'abel'});               # 373
+ok(! exists $seen{'baker'});            # 374
+ok(! exists $seen{'camera'});           # 375
+ok(! exists $seen{'delta'});            # 376
+ok(! exists $seen{'edward'});           # 377
+ok(! exists $seen{'fargo'});            # 378
+ok(! exists $seen{'golfer'});           # 379
+ok(exists $seen{'hilton'});             # 380
+ok(! exists $seen{'icon'});             # 381
+ok(! exists $seen{'jerky'});            # 382
 %seen = ();
 
 $symmetric_difference_ref = get_symdiff_ref('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
-ok(exists $seen{'abel'});               # 380
-ok(! exists $seen{'baker'});            # 381
-ok(! exists $seen{'camera'});           # 382
-ok(! exists $seen{'delta'});            # 383
-ok(! exists $seen{'edward'});           # 384
-ok(! exists $seen{'fargo'});            # 385
-ok(! exists $seen{'golfer'});           # 386
-ok(exists $seen{'hilton'});             # 387
-ok(! exists $seen{'icon'});             # 388
-ok(! exists $seen{'jerky'});            # 389
+ok(exists $seen{'abel'});               # 383
+ok(! exists $seen{'baker'});            # 384
+ok(! exists $seen{'camera'});           # 385
+ok(! exists $seen{'delta'});            # 386
+ok(! exists $seen{'edward'});           # 387
+ok(! exists $seen{'fargo'});            # 388
+ok(! exists $seen{'golfer'});           # 389
+ok(exists $seen{'hilton'});             # 390
+ok(! exists $seen{'icon'});             # 391
+ok(! exists $seen{'jerky'});            # 392
 %seen = ();
 
 @nonintersection = get_nonintersection('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@nonintersection);
-ok(exists $seen{'abel'});               # 390
-ok(! exists $seen{'baker'});            # 391
-ok(! exists $seen{'camera'});           # 392
-ok(! exists $seen{'delta'});            # 393
-ok(! exists $seen{'edward'});           # 394
-ok(! exists $seen{'fargo'});            # 395
-ok(! exists $seen{'golfer'});           # 396
-ok(exists $seen{'hilton'});             # 397
-ok(! exists $seen{'icon'});             # 398
-ok(! exists $seen{'jerky'});            # 399
+ok(exists $seen{'abel'});               # 393
+ok(! exists $seen{'baker'});            # 394
+ok(! exists $seen{'camera'});           # 395
+ok(! exists $seen{'delta'});            # 396
+ok(! exists $seen{'edward'});           # 397
+ok(! exists $seen{'fargo'});            # 398
+ok(! exists $seen{'golfer'});           # 399
+ok(exists $seen{'hilton'});             # 400
+ok(! exists $seen{'icon'});             # 401
+ok(! exists $seen{'jerky'});            # 402
 %seen = ();
 
 $nonintersection_ref = get_nonintersection_ref('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$nonintersection_ref});
-ok(exists $seen{'abel'});               # 400
-ok(! exists $seen{'baker'});            # 401
-ok(! exists $seen{'camera'});           # 402
-ok(! exists $seen{'delta'});            # 403
-ok(! exists $seen{'edward'});           # 404
-ok(! exists $seen{'fargo'});            # 405
-ok(! exists $seen{'golfer'});           # 406
-ok(exists $seen{'hilton'});             # 407
-ok(! exists $seen{'icon'});             # 408
-ok(! exists $seen{'jerky'});            # 409
+ok(exists $seen{'abel'});               # 403
+ok(! exists $seen{'baker'});            # 404
+ok(! exists $seen{'camera'});           # 405
+ok(! exists $seen{'delta'});            # 406
+ok(! exists $seen{'edward'});           # 407
+ok(! exists $seen{'fargo'});            # 408
+ok(! exists $seen{'golfer'});           # 409
+ok(exists $seen{'hilton'});             # 410
+ok(! exists $seen{'icon'});             # 411
+ok(! exists $seen{'jerky'});            # 412
 %seen = ();
 
 @bag = get_bag('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@bag);
-ok($seen{'abel'} == 2);                 # 410
-ok($seen{'baker'} == 2);                # 411
-ok($seen{'camera'} == 2);               # 412
-ok($seen{'delta'} == 3);                # 413
-ok($seen{'edward'} == 2);               # 414
-ok($seen{'fargo'} == 2);                # 415
-ok($seen{'golfer'} == 2);               # 416
-ok($seen{'hilton'} == 1);               # 417
-ok(! exists $seen{'icon'});             # 418
-ok(! exists $seen{'jerky'});            # 419
+ok($seen{'abel'} == 2);                 # 413
+ok($seen{'baker'} == 2);                # 414
+ok($seen{'camera'} == 2);               # 415
+ok($seen{'delta'} == 3);                # 416
+ok($seen{'edward'} == 2);               # 417
+ok($seen{'fargo'} == 2);                # 418
+ok($seen{'golfer'} == 2);               # 419
+ok($seen{'hilton'} == 1);               # 420
+ok(! exists $seen{'icon'});             # 421
+ok(! exists $seen{'jerky'});            # 422
 %seen = ();
 
 $bag_ref = get_bag_ref('-u',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$bag_ref});
-ok($seen{'abel'} == 2);                 # 420
-ok($seen{'baker'} == 2);                # 421
-ok($seen{'camera'} == 2);               # 422
-ok($seen{'delta'} == 3);                # 423
-ok($seen{'edward'} == 2);               # 424
-ok($seen{'fargo'} == 2);                # 425
-ok($seen{'golfer'} == 2);               # 426
-ok($seen{'hilton'} == 1);               # 427
-ok(! exists $seen{'icon'});             # 428
-ok(! exists $seen{'jerky'});            # 429
+ok($seen{'abel'} == 2);                 # 423
+ok($seen{'baker'} == 2);                # 424
+ok($seen{'camera'} == 2);               # 425
+ok($seen{'delta'} == 3);                # 426
+ok($seen{'edward'} == 2);               # 427
+ok($seen{'fargo'} == 2);                # 428
+ok($seen{'golfer'} == 2);               # 429
+ok($seen{'hilton'} == 1);               # 430
+ok(! exists $seen{'icon'});             # 431
+ok(! exists $seen{'jerky'});            # 432
 %seen = ();
 
 ##### BELOW:  Tests for '--unsorted' option ##########
 
 @union = get_union('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@union);
-ok(exists $seen{'abel'});               # 430
-ok(exists $seen{'baker'});              # 431
-ok(exists $seen{'camera'});             # 432
-ok(exists $seen{'delta'});              # 433
-ok(exists $seen{'edward'});             # 434
-ok(exists $seen{'fargo'});              # 435
-ok(exists $seen{'golfer'});             # 436
-ok(exists $seen{'hilton'});             # 437
-ok(! exists $seen{'icon'});             # 438
-ok(! exists $seen{'jerky'});            # 439
+ok(exists $seen{'abel'});               # 433
+ok(exists $seen{'baker'});              # 434
+ok(exists $seen{'camera'});             # 435
+ok(exists $seen{'delta'});              # 436
+ok(exists $seen{'edward'});             # 437
+ok(exists $seen{'fargo'});              # 438
+ok(exists $seen{'golfer'});             # 439
+ok(exists $seen{'hilton'});             # 440
+ok(! exists $seen{'icon'});             # 441
+ok(! exists $seen{'jerky'});            # 442
 %seen = ();
 
 $union_ref = get_union_ref('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$union_ref});
-ok(exists $seen{'abel'});               # 440
-ok(exists $seen{'baker'});              # 441
-ok(exists $seen{'camera'});             # 442
-ok(exists $seen{'delta'});              # 443
-ok(exists $seen{'edward'});             # 444
-ok(exists $seen{'fargo'});              # 445
-ok(exists $seen{'golfer'});             # 446
-ok(exists $seen{'hilton'});             # 447
-ok(! exists $seen{'icon'});             # 448
-ok(! exists $seen{'jerky'});            # 449
+ok(exists $seen{'abel'});               # 443
+ok(exists $seen{'baker'});              # 444
+ok(exists $seen{'camera'});             # 445
+ok(exists $seen{'delta'});              # 446
+ok(exists $seen{'edward'});             # 447
+ok(exists $seen{'fargo'});              # 448
+ok(exists $seen{'golfer'});             # 449
+ok(exists $seen{'hilton'});             # 450
+ok(! exists $seen{'icon'});             # 451
+ok(! exists $seen{'jerky'});            # 452
 %seen = ();
 
 @shared = get_shared('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@shared);
-ok(! exists $seen{'abel'});             # 450
-ok(exists $seen{'baker'});              # 451
-ok(exists $seen{'camera'});             # 452
-ok(exists $seen{'delta'});              # 453
-ok(exists $seen{'edward'});             # 454
-ok(exists $seen{'fargo'});              # 455
-ok(exists $seen{'golfer'});             # 456
-ok(! exists $seen{'hilton'});           # 457
-ok(! exists $seen{'icon'});             # 458
-ok(! exists $seen{'jerky'});            # 459
+ok(! exists $seen{'abel'});             # 453
+ok(exists $seen{'baker'});              # 454
+ok(exists $seen{'camera'});             # 455
+ok(exists $seen{'delta'});              # 456
+ok(exists $seen{'edward'});             # 457
+ok(exists $seen{'fargo'});              # 458
+ok(exists $seen{'golfer'});             # 459
+ok(! exists $seen{'hilton'});           # 460
+ok(! exists $seen{'icon'});             # 461
+ok(! exists $seen{'jerky'});            # 462
 %seen = ();
 
 $shared_ref = get_shared_ref('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$shared_ref});
-ok(! exists $seen{'abel'});             # 460
-ok(exists $seen{'baker'});              # 461
-ok(exists $seen{'camera'});             # 462
-ok(exists $seen{'delta'});              # 463
-ok(exists $seen{'edward'});             # 464
-ok(exists $seen{'fargo'});              # 465
-ok(exists $seen{'golfer'});             # 466
-ok(! exists $seen{'hilton'});           # 467
-ok(! exists $seen{'icon'});             # 468
-ok(! exists $seen{'jerky'});            # 469
+ok(! exists $seen{'abel'});             # 463
+ok(exists $seen{'baker'});              # 464
+ok(exists $seen{'camera'});             # 465
+ok(exists $seen{'delta'});              # 466
+ok(exists $seen{'edward'});             # 467
+ok(exists $seen{'fargo'});              # 468
+ok(exists $seen{'golfer'});             # 469
+ok(! exists $seen{'hilton'});           # 470
+ok(! exists $seen{'icon'});             # 471
+ok(! exists $seen{'jerky'});            # 472
 %seen = ();
 
 @intersection = get_intersection('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@intersection);
-ok(! exists $seen{'abel'});             # 470
-ok(exists $seen{'baker'});              # 471
-ok(exists $seen{'camera'});             # 472
-ok(exists $seen{'delta'});              # 473
-ok(exists $seen{'edward'});             # 474
-ok(exists $seen{'fargo'});              # 475
-ok(exists $seen{'golfer'});             # 476
-ok(! exists $seen{'hilton'});           # 477
-ok(! exists $seen{'icon'});             # 478
-ok(! exists $seen{'jerky'});            # 479
+ok(! exists $seen{'abel'});             # 473
+ok(exists $seen{'baker'});              # 474
+ok(exists $seen{'camera'});             # 475
+ok(exists $seen{'delta'});              # 476
+ok(exists $seen{'edward'});             # 477
+ok(exists $seen{'fargo'});              # 478
+ok(exists $seen{'golfer'});             # 479
+ok(! exists $seen{'hilton'});           # 480
+ok(! exists $seen{'icon'});             # 481
+ok(! exists $seen{'jerky'});            # 482
 %seen = ();
 
 $intersection_ref = get_intersection_ref('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$intersection_ref});
-ok(! exists $seen{'abel'});             # 480
-ok(exists $seen{'baker'});              # 481
-ok(exists $seen{'camera'});             # 482
-ok(exists $seen{'delta'});              # 483
-ok(exists $seen{'edward'});             # 484
-ok(exists $seen{'fargo'});              # 485
-ok(exists $seen{'golfer'});             # 486
-ok(! exists $seen{'hilton'});           # 487
-ok(! exists $seen{'icon'});             # 488
-ok(! exists $seen{'jerky'});            # 489
+ok(! exists $seen{'abel'});             # 483
+ok(exists $seen{'baker'});              # 484
+ok(exists $seen{'camera'});             # 485
+ok(exists $seen{'delta'});              # 486
+ok(exists $seen{'edward'});             # 487
+ok(exists $seen{'fargo'});              # 488
+ok(exists $seen{'golfer'});             # 489
+ok(! exists $seen{'hilton'});           # 490
+ok(! exists $seen{'icon'});             # 491
+ok(! exists $seen{'jerky'});            # 492
 %seen = ();
 
 @unique = get_unique('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@unique);
-ok(exists $seen{'abel'});               # 490
-ok(! exists $seen{'baker'});            # 491
-ok(! exists $seen{'camera'});           # 492
-ok(! exists $seen{'delta'});            # 493
-ok(! exists $seen{'edward'});           # 494
-ok(! exists $seen{'fargo'});            # 495
-ok(! exists $seen{'golfer'});           # 496
-ok(! exists $seen{'hilton'});           # 497
-ok(! exists $seen{'icon'});             # 498
-ok(! exists $seen{'jerky'});            # 499
+ok(exists $seen{'abel'});               # 493
+ok(! exists $seen{'baker'});            # 494
+ok(! exists $seen{'camera'});           # 495
+ok(! exists $seen{'delta'});            # 496
+ok(! exists $seen{'edward'});           # 497
+ok(! exists $seen{'fargo'});            # 498
+ok(! exists $seen{'golfer'});           # 499
+ok(! exists $seen{'hilton'});           # 500
+ok(! exists $seen{'icon'});             # 501
+ok(! exists $seen{'jerky'});            # 502
 %seen = ();
 
 $unique_ref = get_unique_ref('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$unique_ref});
-ok(exists $seen{'abel'});               # 500
-ok(! exists $seen{'baker'});            # 501
-ok(! exists $seen{'camera'});           # 502
-ok(! exists $seen{'delta'});            # 503
-ok(! exists $seen{'edward'});           # 504
-ok(! exists $seen{'fargo'});            # 505
-ok(! exists $seen{'golfer'});           # 506
-ok(! exists $seen{'hilton'});           # 507
-ok(! exists $seen{'icon'});             # 508
-ok(! exists $seen{'jerky'});            # 509
+ok(exists $seen{'abel'});               # 503
+ok(! exists $seen{'baker'});            # 504
+ok(! exists $seen{'camera'});           # 505
+ok(! exists $seen{'delta'});            # 506
+ok(! exists $seen{'edward'});           # 507
+ok(! exists $seen{'fargo'});            # 508
+ok(! exists $seen{'golfer'});           # 509
+ok(! exists $seen{'hilton'});           # 510
+ok(! exists $seen{'icon'});             # 511
+ok(! exists $seen{'jerky'});            # 512
 %seen = ();
 
 @complement = get_complement('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@complement);
-ok(! exists $seen{'abel'});             # 510
-ok(! exists $seen{'baker'});            # 511
-ok(! exists $seen{'camera'});           # 512
-ok(! exists $seen{'delta'});            # 513
-ok(! exists $seen{'edward'});           # 514
-ok(! exists $seen{'fargo'});            # 515
-ok(! exists $seen{'golfer'});           # 516
-ok(exists $seen{'hilton'});             # 517
-ok(! exists $seen{'icon'});             # 518
-ok(! exists $seen{'jerky'});            # 519
+ok(! exists $seen{'abel'});             # 513
+ok(! exists $seen{'baker'});            # 514
+ok(! exists $seen{'camera'});           # 515
+ok(! exists $seen{'delta'});            # 516
+ok(! exists $seen{'edward'});           # 517
+ok(! exists $seen{'fargo'});            # 518
+ok(! exists $seen{'golfer'});           # 519
+ok(exists $seen{'hilton'});             # 520
+ok(! exists $seen{'icon'});             # 521
+ok(! exists $seen{'jerky'});            # 522
 %seen = ();
 
 $complement_ref = get_complement_ref('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$complement_ref});
-ok(! exists $seen{'abel'});             # 520
-ok(! exists $seen{'baker'});            # 521
-ok(! exists $seen{'camera'});           # 522
-ok(! exists $seen{'delta'});            # 523
-ok(! exists $seen{'edward'});           # 524
-ok(! exists $seen{'fargo'});            # 525
-ok(! exists $seen{'golfer'});           # 526
-ok(exists $seen{'hilton'});             # 527
-ok(! exists $seen{'icon'});             # 528
-ok(! exists $seen{'jerky'});            # 529
+ok(! exists $seen{'abel'});             # 523
+ok(! exists $seen{'baker'});            # 524
+ok(! exists $seen{'camera'});           # 525
+ok(! exists $seen{'delta'});            # 526
+ok(! exists $seen{'edward'});           # 527
+ok(! exists $seen{'fargo'});            # 528
+ok(! exists $seen{'golfer'});           # 529
+ok(exists $seen{'hilton'});             # 530
+ok(! exists $seen{'icon'});             # 531
+ok(! exists $seen{'jerky'});            # 532
 %seen = ();
 
 @symmetric_difference = get_symmetric_difference('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@symmetric_difference);
-ok(exists $seen{'abel'});               # 530
-ok(! exists $seen{'baker'});            # 531
-ok(! exists $seen{'camera'});           # 532
-ok(! exists $seen{'delta'});            # 533
-ok(! exists $seen{'edward'});           # 534
-ok(! exists $seen{'fargo'});            # 535
-ok(! exists $seen{'golfer'});           # 536
-ok(exists $seen{'hilton'});             # 537
-ok(! exists $seen{'icon'});             # 538
-ok(! exists $seen{'jerky'});            # 539
+ok(exists $seen{'abel'});               # 533
+ok(! exists $seen{'baker'});            # 534
+ok(! exists $seen{'camera'});           # 535
+ok(! exists $seen{'delta'});            # 536
+ok(! exists $seen{'edward'});           # 537
+ok(! exists $seen{'fargo'});            # 538
+ok(! exists $seen{'golfer'});           # 539
+ok(exists $seen{'hilton'});             # 540
+ok(! exists $seen{'icon'});             # 541
+ok(! exists $seen{'jerky'});            # 542
 %seen = ();
 
 $symmetric_difference_ref = get_symmetric_difference_ref('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
-ok(exists $seen{'abel'});               # 540
-ok(! exists $seen{'baker'});            # 541
-ok(! exists $seen{'camera'});           # 542
-ok(! exists $seen{'delta'});            # 543
-ok(! exists $seen{'edward'});           # 544
-ok(! exists $seen{'fargo'});            # 545
-ok(! exists $seen{'golfer'});           # 546
-ok(exists $seen{'hilton'});             # 547
-ok(! exists $seen{'icon'});             # 548
-ok(! exists $seen{'jerky'});            # 549
+ok(exists $seen{'abel'});               # 543
+ok(! exists $seen{'baker'});            # 544
+ok(! exists $seen{'camera'});           # 545
+ok(! exists $seen{'delta'});            # 546
+ok(! exists $seen{'edward'});           # 547
+ok(! exists $seen{'fargo'});            # 548
+ok(! exists $seen{'golfer'});           # 549
+ok(exists $seen{'hilton'});             # 550
+ok(! exists $seen{'icon'});             # 551
+ok(! exists $seen{'jerky'});            # 552
 %seen = ();
 
 @symmetric_difference = get_symdiff('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@symmetric_difference);
-ok(exists $seen{'abel'});               # 550
-ok(! exists $seen{'baker'});            # 551
-ok(! exists $seen{'camera'});           # 552
-ok(! exists $seen{'delta'});            # 553
-ok(! exists $seen{'edward'});           # 554
-ok(! exists $seen{'fargo'});            # 555
-ok(! exists $seen{'golfer'});           # 556
-ok(exists $seen{'hilton'});             # 557
-ok(! exists $seen{'icon'});             # 558
-ok(! exists $seen{'jerky'});            # 559
+ok(exists $seen{'abel'});               # 553
+ok(! exists $seen{'baker'});            # 554
+ok(! exists $seen{'camera'});           # 555
+ok(! exists $seen{'delta'});            # 556
+ok(! exists $seen{'edward'});           # 557
+ok(! exists $seen{'fargo'});            # 558
+ok(! exists $seen{'golfer'});           # 559
+ok(exists $seen{'hilton'});             # 560
+ok(! exists $seen{'icon'});             # 561
+ok(! exists $seen{'jerky'});            # 562
 %seen = ();
 
 $symmetric_difference_ref = get_symdiff_ref('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
-ok(exists $seen{'abel'});               # 560
-ok(! exists $seen{'baker'});            # 561
-ok(! exists $seen{'camera'});           # 562
-ok(! exists $seen{'delta'});            # 563
-ok(! exists $seen{'edward'});           # 564
-ok(! exists $seen{'fargo'});            # 565
-ok(! exists $seen{'golfer'});           # 566
-ok(exists $seen{'hilton'});             # 567
-ok(! exists $seen{'icon'});             # 568
-ok(! exists $seen{'jerky'});            # 569
+ok(exists $seen{'abel'});               # 563
+ok(! exists $seen{'baker'});            # 564
+ok(! exists $seen{'camera'});           # 565
+ok(! exists $seen{'delta'});            # 566
+ok(! exists $seen{'edward'});           # 567
+ok(! exists $seen{'fargo'});            # 568
+ok(! exists $seen{'golfer'});           # 569
+ok(exists $seen{'hilton'});             # 570
+ok(! exists $seen{'icon'});             # 571
+ok(! exists $seen{'jerky'});            # 572
 %seen = ();
 
 @nonintersection = get_nonintersection('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@nonintersection);
-ok(exists $seen{'abel'});               # 570
-ok(! exists $seen{'baker'});            # 571
-ok(! exists $seen{'camera'});           # 572
-ok(! exists $seen{'delta'});            # 573
-ok(! exists $seen{'edward'});           # 574
-ok(! exists $seen{'fargo'});            # 575
-ok(! exists $seen{'golfer'});           # 576
-ok(exists $seen{'hilton'});             # 577
-ok(! exists $seen{'icon'});             # 578
-ok(! exists $seen{'jerky'});            # 579
+ok(exists $seen{'abel'});               # 573
+ok(! exists $seen{'baker'});            # 574
+ok(! exists $seen{'camera'});           # 575
+ok(! exists $seen{'delta'});            # 576
+ok(! exists $seen{'edward'});           # 577
+ok(! exists $seen{'fargo'});            # 578
+ok(! exists $seen{'golfer'});           # 579
+ok(exists $seen{'hilton'});             # 580
+ok(! exists $seen{'icon'});             # 581
+ok(! exists $seen{'jerky'});            # 582
 %seen = ();
 
 $nonintersection_ref = get_nonintersection_ref('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$nonintersection_ref});
-ok(exists $seen{'abel'});               # 580
-ok(! exists $seen{'baker'});            # 581
-ok(! exists $seen{'camera'});           # 582
-ok(! exists $seen{'delta'});            # 583
-ok(! exists $seen{'edward'});           # 584
-ok(! exists $seen{'fargo'});            # 585
-ok(! exists $seen{'golfer'});           # 586
-ok(exists $seen{'hilton'});             # 587
-ok(! exists $seen{'icon'});             # 588
-ok(! exists $seen{'jerky'});            # 589
+ok(exists $seen{'abel'});               # 583
+ok(! exists $seen{'baker'});            # 584
+ok(! exists $seen{'camera'});           # 585
+ok(! exists $seen{'delta'});            # 586
+ok(! exists $seen{'edward'});           # 587
+ok(! exists $seen{'fargo'});            # 588
+ok(! exists $seen{'golfer'});           # 589
+ok(exists $seen{'hilton'});             # 590
+ok(! exists $seen{'icon'});             # 591
+ok(! exists $seen{'jerky'});            # 592
 %seen = ();
 
 @bag = get_bag('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@bag);
-ok($seen{'abel'} == 2);                 # 590
-ok($seen{'baker'} == 2);                # 591
-ok($seen{'camera'} == 2);               # 592
-ok($seen{'delta'} == 3);                # 593
-ok($seen{'edward'} == 2);               # 594
-ok($seen{'fargo'} == 2);                # 595
-ok($seen{'golfer'} == 2);               # 596
-ok($seen{'hilton'} == 1);               # 597
-ok(! exists $seen{'icon'});             # 598
-ok(! exists $seen{'jerky'});            # 599
+ok($seen{'abel'} == 2);                 # 593
+ok($seen{'baker'} == 2);                # 594
+ok($seen{'camera'} == 2);               # 595
+ok($seen{'delta'} == 3);                # 596
+ok($seen{'edward'} == 2);               # 597
+ok($seen{'fargo'} == 2);                # 598
+ok($seen{'golfer'} == 2);               # 599
+ok($seen{'hilton'} == 1);               # 600
+ok(! exists $seen{'icon'});             # 601
+ok(! exists $seen{'jerky'});            # 602
 %seen = ();
 
 $bag_ref = get_bag_ref('--unsorted',  [ \@a0, \@a1 ] );
 $seen{$_}++ foreach (@{$bag_ref});
-ok($seen{'abel'} == 2);                 # 600
-ok($seen{'baker'} == 2);                # 601
-ok($seen{'camera'} == 2);               # 602
-ok($seen{'delta'} == 3);                # 603
-ok($seen{'edward'} == 2);               # 604
-ok($seen{'fargo'} == 2);                # 605
-ok($seen{'golfer'} == 2);               # 606
-ok($seen{'hilton'} == 1);               # 607
-ok(! exists $seen{'icon'});             # 608
-ok(! exists $seen{'jerky'});            # 609
+ok($seen{'abel'} == 2);                 # 603
+ok($seen{'baker'} == 2);                # 604
+ok($seen{'camera'} == 2);               # 605
+ok($seen{'delta'} == 3);                # 606
+ok($seen{'edward'} == 2);               # 607
+ok($seen{'fargo'} == 2);                # 608
+ok($seen{'golfer'} == 2);               # 609
+ok($seen{'hilton'} == 1);               # 610
+ok(! exists $seen{'icon'});             # 611
+ok(! exists $seen{'jerky'});            # 612
 %seen = ();
 

@@ -1,11 +1,11 @@
 package List::Compare;
-$VERSION = 0.27;   # April 18, 2004 
+$VERSION = 0.28;   # April 25, 2004 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
-use base qw(List::Compare::Base::Regular);
 use List::Compare::Base::_Auxiliary qw(
     _validate_2_seenhashes
+    _chart_engine_regular
 );
 
 sub new {
@@ -137,9 +137,212 @@ sub _init {
     $data{'LsubsetR_status'}      = $LsubsetR_status;
     $data{'RsubsetL_status'}      = $RsubsetL_status;
     $data{'LequivalentR_status'}  = $LequivalentR_status;
+    $data{'LdisjointR_status'}    = keys %intersection == 0 ? 1 : 0;
     $data{'bag'}                  = \@bag;
     return \%data;
 }
+
+sub get_intersection {
+    return @{ get_intersection_ref(shift) };
+}
+
+sub get_intersection_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'intersection'};
+}
+
+sub get_union {
+    return @{ get_union_ref(shift) };
+}
+
+sub get_union_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'union'};
+}
+
+sub get_shared {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    carp "When comparing only 2 lists, $method defaults to \n  ", 'get_union()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_union($class);
+}
+
+sub get_shared_ref {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    carp "When comparing only 2 lists, $method defaults to \n  ", 'get_union_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_union_ref($class);
+}
+
+sub get_unique {
+    return @{ get_unique_ref(shift) };
+}
+
+sub get_unique_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'unique'};
+}
+
+*get_Lonly = \&get_unique;
+*get_Aonly = \&get_unique;
+*get_Lonly_ref = \&get_unique_ref;
+*get_Aonly_ref = \&get_unique_ref;
+
+sub get_complement {
+    return @{ get_complement_ref(shift) };
+}
+
+sub get_complement_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'complement'};
+}
+
+*get_Ronly = \&get_complement;
+*get_Bonly = \&get_complement;
+*get_Ronly_ref = \&get_complement_ref;
+*get_Bonly_ref = \&get_complement_ref;
+
+sub get_symmetric_difference {
+    return @{ get_symmetric_difference_ref(shift) };
+}
+
+sub get_symmetric_difference_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'symmetric_difference'};
+}
+
+*get_symdiff  = \&get_symmetric_difference;
+*get_LorRonly = \&get_symmetric_difference;
+*get_AorBonly = \&get_symmetric_difference;
+*get_symdiff_ref  = \&get_symmetric_difference_ref;
+*get_LorRonly_ref = \&get_symmetric_difference_ref;
+*get_AorBonly_ref = \&get_symmetric_difference_ref;
+
+sub get_nonintersection {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    carp "When comparing only 2 lists, $method defaults to \n  ", 'get_symmetric_difference()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_symmetric_difference($class);
+}
+
+sub get_nonintersection_ref {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    carp "When comparing only 2 lists, $method defaults to \n  ", 'get_symmetric_difference_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_symmetric_difference_ref($class);
+}
+
+sub is_LsubsetR {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'LsubsetR_status'};
+}
+
+*is_AsubsetB = \&is_LsubsetR;
+
+sub is_RsubsetL {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'RsubsetL_status'};
+}
+
+*is_BsubsetA = \&is_RsubsetL;
+
+sub is_LequivalentR {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'LequivalentR_status'};
+}
+
+*is_LeqvlntR = \&is_LequivalentR;
+
+sub is_LdisjointR {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'LdisjointR_status'};
+}
+
+sub print_subset_chart {
+    my $class = shift;
+    my %data = %$class;
+    my @subset_array = ($data{'LsubsetR_status'}, $data{'RsubsetL_status'});
+    my $title = 'Subset';
+    _chart_engine_regular(\@subset_array, $title);
+}
+
+sub print_equivalence_chart {
+    my $class = shift;
+    my %data = %$class;
+    my @equivalent_array = ($data{'LequivalentR_status'}, 
+                            $data{'LequivalentR_status'});
+    my $title = 'Equivalence';
+    _chart_engine_regular(\@equivalent_array, $title);
+}
+
+sub is_member_which {
+    return @{ is_member_which_ref(@_) };
+}    
+
+sub is_member_which_ref {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument (no references):  $!"
+        unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
+    my %data = %$class;
+    my ($arg, @found);
+    $arg = shift;
+    if (exists ${$data{'seenL'}}{$arg}) { push @found, 0; }
+    if (exists ${$data{'seenR'}}{$arg}) { push @found, 1; }
+    if ( (! exists ${$data{'seenL'}}{$arg}) &&
+         (! exists ${$data{'seenR'}}{$arg}) )
+       { @found = (); }
+    return \@found;
+}    
+
+sub are_members_which {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+        unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
+    my %data = %$class;
+    my (@args, %found);
+    @args = @{$_[0]};
+    for (my $i=0; $i<=$#args; $i++) {
+        if (exists ${$data{'seenL'}}{$args[$i]}) { push @{$found{$args[$i]}}, 0; }
+        if (exists ${$data{'seenR'}}{$args[$i]}) { push @{$found{$args[$i]}}, 1; }
+        if ( (! exists ${$data{'seenL'}}{$args[$i]}) &&
+             (! exists ${$data{'seenR'}}{$args[$i]}) )
+           { @{$found{$args[$i]}} = (); }
+    }
+    return \%found;
+}    
+
+sub is_member_any {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument (no references):  $!"
+        unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
+    my %data = %$class;
+    my $arg = shift;
+    ( defined $data{'seenL'}{$arg} ) ||
+    ( defined $data{'seenR'}{$arg} ) ? return 1 : return 0;
+}    
+
+sub are_members_any {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+        unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
+    my %data = %$class;
+    my (@args, %present);
+    @args = @{$_[0]};
+    for (my $i=0; $i<=$#args; $i++) {
+    $present{$args[$i]} = ( defined $data{'seenL'}{$args[$i]} ) ||
+                              ( defined $data{'seenR'}{$args[$i]} ) ? 1 : 0;
+    }
+    return \%present;
+}    
 
 sub get_bag {
     return @{ get_bag_ref(shift) };
@@ -161,11 +364,29 @@ sub get_version {
 
 package List::Compare::Accelerated;
 use Carp;
-use base qw(List::Compare::Base::Accelerated);
 use List::Compare::Base::_Auxiliary qw(
     _validate_2_seenhashes
     _argument_checker_0
 );
+use List::Compare::Base::_Engine qw|
+    _intersection_engine
+    _intersection_alt_engine
+    _union_engine
+    _unique_engine
+    _complement_engine
+    _symmetric_difference_engine
+    _symmetric_difference_alt_engine 
+    _is_LsubsetR_engine
+    _is_RsubsetL_engine
+    _is_LequivalentR_engine
+    _is_LdisjointR_engine
+    _print_subset_chart_engine
+    _print_equivalence_chart_engine
+    _is_member_which_engine
+    _are_members_which_engine
+    _is_member_any_engine
+    _are_members_any_engine
+|;
 
 sub _init {
     my $self = shift;
@@ -174,6 +395,219 @@ sub _init {
     ($data{'L'}, $data{'R'}) = _argument_checker_0($refL, $refR);
     $data{'unsort'} = $unsortflag ? 1 : 0;
     return \%data;
+}    
+
+sub get_intersection {
+    return @{ get_intersection_ref(shift) };
+}
+
+sub get_intersection_ref {
+    my $class = shift;
+    my %data = %$class;
+    $data{'unsort'} 
+      ? return          _intersection_engine($data{'L'}, $data{'R'})   
+      : return [ sort @{_intersection_engine($data{'L'}, $data{'R'})} ];
+}
+
+sub get_intersection_alt {
+    return @{ get_intersection_alt_ref(shift) };
+}
+
+sub get_intersection_alt_ref {
+    my $class = shift;
+    my %data = %$class;
+    $data{'unsort'} 
+      ? return          _intersection_alt_engine($data{'L'}, $data{'R'})   
+      : return [ sort @{_intersection_alt_engine($data{'L'}, $data{'R'})} ];
+#    ${$class}{'unsort'} 
+#      ? return          _intersection_alt_engine(${$class}{'L'}, ${$class}{'R'})   
+#      : return [ sort @{_intersection_alt_engine(${$class}{'L'}, ${$class}{'R'})} ];
+}
+
+sub get_union {
+    return @{ get_union_ref(shift) };
+}
+
+sub get_union_ref {
+    my $class = shift;
+    my %data = %$class;
+    $data{'unsort'} 
+      ? return          _union_engine($data{'L'}, $data{'R'})   
+      : return [ sort @{_union_engine($data{'L'}, $data{'R'})} ];
+}
+
+sub get_shared {
+    return @{ get_shared_ref(shift) };
+}
+
+sub get_shared_ref {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing only 2 lists, \&$method defaults to \n  \&get_union_ref.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    &get_union_ref($class);
+}
+
+sub get_unique {
+    return @{ get_unique_ref(shift) };
+}
+
+sub get_unique_ref {
+    my $class = shift;
+    my %data = %$class;
+    $data{'unsort'} 
+      ? return          _unique_engine($data{'L'}, $data{'R'})   
+      : return [ sort @{_unique_engine($data{'L'}, $data{'R'})} ];
+}
+
+*get_Lonly = \&get_unique;
+*get_Aonly = \&get_unique;
+*get_Lonly_ref = \&get_unique_ref;
+*get_Aonly_ref = \&get_unique_ref;
+
+sub get_complement {
+    return @{ get_complement_ref(shift) };
+}
+
+sub get_complement_ref {
+    my $class = shift;
+    my %data = %$class;
+    $data{'unsort'} 
+      ? return          _complement_engine($data{'L'}, $data{'R'})   
+      : return [ sort @{_complement_engine($data{'L'}, $data{'R'})} ];
+}
+
+*get_Ronly = \&get_complement;
+*get_Bonly = \&get_complement;
+*get_Ronly_ref = \&get_complement_ref;
+*get_Bonly_ref = \&get_complement_ref;
+
+sub get_symmetric_difference {
+    return @{ get_symmetric_difference_ref(shift) };
+}
+
+sub get_symmetric_difference_ref {
+    my $class = shift;
+    my %data = %$class;
+    $data{'unsort'} 
+      ? return          _symmetric_difference_engine($data{'L'}, $data{'R'})  
+      : return [ sort @{_symmetric_difference_engine($data{'L'}, $data{'R'})} ];
+}
+
+sub get_symmetric_difference_alt {
+    return @{ get_symmetric_difference_alt_ref(shift) };
+}
+
+sub get_symmetric_difference_alt_ref {
+    my $class = shift;
+    my %data = %$class;
+    $data{'unsort'} 
+      ? return          _symmetric_difference_alt_engine($data{'L'}, $data{'R'})  
+      : return [ sort @{_symmetric_difference_alt_engine($data{'L'}, $data{'R'})} ];
+#    ${$class}{'unsort'} 
+#      ? return          _symmetric_difference_alt_engine(${$class}{'L'}, ${$class}{'R'})  
+#      : return [ sort @{_symmetric_difference_alt_engine(${$class}{'L'}, ${$class}{'R'})} ];
+}
+
+*get_symdiff  = \&get_symmetric_difference;
+*get_LorRonly = \&get_symmetric_difference;
+*get_AorBonly = \&get_symmetric_difference;
+*get_symdiff_ref  = \&get_symmetric_difference_ref;
+*get_LorRonly_ref = \&get_symmetric_difference_ref;
+*get_AorBonly_ref = \&get_symmetric_difference_ref;
+
+sub get_nonintersection {
+    return @{ get_nonintersection_ref(shift) };
+}
+
+sub get_nonintersection_ref {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing only 2 lists, \&$method defaults to \n  \&get_symmetric_difference_ref.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    &get_symmetric_difference_ref($class);
+}
+
+sub is_LsubsetR {
+    my $class = shift;
+    my %data = %$class;
+    return _is_LsubsetR_engine($data{'L'}, $data{'R'});
+}
+
+*is_AsubsetB  = \&is_LsubsetR;
+
+sub is_RsubsetL {
+    my $class = shift;
+    my %data = %$class;
+    return _is_RsubsetL_engine($data{'L'}, $data{'R'});
+}
+
+*is_BsubsetA  = \&is_RsubsetL;
+
+sub is_LequivalentR {
+    my $class = shift;
+    my %data = %$class;
+    return _is_LequivalentR_engine($data{'L'}, $data{'R'});
+}
+
+*is_LeqvlntR = \&is_LequivalentR;
+
+sub is_LdisjointR {
+    my $class = shift;
+    my %data = %$class;
+    return _is_LdisjointR_engine($data{'L'}, $data{'R'});
+}
+
+sub print_subset_chart {
+    my $class = shift;
+    my %data = %$class;
+    _print_subset_chart_engine($data{'L'}, $data{'R'});
+}
+
+sub print_equivalence_chart {
+    my $class = shift;
+    my %data = %$class;
+    _print_equivalence_chart_engine($data{'L'}, $data{'R'});
+}
+
+sub is_member_which {
+    return @{ is_member_which_ref(@_) };
+}    
+
+sub is_member_which_ref {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument (no references):  $!"
+        unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
+    my %data = %$class;
+    return _is_member_which_engine($data{'L'}, $data{'R'}, shift);
+}    
+
+sub are_members_which {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+        unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
+    my %data = %$class;
+    my (@args);
+    @args = @{$_[0]};
+    return _are_members_which_engine($data{'L'}, $data{'R'}, \@args);
+}
+
+sub is_member_any {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument (no references):  $!"
+        unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
+    my %data = %$class;
+    return _is_member_any_engine($data{'L'}, $data{'R'}, shift);
+}    
+
+sub are_members_any {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+        unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
+    my %data = %$class;
+    my (@args);
+    @args = @{$_[0]};
+    return _are_members_any_engine($data{'L'}, $data{'R'}, \@args);
 }    
 
 sub get_bag {
@@ -213,9 +647,11 @@ sub get_version {
 
 package List::Compare::Multiple;
 use Carp;
-use base qw(List::Compare::Base::Multiple);
 use List::Compare::Base::_Auxiliary qw(
     _validate_seen_hash
+    _index_message1
+    _index_message2
+    _chart_engine_multiple
 );
 
 sub _init {
@@ -274,6 +710,9 @@ sub _init {
         # will be hash of arrays, holding the items that are found in 
         # any list other than the list whose index number is passed 
         # as an argument
+    my @xdisjoint = ();
+        # will be an array of arrays, holding an indicator as to whether 
+        # any pair of lists are disjoint, i.e., have no intersection
 
     # Calculate overall union and take steps needed to calculate overall 
     # intersection, unique, difference, etc.
@@ -319,7 +758,7 @@ sub _init {
         push(@nonintersection, $_) unless (exists $intersection{$_});
     }
 
-    # Calculate %xunique
+    # Calculate %xunique and @xdisjoint
     # Inputs:  @arrayrefs    %seen    %xintersection
     for (my $i = 0; $i <= $#arrayrefs; $i++) {
         my %seenthis = %{$seen{$i}};
@@ -331,6 +770,8 @@ sub _init {
             if ($left == $i || $right == $i) {
                 $deductions{$_} = $xintersection{$_};
             }
+            $xdisjoint[$left][$right] = $xdisjoint[$right][$left] = 
+                ! scalar(keys %{$xintersection{$_}}) ? 1 : 0;
         }
         foreach my $ded (keys %deductions) {
             foreach (keys %{$deductions{$ded}}) {
@@ -341,6 +782,7 @@ sub _init {
             push(@uniquethis, $_) unless ($alldeductions{$_});
         }
         $xunique{$i} = \@uniquethis;
+        $xdisjoint[$i][$i] = 0; 
     }
     # %xunique is now available for use in further calculations, 
     # such as returning the items unique to a particular source list.
@@ -369,7 +811,6 @@ sub _init {
         push(@symmetric_difference, $_) unless (exists $shared{$_});
     }
     # @shared and @symmetric_difference are now available.
-
 
     my @xsubset = ();
     foreach my $i (keys %seen) {
@@ -405,9 +846,284 @@ sub _init {
     $data{'xcomplement'}            = \%xcomplement;
     $data{'xsubset'}                = \@xsubset;
     $data{'xequivalent'}            = \@xequivalent;
+    $data{'xdisjoint'}              = \@xdisjoint;
     $data{'bag'}                    = \@bag;
     return \%data;
 }    
+
+sub get_intersection {
+    return @{ get_intersection_ref(shift) };
+}
+
+sub get_intersection_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'intersection'};
+}
+
+sub get_union {
+    return @{ get_union_ref(shift) };
+}
+
+sub get_union_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'union'};
+}
+
+sub get_shared {
+    return @{ get_shared_ref(shift) };
+}
+
+sub get_shared_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'shared'};
+}
+
+sub get_unique {
+    my $class = shift;
+    my %data = %$class;
+    my $index = defined $_[0] ? shift : 0;
+    return @{ get_unique_ref($class, $index) };
+}
+
+sub get_unique_ref {
+    my $class = shift;
+    my %data = %$class;
+    my $index = defined $_[0] ? shift : 0;
+    _index_message1($index, \%data);
+    return ${$data{'xunique'}}{$index};
+}
+
+sub get_Lonly {
+    my ($class, $index) = @_;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_unique()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_unique($class, $index);
+}    
+
+sub get_Lonly_ref {
+    my ($class, $index) = @_;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_unique_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_unique_ref($class, $index);
+}    
+
+*get_Aonly = \&get_Lonly;
+*get_Aonly_ref = \&get_Lonly_ref;
+
+sub get_complement {
+    my $class = shift;
+    my %data = %$class;
+    my $index = defined $_[0] ? shift : 0;
+    return @{ get_complement_ref($class, $index) };
+}
+
+sub get_complement_ref {
+    my $class = shift;
+    my %data = %$class;
+    my $index = defined $_[0] ? shift : 0;
+    _index_message1($index, \%data);
+    my %temp = %{$data{'xcomplement'}};
+    return ${$data{'xcomplement'}}{$index};
+}
+
+sub get_Ronly {
+    my ($class, $index) = @_;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_complement()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    &get_complement($class, $index);
+}    
+
+sub get_Ronly_ref {
+    my ($class, $index) = @_;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_complement_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    &get_complement_ref($class, $index);
+}    
+
+*get_Bonly = \&get_Ronly;
+*get_Bonly_ref = \&get_Ronly_ref;
+
+sub get_symmetric_difference {
+    return @{ get_symmetric_difference_ref(shift) };
+}
+
+sub get_symmetric_difference_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'symmetric_difference'};
+}
+
+*get_symdiff  = \&get_symmetric_difference;
+*get_symdiff_ref  = \&get_symmetric_difference_ref;
+
+sub get_LorRonly {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_symmetric_difference()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_symmetric_difference($class);
+}    
+
+sub get_LorRonly_ref {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_symmetric_difference_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_symmetric_difference_ref($class);
+}    
+
+*get_AorBonly = \&get_LorRonly;
+*get_AorBonly_ref = \&get_LorRonly_ref;
+
+sub get_nonintersection {
+    return @{ get_nonintersection_ref(shift) };
+}
+
+sub get_nonintersection_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'nonintersection'};
+}
+
+sub is_LsubsetR {
+    my $class = shift;
+    my %data = %$class;
+    my ($index_left, $index_right) = _index_message2(\%data, @_);
+    my @subset_array = @{$data{'xsubset'}};
+    my $subset_status = $subset_array[$index_left][$index_right];
+    return $subset_status;
+}
+
+*is_AsubsetB = \&is_LsubsetR;
+
+sub is_RsubsetL {
+    my $class = shift;
+    my %data = %$class;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias is restricted to \n  asking if the list which is the 2nd argument to the constructor \n    is a subset of the list which is the 1st argument.\n      For greater flexibility, please re-code with \&is_LsubsetR: $!";
+    @_ = (1,0);
+    my ($index_left, $index_right) = _index_message2(\%data, @_);
+    my @subset_array = @{$data{'xsubset'}};
+    my $subset_status = $subset_array[$index_left][$index_right];
+    return $subset_status;
+}
+
+*is_BsubsetA = \&is_RsubsetL;
+
+sub is_LequivalentR {
+    my $class = shift;
+    my %data = %$class;
+    my ($index_left, $index_right) = _index_message2(\%data, @_);
+    my @equivalent_array = @{$data{'xequivalent'}};
+    my $equivalent_status = $equivalent_array[$index_left][$index_right];
+    return $equivalent_status;
+}
+
+*is_LeqvlntR = \&is_LequivalentR;
+
+sub is_LdisjointR {
+    my $class = shift;
+    my %data = %$class;
+    my ($index_left, $index_right) = _index_message2(\%data, @_);
+    my @disjoint_array = @{$data{'xdisjoint'}};
+    my $disjoint_status = $disjoint_array[$index_left][$index_right];
+    return $disjoint_status;
+}
+
+sub is_member_which {
+    return @{ is_member_which_ref(@_) };
+}    
+
+sub is_member_which_ref {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument (no references):  $!"
+        unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
+    my %data = %$class;
+    my %seen = %{$data{'seen'}};
+    my ($arg, @found);
+    $arg = shift;
+    foreach (sort keys %seen) {
+        push @found, $_ if (exists $seen{$_}{$arg});
+    }
+    return \@found;
+}    
+
+sub are_members_which {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+        unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
+    my %data = %$class;
+    my %seen = %{$data{'seen'}};
+    my (@args, %found);
+    @args = @{$_[0]};
+    for (my $i=0; $i<=$#args; $i++) {
+        my (@not_found);
+        foreach (sort keys %seen) {
+            exists ${$seen{$_}}{$args[$i]}
+                ? push @{$found{$args[$i]}}, $_
+                : push @not_found, $_;
+        }
+        $found{$args[$i]} = [] if (@not_found == keys %seen);
+    }
+    return \%found;
+}    
+
+sub is_member_any {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument (no references):  $!"
+        unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
+    my %data = %$class;
+    my %seen = %{$data{'seen'}};
+    my ($arg, $k);
+    $arg = shift;
+    while ( $k = each %seen ) {
+        return 1 if (defined $seen{$k}{$arg});
+    }
+    return 0;
+}    
+
+sub are_members_any {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+        unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
+    my %data = %$class;
+    my %seen = %{$data{'seen'}};
+    my (@args, %present);
+    @args = @{$_[0]};
+    for (my $i=0; $i<=$#args; $i++) {
+        foreach (keys %seen) {
+            unless (defined $present{$args[$i]}) {
+                $present{$args[$i]} = 1 if $seen{$_}{$args[$i]};
+            }
+        }
+        $present{$args[$i]} = 0 if (! defined $present{$args[$i]});
+    }
+    return \%present;
+}    
+
+sub print_subset_chart {
+    my $class = shift;
+    my %data = %$class;
+    my @subset_array = @{$data{'xsubset'}};
+    my $title = 'subset';
+    _chart_engine_multiple(\@subset_array, $title);
+}
+
+sub print_equivalence_chart {
+    my $class = shift;
+    my %data = %$class;
+    my @equivalent_array = @{$data{'xequivalent'}};
+    my $title = 'Equivalence';
+    _chart_engine_multiple(\@equivalent_array, $title);
+}
 
 sub get_bag {
     return @{ get_bag_ref(shift) };
@@ -429,23 +1145,418 @@ sub get_version {
 
 package List::Compare::Multiple::Accelerated;
 use Carp;
-use base qw(List::Compare::Base::Multiple::Accelerated);
 use List::Compare::Base::_Auxiliary qw(
     _argument_checker_0
     _prepare_listrefs
+    _subset_subengine
+    _chart_engine_multiple
+    _equivalent_subengine
+    _index_message3
+    _index_message4
+    _prepare_listrefs 
+    _subset_engine_multaccel 
 );
- 
+use List::Compare::Base::_Auxiliary qw(:calculate);
+
 sub _init {
     my $self = shift;
     my $unsortflag = shift;
-    my @listrefs = @_;
+    my @listrefs = _argument_checker_0(@_);
     my %data = ();
     for (my $i=0; $i<=$#listrefs; $i++) {
-        $data{$i} = _argument_checker_0($listrefs[$i]);
+        $data{$i} = $listrefs[$i]; 
     }
     $data{'unsort'} = $unsortflag ? 1 : 0;
     return \%data;
 }    
+
+sub get_union {
+    return @{ get_union_ref(shift) };
+}
+
+sub get_union_ref {
+    my $class = shift;
+    my %data = %$class;
+    my $unsortflag = $data{'unsort'};
+    my $aref = _prepare_listrefs(\%data);
+
+    my $unionref = _calculate_union_only($aref);
+    my @union = $unsortflag ? keys %{$unionref} : sort(keys %{$unionref});
+    return \@union;
+}
+
+sub get_intersection {
+    return @{ get_intersection_ref(shift) };
+}
+
+sub get_intersection_ref {
+    my $class = shift;
+    my %data = %$class;
+    my $unsortflag = $data{'unsort'};
+    my $aref = _prepare_listrefs(\%data);
+
+    # Calculate overall intersection
+    # Inputs:  %xintersection
+    my $xintersectionref = _calculate_xintersection_only($aref);
+    my $intersectionref = _calculate_hash_intersection($xintersectionref);
+    my @intersection = 
+        $unsortflag ? keys %{$intersectionref} : sort(keys %{$intersectionref});
+    return \@intersection;
+}
+
+sub get_nonintersection {
+    return @{ get_nonintersection_ref(shift) };
+}
+
+sub get_nonintersection_ref {
+    my $class = shift;
+    my %data = %$class;
+    my $unsortflag = $data{'unsort'};
+    my $aref = _prepare_listrefs(\%data);
+
+    my ($unionref, $xintersectionref) = 
+        _calculate_union_xintersection_only($aref);
+    my @union = $unsortflag ? keys %{$unionref} : sort(keys %{$unionref});
+    my $intersectionref = _calculate_hash_intersection($xintersectionref);
+
+    # Calculate nonintersection
+    # Inputs:  @union    %intersection
+    my (@nonintersection);
+    foreach (@union) {
+        push(@nonintersection, $_) unless exists ${$intersectionref}{$_};
+    }
+    return \@nonintersection;
+}
+
+sub get_shared {
+    return @{ get_shared_ref(shift) };
+}
+
+sub get_shared_ref {
+    my $class = shift;
+    my %data = %$class;
+    my $unsortflag = $data{'unsort'};
+    my $aref = _prepare_listrefs(\%data);
+
+    # Calculate @shared
+    # Inputs:  %xintersection
+    my $xintersectionref = _calculate_xintersection_only($aref);
+    my $sharedref = _calculate_hash_shared($xintersectionref);
+    my @shared = $unsortflag ? keys %{$sharedref} : sort(keys %{$sharedref});
+    return \@shared;
+}
+
+sub get_symmetric_difference {
+    return @{ get_symmetric_difference_ref(shift) };
+}
+
+sub get_symmetric_difference_ref {
+    my $class = shift;
+    my %data = %$class;
+    my $unsortflag = $data{'unsort'};
+    my $aref = _prepare_listrefs(\%data);
+
+    my ($unionref, $xintersectionref) = 
+        _calculate_union_xintersection_only($aref);
+    my @union = $unsortflag ? keys %{$unionref} : sort(keys %{$unionref});
+
+    my $sharedref = _calculate_hash_shared($xintersectionref);
+    my (@symmetric_difference);
+    foreach (@union) {
+        push(@symmetric_difference, $_) unless exists ${$sharedref}{$_};
+    }
+    return \@symmetric_difference;
+}
+
+*get_symdiff = \&get_symmetric_difference;
+*get_symdiff_ref = \&get_symmetric_difference_ref;
+
+sub get_LorRonly {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_symmetric_difference()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_symmetric_difference($class);
+}    
+
+sub get_LorRonly_ref {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_symmetric_difference_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_symmetric_difference_ref($class);
+}    
+
+*get_AorBonly = \&get_LorRonly;
+*get_AorBonly_ref = \&get_LorRonly_ref;
+
+sub get_unique {
+    my $class = shift;
+    my %data = %$class;
+    my $index = defined $_[0] ? shift : 0;
+    return @{ get_unique_ref($class, $index) };
+}
+
+sub get_unique_ref {
+    my $class = shift;
+    my %data = %$class;
+    my $index = defined $_[0] ? shift : 0;
+    my $aref = _prepare_listrefs(\%data);
+    _index_message3($index, $#{$aref});
+
+    my ($seenref, $xintersectionref) = 
+        _calculate_seen_xintersection_only($aref);
+    my %seen = %{$seenref};
+    my %xintersection = %{$xintersectionref};
+
+    # Calculate %xunique
+    # Inputs:  $aref    %seen    %xintersection
+    my (%xunique);
+    for (my $i = 0; $i <= $#{$aref}; $i++) {
+        my %seenthis = %{$seen{$i}};
+        my (@uniquethis, %deductions, %alldeductions);
+        # Get those elements of %xintersection which we'll need 
+        # to subtract from %seenthis
+        foreach (keys %xintersection) {
+            my ($left, $right) = split /_/, $_;
+            if ($left == $i || $right == $i) {
+                $deductions{$_} = $xintersection{$_};
+            }
+        }
+        foreach my $ded (keys %deductions) {
+            foreach (keys %{$deductions{$ded}}) {
+                $alldeductions{$_}++;
+            }
+        }
+        foreach (keys %seenthis) {
+            push(@uniquethis, $_) unless ($alldeductions{$_});
+        }
+        $xunique{$i} = \@uniquethis;
+    }
+    return [ @{$xunique{$index}} ];
+}
+
+sub get_Lonly {
+    my ($class, $index) = @_;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_unique()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_unique($class, $index);
+}    
+
+sub get_Lonly_ref {
+    my ($class, $index) = @_;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_unique_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_unique_ref($class, $index);
+}    
+
+*get_Aonly = \&get_Lonly;
+*get_Aonly_ref = \&get_Lonly_ref;
+
+sub get_complement {
+    my $class = shift;
+    my %data = %$class;
+    my $index = defined $_[0] ? shift : 0;
+    return @{ get_complement_ref($class, $index) };
+}
+
+sub get_complement_ref {
+    my $class = shift;
+    my %data = %$class;
+    my $index = defined $_[0] ? shift : 0;
+    my $unsortflag = $data{'unsort'};
+    my $aref = _prepare_listrefs(\%data);
+    _index_message3($index, $#{$aref});
+
+    my ($unionref, $seenref) = _calculate_union_seen_only($aref);
+    my %seen = %{$seenref};
+    my @union = $unsortflag ? keys %{$unionref} : sort(keys %{$unionref});
+
+    # Calculate %xcomplement
+    # Inputs:  $aref @union %seen
+    my (%xcomplement);
+    for (my $i = 0; $i <= $#{$aref}; $i++) {
+        my %seenthis = %{$seen{$i}};
+        my @complementthis = ();
+        foreach (@union) {
+            push(@complementthis, $_) unless (exists $seenthis{$_});
+        }
+        $xcomplement{$i} = \@complementthis;
+    }
+    return [ @{$xcomplement{$index}} ];
+}
+
+sub get_Ronly {
+    my ($class, $index) = @_;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_complement()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    &get_complement($class, $index);
+}    
+
+sub get_Ronly_ref {
+    my ($class, $index) = @_;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_complement_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    &get_complement_ref($class, $index);
+}    
+
+*get_Bonly = \&get_Ronly;
+*get_Bonly_ref = \&get_Ronly_ref;
+
+sub is_LsubsetR {
+    my $class = shift;
+    my %data = %$class;
+    my $subset_status = _subset_engine_multaccel(\%data, @_);
+    return $subset_status;
+}
+
+*is_AsubsetB = \&is_LsubsetR;
+
+sub is_RsubsetL {
+    my $class = shift;
+    my %data = %$class;
+
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias is restricted to \n  asking if the list which is the 2nd argument to the constructor \n    is a subset of the list which is the 1st argument.\n      For greater flexibility, please re-code with \&is_LsubsetR: $!";
+    @_ = (1,0);
+
+    my $subset_status = _subset_engine_multaccel(\%data, @_);
+    return $subset_status;
+}
+
+*is_BsubsetA = \&is_RsubsetL;
+
+sub is_LequivalentR {
+    my $class = shift;
+    my %data = %$class;
+    my $aref = _prepare_listrefs(\%data);
+    my ($index_left, $index_right) = _index_message4($#{$aref}, @_);
+
+    my $xequivalentref = _equivalent_subengine($aref);
+    return ${$xequivalentref}[$index_left][$index_right];
+}
+
+*is_LeqvlntR = \&is_LequivalentR;
+
+sub is_LdisjointR {
+    my $class = shift;
+    my %data = %$class;
+    my $aref = _prepare_listrefs(\%data);
+    my ($index_left, $index_right) = _index_message4($#{$aref}, @_);
+
+    my (@xdisjoint);
+    my $xintersectionref = _calculate_xintersection_only($aref);
+    for (my $i = 0; $i <= $#{$aref}; $i++) {
+        foreach (keys %{$xintersectionref}) {
+            my ($left, $right) = split /_/, $_;
+            $xdisjoint[$left][$right] = $xdisjoint[$right][$left] = 
+                ! scalar(keys %{${$xintersectionref}{$_}}) ? 1 : 0;
+        }
+        $xdisjoint[$i][$i] = 0; 
+    }
+    my $disjoint_status = $xdisjoint[$index_left][$index_right];
+    return $disjoint_status;
+}
+
+sub is_member_which {
+    return @{ is_member_which_ref(@_) };
+}    
+
+sub is_member_which_ref {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument (no references):  $!"
+        unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
+    my %data = %{$class};
+    my $aref = _prepare_listrefs(\%data);
+    my $seenref = _calculate_seen_only($aref);
+    my ($arg, @found);
+    $arg = shift;
+    foreach (sort keys %{$seenref}) {
+        push @found, $_ if (exists ${$seenref}{$_}{$arg});
+    }
+    return \@found;
+}    
+
+sub are_members_which {
+    my $class = shift;
+    croak "Method call needs at least one argument:  $!" unless (@_);
+    my %data = %{$class};
+    my $aref = _prepare_listrefs(\%data);
+    my $seenref = _calculate_seen_only($aref);
+    my (@args, %found);
+    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
+        ?  @{$_[0]}
+        :  @_;
+    for (my $i=0; $i<=$#args; $i++) {
+        my (@not_found);
+        foreach (sort keys %{$seenref}) {
+            exists ${${$seenref}{$_}}{$args[$i]}
+                ? push @{$found{$args[$i]}}, $_
+                : push @not_found, $_;
+        }
+        $found{$args[$i]} = [] if (@not_found == keys %{$seenref});
+    }
+    return \%found;
+}    
+
+sub is_member_any {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument (no references):  $!"
+        unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
+    my %data = %$class;
+    my $aref = _prepare_listrefs(\%data);
+    my $seenref = _calculate_seen_only($aref);
+    my ($arg, $k);
+    $arg = shift;
+    while ( $k = each %{$seenref} ) {
+        return 1 if (defined ${$seenref}{$k}{$arg});
+    }
+    return 0;
+}    
+
+sub are_members_any {
+    my $class = shift;
+    croak "Method call needs at least one argument:  $!" unless (@_);
+    my %data = %$class;
+    my $aref = _prepare_listrefs(\%data);
+    my $seenref = _calculate_seen_only($aref);
+    my (@args, %present);
+    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
+        ?  @{$_[0]}
+        :  @_;
+    for (my $i=0; $i<=$#args; $i++) {
+        foreach (keys %{$seenref}) {
+            unless (defined $present{$args[$i]}) {
+                $present{$args[$i]} = 1 if ${$seenref}{$_}{$args[$i]};
+            }
+        }
+        $present{$args[$i]} = 0 if (! defined $present{$args[$i]});
+    }
+    return \%present;
+}    
+
+sub print_subset_chart {
+    my $class = shift;
+    my %data = %$class;
+    my $aref = _prepare_listrefs(\%data);
+    my $xsubsetref = _subset_subengine($aref);
+    my $title = 'subset';
+    _chart_engine_multiple($xsubsetref, $title);
+}
+
+sub print_equivalence_chart {
+    my $class = shift;
+    my %data = %$class;
+    my $aref = _prepare_listrefs(\%data);
+    my $xequivalentref = _equivalent_subengine($aref);
+    my $title = 'Equivalence';
+    _chart_engine_multiple($xequivalentref, $title);
+}
 
 sub get_bag {
     return @{ get_bag_ref(shift) };
@@ -492,8 +1603,8 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.27 of List::Compare.  This version was
-released April 18, 2004.
+This document refers to version 0.28 of List::Compare.  This version was
+released April 25, 2004.
 
 =head1 SYNOPSIS
 
@@ -617,6 +1728,14 @@ at least once in the right-hand list ('R') and I<vice versa>.
 
     $eqv = $lc->is_LequivalentR;
     $eqv = $lc->is_LeqvlntR;            # alias
+
+=item *
+
+Return a true value if the two lists passed to the constructor are 
+disjoint, I<i.e.> if the two lists have zero elements in common (or, what 
+is the same thing, if their intersection is an empty set).
+
+    $disj = $lc->is_LdisjointR;
 
 =item *
 
@@ -793,6 +1912,7 @@ you in the Accelerated case as well.
     $LR               = $lca->is_LsubsetR;
     $RL               = $lca->is_RsubsetL;
     $eqv              = $lca->is_LequivalentR;
+    $disj             = $lca->is_LdisjointR;
                         $lca->print_subset_chart;
                         $lca->print_equivalence_chart;
     @memb_arr         = $lca->is_member_which('abel');
@@ -968,6 +2088,23 @@ A true value (C<1>) is returned if the lists are equivalent; a false value
 (C<0>) otherwise. 
 
 If no arguments are passed, C<is_LequivalentR> defaults to C<(0,1)> and 
+compares the first two lists passed to the constructor.
+
+=item *
+
+To determine whether any two particular lists are disjoint from each other 
+(I<i.e.,> have no members in common), provide C<is_LdisjointR> with their 
+index positions in the list of arguments passed to the constructor 
+(ignoring any unsorted option).
+
+Example:  To determine whether C<@Don> and C<@Ed> are disjoint, call:
+
+    $disj = $lcm->is_LdisjointR(3,4);
+
+A true value (C<1>) is returned if the lists are equivalent; a false value 
+(C<0>) otherwise. 
+
+If no arguments are passed, C<is_LdisjointR> defaults to C<(0,1)> and 
 compares the first two lists passed to the constructor.
 
 =item *
@@ -1238,6 +2375,7 @@ modification> when references to seen-hashes are passed to the constructor.
     $LR               = $lcsh->is_LsubsetR;
     $RL               = $lcsh->is_RsubsetL;
     $eqv              = $lcsh->is_LequivalentR;
+    $disj             = $lcsh->is_LdisjointR;
                         $lcsh->print_subset_chart;
                         $lcsh->print_equivalence_chart;
     @memb_arr         = $lsch->is_member_which('abel');
@@ -1540,14 +2678,13 @@ from Damian Conway's I<Object Oriented Perl>
 L<http://www.manning.com/Conway/index.html>, Manning Publications, 2000.
 
 With the addition of the Accelerated, Multiple and Multiple Accelerated 
- modes, List::Compare 
-expands considerably in both size and capabilities.  Nonetheless,  Tom and 
-Nat's I<Cookbook> code still lies at its core:  the use of hashes as look-up 
-tables to record elements seen in lists.  Please note:   
-List::Compare is not concerned with any concept of 'equality' among lists 
-which hinges upon the frequency with which, or the order in which, elements 
-appear in the lists to be compared.  If this does not meet your needs, you 
-should look elsewhere or write your own module.
+modes, List::Compare expands considerably in both size and capabilities.  
+Nonetheless,  Tom and Nat's I<Cookbook> code still lies at its core:  
+the use of hashes as look-up tables to record elements seen in lists.  
+Please note:  List::Compare is not concerned with any concept of 'equality' 
+among lists which hinges upon the frequency with which, or the order in 
+which, elements appear in the lists to be compared.  If this does not 
+meet your needs, you should look elsewhere or write your own module.
 
 =head2 The Inspiration
 
@@ -1698,7 +2835,7 @@ you must first install the Want module, also available on CPAN.
 James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please 
 include 'List::Compare' or 'List-Compare' in your subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  April 18, 2004. 
+Creation date:  May 20, 2002.  Last modification date:  April 25, 2004. 
 Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

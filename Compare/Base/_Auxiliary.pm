@@ -1,5 +1,6 @@
 package List::Compare::Base::_Auxiliary;
-$VERSION = 0.27;
+$VERSION = 0.28;
+# As of:  04/25/2004
 # Holds subroutines used within various List::Compare
 # and List::Compare::Functional
 use Carp;
@@ -27,6 +28,7 @@ use Carp;
     _prepare_listrefs 
     _subset_engine_multaccel 
     _calc_seen
+    _calc_seen_alt
     _calc_seen1
     _equiv_engine 
     _argument_checker_0 
@@ -46,6 +48,14 @@ use Carp;
         _calculate_union_seen_only
         _calculate_hash_intersection
         _calculate_hash_shared
+    ) ],
+    checker => [ qw(
+        _argument_checker_0 
+        _argument_checker 
+        _argument_checker_1 
+        _argument_checker_2 
+        _argument_checker_3 
+        _argument_checker_4
     ) ],
 );
 use strict;
@@ -451,9 +461,11 @@ sub _index_message4 {
 # L:C, L:C:B:_Auxiliary, L:C:B:Multiple::Accelerated 
 sub _prepare_listrefs {
     my $dataref = shift;
+    delete ${$dataref}{'unsort'};
     my (@listrefs);
     foreach my $lref (sort {$a <=> $b} keys %{$dataref}) {
-        push(@listrefs, ${$dataref}{$lref}) unless $lref eq 'unsort';
+#        push(@listrefs, ${$dataref}{$lref}) unless $lref eq 'unsort';
+        push(@listrefs, ${$dataref}{$lref});
     };
     return \@listrefs;
 }
@@ -477,6 +489,20 @@ sub _calc_seen {
         my (%seenL, %seenR);
         foreach (@$refL) { $seenL{$_}++ }
         foreach (@$refR) { $seenR{$_}++ }
+        return (\%seenL, \%seenR); 
+    } else {
+        croak "Improper mixing of arguments; accelerated calculation not possible:  $!";
+    }
+}
+
+sub _calc_seen_alt {
+    my ($refL, $refR) = @_;
+    if (ref($refL) eq 'HASH' and ref($refR) eq 'HASH') {
+        return ($refL, $refR);
+    } elsif (ref($refL) eq 'ARRAY' and ref($refR) eq 'ARRAY') {
+        my (%seenL, %seenR);
+        @seenL{@$refL} = @$refL;
+        @seenR{@$refR} = @$refR;
         return (\%seenL, \%seenR); 
     } else {
         croak "Improper mixing of arguments; accelerated calculation not possible:  $!";
@@ -563,15 +589,18 @@ sub _argument_checker_3 {
     }
 }
 
-# L:C:Functional, L:C:B:_Auxiliary
 sub _argument_checker_4 {
     my @argrefs = @_;
     if (@argrefs == 1) {
         return (_argument_checker($argrefs[0]), [0,1]);
     } elsif (@argrefs == 2) {
-        return (_argument_checker($argrefs[0]), $argrefs[1]); 
+        if (@{$argrefs[1]} == 2) {
+            return (_argument_checker($argrefs[0]), $argrefs[1]);
+        } else {
+            croak "Must provide index positions corresponding to two lists: $!";
+        }
     } else {
-        croak "Subroutine call requires 1 or 2 references as arguments:  $!"
+        croak "Subroutine call requires 1 or 2 references as arguments: $!"
             unless (@argrefs == 1 or @argrefs == 2);
     }
 }
@@ -600,7 +629,6 @@ sub _calc_seen1 {
         croak "Indeterminate case in _calc_seen1: $!";
     }
 }
-
 
 1;
 

@@ -100,6 +100,12 @@ Revision history for Perl extension List::Compare.
 transferred directly into List::Compare
 	- corrections to POD
 
-0.28  Sun Apr 18 2004
+0.27  Sun Apr 18 2004
 	- corrections to POD
+
+0.28  Sun Apr 25 2004
+	- implementation of is_LdisjointR
+	- correction of error in tests of multiple-accelerated mode
+	- correction of error in internal subroutine _argument_checker_0
+	- further implication of deprecation of List::Compare::SeenHash is that all the code in List::Compare::Base::Regular, L:C:B:Accelerated, L:C:B:Multiple and L:C:B:Multiple::Accelerated is no longer shared between List::Compare and List::Compare::SeenHash and hence can be taken back into List::Compare; thereby eliminating the 'use base' calls from List::Compare.
 

@@ -1,5 +1,5 @@
 package List::Compare;
-$VERSION = 0.3;   # May 21, 2004 
+$VERSION = 0.31;   # August 15, 2004 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
@@ -103,11 +103,7 @@ sub _init {
 
     foreach (keys %seenL) {
         $union{$_}++;
-        if (exists $seenR{$_}) {
-            $intersection{$_}++;
-        } else {
-            $Lonly{$_}++;
-        }
+        exists $seenR{$_} ? $intersection{$_}++ : $Lonly{$_}++;
     }
 
     foreach (keys %seenR) {
@@ -196,6 +192,12 @@ sub get_unique_ref {
     return $data{'unique'};
 }
 
+sub get_unique_all {
+    my $class = shift;
+    my %data = %$class;
+    return [ $data{'unique'}, $data{'complement'} ];
+}
+
 *get_Lonly = \&get_unique;
 *get_Aonly = \&get_unique;
 *get_Lonly_ref = \&get_unique_ref;
@@ -209,6 +211,12 @@ sub get_complement_ref {
     my $class = shift;
     my %data = %$class;
     return $data{'complement'};
+}
+
+sub get_complement_all {
+    my $class = shift;
+    my %data = %$class;
+    return [ $data{'complement'}, $data{'unique'} ];
 }
 
 *get_Ronly = \&get_complement;
@@ -349,7 +357,7 @@ sub are_members_any {
     @args = @{$_[0]};
     for (my $i=0; $i<=$#args; $i++) {
     $present{$args[$i]} = ( defined $data{'seenL'}{$args[$i]} ) ||
-                              ( defined $data{'seenR'}{$args[$i]} ) ? 1 : 0;
+                          ( defined $data{'seenR'}{$args[$i]} )     ? 1 : 0;
     }
     return \%present;
 }    
@@ -377,26 +385,10 @@ use Carp;
 use List::Compare::Base::_Auxiliary qw(
     _validate_2_seenhashes
     _argument_checker_0
+    _chart_engine_regular
+    _calc_seen
+    _equiv_engine 
 );
-use List::Compare::Base::_Engine qw|
-    _intersection_engine
-    _intersection_alt_engine
-    _union_engine
-    _unique_engine
-    _complement_engine
-    _symmetric_difference_engine
-    _symmetric_difference_alt_engine 
-    _is_LsubsetR_engine
-    _is_RsubsetL_engine
-    _is_LequivalentR_engine
-    _is_LdisjointR_engine
-    _print_subset_chart_engine
-    _print_equivalence_chart_engine
-    _is_member_which_engine
-    _are_members_which_engine
-    _is_member_any_engine
-    _are_members_any_engine
-|;
 
 sub _init {
     my $self = shift;
@@ -417,21 +409,6 @@ sub get_intersection_ref {
     $data{'unsort'} 
       ? return          _intersection_engine($data{'L'}, $data{'R'})   
       : return [ sort @{_intersection_engine($data{'L'}, $data{'R'})} ];
-}
-
-sub get_intersection_alt {
-    return @{ get_intersection_alt_ref(shift) };
-}
-
-sub get_intersection_alt_ref {
-    my $class = shift;
-    my %data = %$class;
-    $data{'unsort'} 
-      ? return          _intersection_alt_engine($data{'L'}, $data{'R'})   
-      : return [ sort @{_intersection_alt_engine($data{'L'}, $data{'R'})} ];
-#    ${$class}{'unsort'} 
-#      ? return          _intersection_alt_engine(${$class}{'L'}, ${$class}{'R'})   
-#      : return [ sort @{_intersection_alt_engine(${$class}{'L'}, ${$class}{'R'})} ];
 }
 
 sub get_union {
@@ -470,6 +447,11 @@ sub get_unique_ref {
       : return [ sort @{_unique_engine($data{'L'}, $data{'R'})} ];
 }
 
+sub get_unique_all {
+    my $class = shift;
+    return [ get_unique_ref($class), get_complement_ref($class) ];
+}
+
 *get_Lonly = \&get_unique;
 *get_Aonly = \&get_unique;
 *get_Lonly_ref = \&get_unique_ref;
@@ -487,6 +469,11 @@ sub get_complement_ref {
       : return [ sort @{_complement_engine($data{'L'}, $data{'R'})} ];
 }
 
+sub get_complement_all {
+    my $class = shift;
+    return [ get_complement_ref($class), get_unique_ref($class) ];
+}
+
 *get_Ronly = \&get_complement;
 *get_Bonly = \&get_complement;
 *get_Ronly_ref = \&get_complement_ref;
@@ -502,21 +489,6 @@ sub get_symmetric_difference_ref {
     $data{'unsort'} 
       ? return          _symmetric_difference_engine($data{'L'}, $data{'R'})  
       : return [ sort @{_symmetric_difference_engine($data{'L'}, $data{'R'})} ];
-}
-
-sub get_symmetric_difference_alt {
-    return @{ get_symmetric_difference_alt_ref(shift) };
-}
-
-sub get_symmetric_difference_alt_ref {
-    my $class = shift;
-    my %data = %$class;
-    $data{'unsort'} 
-      ? return          _symmetric_difference_alt_engine($data{'L'}, $data{'R'})  
-      : return [ sort @{_symmetric_difference_alt_engine($data{'L'}, $data{'R'})} ];
-#    ${$class}{'unsort'} 
-#      ? return          _symmetric_difference_alt_engine(${$class}{'L'}, ${$class}{'R'})  
-#      : return [ sort @{_symmetric_difference_alt_engine(${$class}{'L'}, ${$class}{'R'})} ];
 }
 
 *get_symdiff  = \&get_symmetric_difference;
@@ -651,6 +623,175 @@ sub get_version {
     return $List::Compare::VERSION;
 }
 
+sub _intersection_engine {
+    my ($l, $r) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my %intersection = ();
+    foreach (keys %{$hrefL}) {
+        $intersection{$_}++ if (exists ${$hrefR}{$_});
+    }
+    return [ keys %intersection ];
+}
+
+sub _union_engine {
+    my ($l, $r) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my %union = ();
+    $union{$_}++ foreach ( (keys %{$hrefL}), (keys %{$hrefR}) );
+    return [ keys %union ];
+}
+
+sub _unique_engine {
+    my ($l, $r) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my (%Lonly);
+    foreach (keys %{$hrefL}) {
+        $Lonly{$_}++ unless exists ${$hrefR}{$_};
+    }
+    return [ keys %Lonly ];
+}
+
+sub _complement_engine {
+    my ($l, $r) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my (%Ronly);
+    foreach (keys %{$hrefR}) {
+        $Ronly{$_}++ unless (exists ${$hrefL}{$_});
+    }
+    return [ keys %Ronly ];
+}
+
+sub _symmetric_difference_engine {
+    my ($l, $r) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my (%LorRonly);
+    foreach (keys %{$hrefL}) {
+        $LorRonly{$_}++ unless (exists ${$hrefR}{$_});
+    }
+    foreach (keys %{$hrefR}) {
+        $LorRonly{$_}++ unless (exists ${$hrefL}{$_});
+    }
+    return [ keys %LorRonly ];
+}
+
+sub _is_LsubsetR_engine {
+    my ($l, $r) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my $LsubsetR_status = 1;
+    foreach (keys %{$hrefL}) {
+        if (! exists ${$hrefR}{$_}) {
+            $LsubsetR_status = 0;
+            last;
+        }
+    }
+    return $LsubsetR_status;
+}
+
+sub _is_RsubsetL_engine {
+    my ($l, $r) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my $RsubsetL_status = 1;
+    foreach (keys %{$hrefR}) {
+        if (! exists ${$hrefL}{$_}) {
+            $RsubsetL_status = 0;
+            last;
+        }
+    }
+    return $RsubsetL_status;
+}
+
+sub _is_LequivalentR_engine {
+    my ($l, $r) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    return _equiv_engine($hrefL, $hrefR);
+}
+
+sub _is_LdisjointR_engine {
+    my ($l, $r) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my %intersection = ();
+    foreach (keys %{$hrefL}) {
+        $intersection{$_}++ if (exists ${$hrefR}{$_});
+    }
+    keys %intersection == 0 ? 1 : 0;
+}
+
+sub _print_subset_chart_engine {
+    my ($l, $r) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my $LsubsetR_status = my $RsubsetL_status = 1;
+    foreach (keys %{$hrefL}) {
+        if (! exists ${$hrefR}{$_}) {
+            $LsubsetR_status = 0;
+            last;
+        }
+    }
+    foreach (keys %{$hrefR}) {
+        if (! exists ${$hrefL}{$_}) {
+            $RsubsetL_status = 0;
+            last;
+        }
+    }
+    my @subset_array = ($LsubsetR_status, $RsubsetL_status);
+    my $title = 'Subset';
+    _chart_engine_regular(\@subset_array, $title);
+}
+
+sub _print_equivalence_chart_engine {
+    my ($l, $r) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my $LequivalentR_status = _equiv_engine($hrefL, $hrefR);
+    my @equivalent_array = ($LequivalentR_status, $LequivalentR_status);
+    my $title = 'Equivalence';
+    _chart_engine_regular(\@equivalent_array, $title);
+}    
+
+sub _is_member_which_engine {
+    my ($l, $r, $arg) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my (@found);
+    if (exists ${$hrefL}{$arg}) { push @found, 0; }
+    if (exists ${$hrefR}{$arg}) { push @found, 1; }
+    if ( (! exists ${$hrefL}{$arg}) &&
+         (! exists ${$hrefR}{$arg}) )
+       { @found = (); }
+    return \@found;
+}    
+
+sub _are_members_which_engine {
+    my ($l, $r, $arg) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my @args = @{$arg};
+    my (%found);
+    for (my $i=0; $i<=$#args; $i++) {
+        if (exists ${$hrefL}{$args[$i]}) { push @{$found{$args[$i]}}, 0; }
+        if (exists ${$hrefR}{$args[$i]}) { push @{$found{$args[$i]}}, 1; }
+        if ( (! exists ${$hrefL}{$args[$i]}) &&
+             (! exists ${$hrefR}{$args[$i]}) )
+           { @{$found{$args[$i]}} = (); }
+    }
+    return \%found;
+}
+
+sub _is_member_any_engine {
+    my ($l, $r, $arg) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    ( defined ${$hrefL}{$arg} ) ||
+    ( defined ${$hrefR}{$arg} ) ? return 1 : return 0;
+}
+
+sub _are_members_any_engine {
+    my ($l, $r, $arg) = @_;
+    my ($hrefL, $hrefR) = _calc_seen($l, $r);
+    my @args = @{$arg};
+    my (%present);
+    for (my $i=0; $i<=$#args; $i++) {
+        $present{$args[$i]} = ( defined ${$hrefL}{$args[$i]} ) ||
+                              ( defined ${$hrefR}{$args[$i]} ) ? 1 : 0;
+    }
+    return \%present;
+}
+
 1;
 
 ################################################################################
@@ -713,11 +854,11 @@ sub _init {
         # the source lists
     my %shared = ();
         # will be used to generate @shared
-    my %xunique = ();
-        # will be hash of arrays, holding the items that are unique to 
+    my @xunique = ();
+        # will be array of arrays, holding the items that are unique to 
         # the list whose index number is passed as an argument
-    my %xcomplement = ();
-        # will be hash of arrays, holding the items that are found in 
+    my @xcomplement = ();
+        # will be array of arrays, holding the items that are found in 
         # any list other than the list whose index number is passed 
         # as an argument
     my @xdisjoint = ();
@@ -728,7 +869,7 @@ sub _init {
     # intersection, unique, difference, etc.
     for (my $i = 0; $i <= $#arrayrefs; $i++) {
         my %seenthis = ();
-        foreach $_ (@{$arrayrefs[$i]}) {
+        foreach (@{$arrayrefs[$i]}) {
             $seenthis{$_}++;
             $union{$_}++;
         }
@@ -768,7 +909,7 @@ sub _init {
         push(@nonintersection, $_) unless (exists $intersection{$_});
     }
 
-    # Calculate %xunique and @xdisjoint
+    # Calculate @xunique and @xdisjoint
     # Inputs:  @arrayrefs    %seen    %xintersection
     for (my $i = 0; $i <= $#arrayrefs; $i++) {
         my %seenthis = %{$seen{$i}};
@@ -781,7 +922,7 @@ sub _init {
                 $deductions{$_} = $xintersection{$_};
             }
             $xdisjoint[$left][$right] = $xdisjoint[$right][$left] = 
-                ! scalar(keys %{$xintersection{$_}}) ? 1 : 0;
+                ! (keys %{$xintersection{$_}}) ? 1 : 0;
         }
         foreach my $ded (keys %deductions) {
             foreach (keys %{$deductions{$ded}}) {
@@ -791,13 +932,13 @@ sub _init {
         foreach (keys %seenthis) {
             push(@uniquethis, $_) unless ($alldeductions{$_});
         }
-        $xunique{$i} = \@uniquethis;
+        $xunique[$i] = \@uniquethis;
         $xdisjoint[$i][$i] = 0; 
     }
-    # %xunique is now available for use in further calculations, 
+    # @xunique is now available for use in further calculations, 
     # such as returning the items unique to a particular source list.
 
-    # Calculate %xcomplement
+    # Calculate @xcomplement
     # Inputs:  @arrayrefs    %seen    @union
     for (my $i = 0; $i <= $#arrayrefs; $i++) {
         my %seenthis = %{$seen{$i}};
@@ -805,9 +946,9 @@ sub _init {
         foreach (@union) {
             push(@complementthis, $_) unless (exists $seenthis{$_});
         }
-        $xcomplement{$i} = \@complementthis;
+        $xcomplement[$i] = \@complementthis;
     }
-    # %xcomplement is now available for use in further calculations, 
+    # @xcomplement is now available for use in further calculations, 
     # such as returning the items in all lists different from those in a 
     # particular source list.
 
@@ -852,8 +993,8 @@ sub _init {
     $data{'union'}                  = \@union;
     $data{'shared'}                 = \@shared;
     $data{'symmetric_difference'}   = \@symmetric_difference;
-    $data{'xunique'}                = \%xunique;
-    $data{'xcomplement'}            = \%xcomplement;
+    $data{'xunique'}                = \@xunique;
+    $data{'xcomplement'}            = \@xcomplement;
     $data{'xsubset'}                = \@xsubset;
     $data{'xequivalent'}            = \@xequivalent;
     $data{'xdisjoint'}              = \@xdisjoint;
@@ -903,7 +1044,13 @@ sub get_unique_ref {
     my %data = %$class;
     my $index = defined $_[0] ? shift : 0;
     _index_message1($index, \%data);
-    return ${$data{'xunique'}}{$index};
+    return ${$data{'xunique'}}[$index];
+}
+
+sub get_unique_all {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'xunique'};
 }
 
 sub get_Lonly {
@@ -937,8 +1084,13 @@ sub get_complement_ref {
     my %data = %$class;
     my $index = defined $_[0] ? shift : 0;
     _index_message1($index, \%data);
-    my %temp = %{$data{'xcomplement'}};
-    return ${$data{'xcomplement'}}{$index};
+    return ${$data{'xcomplement'}}[$index];
+}
+
+sub get_complement_all {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'xcomplement'};
 }
 
 sub get_Ronly {
@@ -1167,6 +1319,10 @@ use List::Compare::Base::_Auxiliary qw(
     _subset_engine_multaccel 
 );
 use List::Compare::Base::_Auxiliary qw(:calculate);
+use List::Compare::Base::_Engine    qw(
+    _unique_all_engine
+    _complement_all_engine
+);
 
 sub _init {
     my $self = shift;
@@ -1314,36 +1470,15 @@ sub get_unique_ref {
     my $aref = _prepare_listrefs(\%data);
     _index_message3($index, $#{$aref});
 
-    my ($seenref, $xintersectionref) = 
-        _calculate_seen_xintersection_only($aref);
-    my %seen = %{$seenref};
-    my %xintersection = %{$xintersectionref};
+    my $unique_all_ref = _unique_all_engine($aref);
+    return ${$unique_all_ref}[$index];
+}
 
-    # Calculate %xunique
-    # Inputs:  $aref    %seen    %xintersection
-    my (%xunique);
-    for (my $i = 0; $i <= $#{$aref}; $i++) {
-        my %seenthis = %{$seen{$i}};
-        my (@uniquethis, %deductions, %alldeductions);
-        # Get those elements of %xintersection which we'll need 
-        # to subtract from %seenthis
-        foreach (keys %xintersection) {
-            my ($left, $right) = split /_/, $_;
-            if ($left == $i || $right == $i) {
-                $deductions{$_} = $xintersection{$_};
-            }
-        }
-        foreach my $ded (keys %deductions) {
-            foreach (keys %{$deductions{$ded}}) {
-                $alldeductions{$_}++;
-            }
-        }
-        foreach (keys %seenthis) {
-            push(@uniquethis, $_) unless ($alldeductions{$_});
-        }
-        $xunique{$i} = \@uniquethis;
-    }
-    return [ @{$xunique{$index}} ];
+sub get_unique_all {
+    my $class = shift;
+    my %data = %$class;
+    my $aref = _prepare_listrefs(\%data);
+    return _unique_all_engine($aref);
 }
 
 sub get_Lonly {
@@ -1380,22 +1515,15 @@ sub get_complement_ref {
     my $aref = _prepare_listrefs(\%data);
     _index_message3($index, $#{$aref});
 
-    my ($unionref, $seenref) = _calculate_union_seen_only($aref);
-    my %seen = %{$seenref};
-    my @union = $unsortflag ? keys %{$unionref} : sort(keys %{$unionref});
+    my $complement_all_ref = _complement_all_engine($aref, $unsortflag );
+    return ${$complement_all_ref}[$index];
+}
 
-    # Calculate %xcomplement
-    # Inputs:  $aref @union %seen
-    my (%xcomplement);
-    for (my $i = 0; $i <= $#{$aref}; $i++) {
-        my %seenthis = %{$seen{$i}};
-        my @complementthis = ();
-        foreach (@union) {
-            push(@complementthis, $_) unless (exists $seenthis{$_});
-        }
-        $xcomplement{$i} = \@complementthis;
-    }
-    return [ @{$xcomplement{$index}} ];
+sub get_complement_all {
+    my $class = shift;
+    my %data = %$class;
+    my $aref = _prepare_listrefs(\%data);
+    return _complement_all_engine($aref);
 }
 
 sub get_Ronly {
@@ -1494,14 +1622,17 @@ sub is_member_which_ref {
 
 sub are_members_which {
     my $class = shift;
-    croak "Method call needs at least one argument:  $!" unless (@_);
+#    croak "Method call needs at least one argument:  $!" unless (@_);
+    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+        unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %{$class};
     my $aref = _prepare_listrefs(\%data);
     my $seenref = _calculate_seen_only($aref);
     my (@args, %found);
-    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
-        ?  @{$_[0]}
-        :  @_;
+    @args = @{$_[0]};
+#    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
+#        ?  @{$_[0]}
+#        :  @_;
     for (my $i=0; $i<=$#args; $i++) {
         my (@not_found);
         foreach (sort keys %{$seenref}) {
@@ -1531,14 +1662,17 @@ sub is_member_any {
 
 sub are_members_any {
     my $class = shift;
-    croak "Method call needs at least one argument:  $!" unless (@_);
+#    croak "Method call needs at least one argument:  $!" unless (@_);
+    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+        unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
     my $aref = _prepare_listrefs(\%data);
     my $seenref = _calculate_seen_only($aref);
     my (@args, %present);
-    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
-        ?  @{$_[0]}
-        :  @_;
+    @args = @{$_[0]};
+#    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
+#        ?  @{$_[0]}
+#        :  @_;
     for (my $i=0; $i<=$#args; $i++) {
         foreach (keys %{$seenref}) {
             unless (defined $present{$args[$i]}) {
@@ -1613,8 +1747,8 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.3 of List::Compare.  This version was
-released May 21, 2004.
+This document refers to version 0.31 of List::Compare.  This version was
+released August 15, 2004.
 
 =head1 SYNOPSIS
 
@@ -2339,7 +2473,41 @@ full array, use the following alternative methods:
     $nonintersection_ref = $lcm->get_nonintersection_ref;
     $shared_ref = $lcm->get_shared_ref;
 
-=back
+=item *
+
+Get a reference to an array of array references where each of the interior 
+arrays holds the list of those items I<unique> to the list passed to the 
+constructor with the same index position.
+
+    $unique_all_ref = $lcm->get_unique_all();
+
+In the example above, C<$unique_all_ref> will hold:
+
+    [
+        [ qw| abel | ],
+        [ ],
+        [ qw| jerky | ],
+        [ ],
+        [ ],
+    ]
+
+=item *
+
+Get a reference to an array of array references where each of the interior 
+arrays holds the list of those items in the I<complement> to the list 
+passed to the constructor with the same index position.
+
+    $complement_all_ref = $lcm->get_complement_all();
+
+In the example above, C<$complement_all_ref> will hold:
+
+    [
+        [ qw| hilton icon jerky | ],
+        [ qw| abel icon jerky | ],
+        [ qw| abel baker camera delta edward | ],
+        [ qw| abel baker camera delta edward jerky | ],
+        [ qw| abel baker camera delta edward jerky | ],
+    ]
 
 =back
 
@@ -2467,32 +2635,34 @@ You can now do so:
 I<All> of List::Compare's output methods are supported I<without further 
 modification> when references to seen-hashes are passed to the constructor.
 
-    @intersection     = $lcsh->get_intersection;
-    @union            = $lcsh->get_union;
-    @Lonly            = $lcsh->get_unique;
-    @Ronly            = $lcsh->get_complement;
-    @LorRonly         = $lcsh->get_symmetric_difference;
-    @bag              = $lcsh->get_bag;
-    $intersection_ref = $lcsh->get_intersection_ref;
-    $union_ref        = $lcsh->get_union_ref;
-    $Lonly_ref        = $lcsh->get_unique_ref;
-    $Ronly_ref        = $lcsh->get_complement_ref;
-    $LorRonly_ref     = $lcsh->get_symmetric_difference_ref;
-    $bag_ref          = $lcsh->get_bag_ref;
-    $LR               = $lcsh->is_LsubsetR;
-    $RL               = $lcsh->is_RsubsetL;
-    $eqv              = $lcsh->is_LequivalentR;
-    $disj             = $lcsh->is_LdisjointR;
-                        $lcsh->print_subset_chart;
-                        $lcsh->print_equivalence_chart;
-    @memb_arr         = $lsch->is_member_which('abel');
-    $memb_arr_ref     = $lsch->is_member_which_ref('baker');
-    $memb_hash_ref    = $lsch->are_members_which(
-                            [ qw| abel baker fargo hilton zebra | ]);
-    $found            = $lsch->is_member_any('abel');
-    $memb_hash_ref    = $lsch->are_members_any(
-                            [ qw| abel baker fargo hilton zebra | ]);
-    $vers             = $lcsh->get_version;
+    @intersection         = $lcsh->get_intersection;
+    @union                = $lcsh->get_union;
+    @Lonly                = $lcsh->get_unique;
+    @Ronly                = $lcsh->get_complement;
+    @LorRonly             = $lcsh->get_symmetric_difference;
+    @bag                  = $lcsh->get_bag;
+    $intersection_ref     = $lcsh->get_intersection_ref;
+    $union_ref            = $lcsh->get_union_ref;
+    $Lonly_ref            = $lcsh->get_unique_ref;
+    $Ronly_ref            = $lcsh->get_complement_ref;
+    $LorRonly_ref         = $lcsh->get_symmetric_difference_ref;
+    $bag_ref              = $lcsh->get_bag_ref;
+    $LR                   = $lcsh->is_LsubsetR;
+    $RL                   = $lcsh->is_RsubsetL;
+    $eqv                  = $lcsh->is_LequivalentR;
+    $disj                 = $lcsh->is_LdisjointR;
+                            $lcsh->print_subset_chart;
+                            $lcsh->print_equivalence_chart;
+    @memb_arr             = $lsch->is_member_which('abel');
+    $memb_arr_ref         = $lsch->is_member_which_ref('baker');
+    $memb_hash_ref        = $lsch->are_members_which(
+                                [ qw| abel baker fargo hilton zebra | ]);
+    $found                = $lsch->is_member_any('abel');
+    $memb_hash_ref        = $lsch->are_members_any(
+                                [ qw| abel baker fargo hilton zebra | ]);
+    $vers                 = $lcsh->get_version;
+    $unique_all_ref       = $lcsh->get_unique_all();
+    $complement_all_ref   = $lcsh->get_complement_all();
 
 =item * Accelerated Mode and Seen-Hashes
 
@@ -2869,6 +3039,27 @@ A remark by David H. Adler at a New York Perlmongers meeting in April 2004
 led me to develop the 'single hashref' alternative constructor format, 
 introduced in version 0.29 the following month.
 
+Presentations at two different editions of Yet Another Perl Conference (YAPC) 
+inspired the development of List::Compare versions 0.30 and 0.31.  I was 
+selected to give a talk on List::Compare at YAPC::NA::2004 in Buffalo.  This 
+spurred me to improve certain aspects of the documentation.  Version 0.31 
+owes its inspiration to one talk at the Buffalo YAPC and one earlier talk at 
+YAPC::EU::2003 in Paris.  In Paris I heard Paul Johnson speak on his CPAN 
+module Devel::Cover and on coverage analysis more generally.  That material 
+was over my head at that time, but in Buffalo I heard Andy Lester discuss 
+Devel::Cover as part of his discussion of testing and of the Phalanx project 
+(L<http://qa.perl.org/phalanx>).  This time I got it, and when I returned 
+from Buffalo I applied Devel::Cover to List::Compare and wrote additional tests 
+to improve its subroutine and statement coverage.  In addition, I added two 
+new methods, C<get_unique_all> and C<get_complement_all>.  In writing these 
+two methods, I followed a model of test-driven development much more so than 
+in earlier versions of List::Compare and my other CPAN modules.  The result?  
+List::Compare's test suite grew by over 3300 tests to nearly 23,000 tests.  
+The last 25 of those new tests were the most interesting, because they were 
+tests which were written in response to deficiencies in coverage revealed by 
+use of Devel::Cover.  The use of Devel::Cover also led to some subtle 
+changes deep in the internals of the modules themselves.
+
 =head2 If You Like List::Compare, You'll Love ...
 
 While preparing this module for distribution via CPAN, I had occasion to
@@ -2973,7 +3164,7 @@ you must first install the Want module, also available on CPAN.
 James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please 
 include 'List::Compare' or 'List-Compare' in your subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  May 21, 2004. 
+Creation date:  May 20, 2002.  Last modification date:  August 15, 2004. 
 Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

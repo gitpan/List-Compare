@@ -115,3 +115,7 @@ transferred directly into List::Compare
 0.30  Fri May 21 2004
 	- documentation corrections only
 
+0.31  Sun Aug 15 2004
+	- added methods get_unique_all() and get_complement_all(); added 3335 tests; repositioned most methods in List::Compare::Base::_Engine to List::Compare::Accelerated as they were no longer also being used in List::Compare::Functional; other internal code clean-up
+
+

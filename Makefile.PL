@@ -4,6 +4,6 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     'NAME'		=> 'List::Compare',
     'VERSION_FROM'	=> 'Compare.pm', # finds $VERSION
-    'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
+    'PREREQ_PM'		=> { Test::Simple => 0.10 }, # e.g., Module::Name => 1.1
 );
 

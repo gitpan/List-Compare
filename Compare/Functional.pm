@@ -1,5 +1,5 @@
 package List::Compare::Functional;
-$VERSION = 0.3;   # May 21, 2004 
+$VERSION = 0.31;   # August 15, 2004 
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
     get_intersection
@@ -8,8 +8,10 @@ $VERSION = 0.3;   # May 21, 2004
     get_union_ref
     get_unique
     get_unique_ref
+    get_unique_all
     get_complement
     get_complement_ref
+    get_complement_all
     get_symmetric_difference
     get_symmetric_difference_ref
     is_LsubsetR
@@ -32,6 +34,7 @@ $VERSION = 0.3;   # May 21, 2004
     is_LeqvlntR
     get_bag
     get_bag_ref
+    get_version
 |;
 %EXPORT_TAGS = (
     main => [ qw(
@@ -56,8 +59,10 @@ $VERSION = 0.3;   # May 21, 2004
         get_union_ref
         get_unique
         get_unique_ref
+        get_unique_all
         get_complement
         get_complement_ref
+        get_complement_all
         get_symmetric_difference
         get_symmetric_difference_ref
         get_shared
@@ -77,6 +82,7 @@ $VERSION = 0.3;   # May 21, 2004
         print_equivalence_chart
         get_bag
         get_bag_ref
+        get_version
     ) ],
     aliases => [ qw(
         get_symdiff
@@ -87,13 +93,16 @@ $VERSION = 0.3;   # May 21, 2004
 use strict;
 use Carp;
 use List::Compare::Base::_Auxiliary qw(
-    _validate_seen_hash
     _subset_subengine
     _chart_engine_multiple
     _equivalent_subengine
     _calc_seen1
 );
 use List::Compare::Base::_Auxiliary qw(:calculate :checker :tester);
+use List::Compare::Base::_Engine qw( 
+    _unique_all_engine 
+    _complement_all_engine
+);
 
 
 sub get_union {
@@ -142,6 +151,13 @@ sub get_unique_ref {
         : return [ sort @{_unique_engine(_argument_checker_3($argref))} ];
 }
 
+sub get_unique_all {
+    my ($argref, $unsorted) = _alt_construct_tester_3(@_);
+    # currently it doesn't appear that &_unique_all_engine can make use of
+    # $unsorted
+    return _unique_all_engine(_argument_checker_3a($argref));
+}
+
 sub _unique_engine {
     my $tested = pop(@_);
     my $seenrefsref = _calc_seen1(@_);
@@ -185,6 +201,11 @@ sub get_complement_ref {
     $unsorted
         ? return          _complement_engine(_argument_checker_3($argref))
         : return [ sort @{_complement_engine(_argument_checker_3($argref))} ];
+}
+
+sub get_complement_all {
+    my ($argref, $unsorted) = _alt_construct_tester_3(@_);
+    return _complement_all_engine(_argument_checker_3a($argref), $unsorted);
 }
 
 sub _complement_engine {
@@ -431,9 +452,7 @@ sub _are_members_which_engine {
 }
 
 sub are_members_any {
-#    return _are_members_any_engine(_argument_checker_2(@_));
     my $argref = _alt_construct_tester_2(@_);
-#    return _are_members_any_engine(_argument_checker_2(@{$argref}));
     return _are_members_any_engine(_argument_checker_2($argref));
 }    
 
@@ -502,8 +521,8 @@ List::Compare::Functional - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.3 of List::Compare::Functional.  
-This version was released May 21, 2004.  The first released 
+This document refers to version 0.31 of List::Compare::Functional.  
+This version was released August 15, 2004.  The first released 
 version of List::Compare::Functional was v0.21.  Its version numbers 
 are set to be consistent with the other parts of the List::Compare 
 distribution.
@@ -942,6 +961,22 @@ is same as:
 
 =item *
 
+Should you need to identify the items unique to I<each> of the lists under 
+consideration, call C<get_unique_all> and get a reference to an array of 
+array references:
+
+    $unique_all_ref = get_unique_all(
+        [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ]
+    );
+
+or
+
+    $unique_all_ref = get_unique_all( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
+    } );
+
+=item *
+
 To get those items which appear only in lists I<other than> one particular 
 list, pass two array references to the C<get_complement()>  function.  
 The first holds references to the arrays which in turn hold the individual lists 
@@ -970,6 +1005,22 @@ C<get_complement()>.
 is same as:
 
     @Lonly = get_complement( [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ], [ 0 ] );
+
+=item *
+
+Should you need to identify the items not found in I<each> of the lists under 
+consideration, call C<get_complement_all> and get a reference to an array of 
+array references:
+
+    $complement_all_ref = get_complement_all(
+        [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ]
+    );
+
+or
+
+    $complement_all_ref = get_complement_all( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
+    } );
 
 =item *
 
@@ -1523,8 +1574,10 @@ in their 'original' form, I<i.e.>, no aliases for those subroutines:
     get_union_ref
     get_unique
     get_unique_ref
+    get_unique_all
     get_complement
     get_complement_ref
+    get_complement_all
     get_symmetric_difference
     get_symmetric_difference_ref
     get_shared
@@ -1633,7 +1686,7 @@ James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please
 include 'List::Compare::Functional' or 'List-Compare-Functional' in your 
 subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  May 21, 2004. 
+Creation date:  May 20, 2002.  Last modification date:  August 15, 2004. 
 Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

@@ -1,231 +1,103 @@
 package List::Compare::Base::_Engine;
-$VERSION = 0.3;
-# Holds subroutines used within both 
+$VERSION = 0.31;
+# Holds subroutines used within 
 # List::Compare::Base::Accelerated and List::Compare::Functional
-# As of 05/21/2004
+# As of 08/15/2004
 use Carp;
 use List::Compare::Base::_Auxiliary qw(
-    _chart_engine_regular
-    _calc_seen
-    _calc_seen_alt
     _equiv_engine 
+    _calculate_seen_xintersection_only
+    _calculate_union_seen_only
 );
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
-    _intersection_engine
-    _intersection_alt_engine
-    _union_engine
-    _unique_engine
-    _complement_engine
-    _symmetric_difference_engine
-    _symmetric_difference_alt_engine 
-    _is_LsubsetR_engine
-    _is_RsubsetL_engine
-    _is_LequivalentR_engine
-    _is_LdisjointR_engine 
-    _is_member_which_engine
-    _are_members_which_engine
-    _is_member_any_engine
-    _are_members_any_engine
-    _print_subset_chart_engine
-    _print_equivalence_chart_engine
+    _unique_all_engine
+    _complement_all_engine
 |;
 use strict;
 
-sub _intersection_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my %intersection = ();
-    foreach (keys %{$hrefL}) {
-        $intersection{$_}++ if (exists ${$hrefR}{$_});
-    }
-    return [ keys %intersection ];
-}
+sub _unique_all_engine {
+    my $aref = shift;
+    my ($seenref, $xintersectionref) = 
+        _calculate_seen_xintersection_only($aref);
+    my %seen = %{$seenref};
+    my %xintersection = %{$xintersectionref};
 
-sub _intersection_alt_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen_alt($l, $r);
-    my (%count, @intersection);
-    @count{keys(%{$hrefL})} = keys(%{$hrefL});
-    @intersection = grep { delete $count{$_} } keys(%{$hrefR});
-    return \@intersection;
-}
-
-sub _union_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my %union = ();
-    $union{$_}++ foreach ( (keys %{$hrefL}), (keys %{$hrefR}) );
-    return [ keys %union ];
-}
-
-sub _unique_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my (%Lonly);
-    foreach (keys %{$hrefL}) {
-        $Lonly{$_}++ unless exists ${$hrefR}{$_};
-    }
-    return [ keys %Lonly ];
-}
-
-sub _complement_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my (%intersection, %Ronly);
-    foreach (keys %{$hrefL}) {
-        $intersection{$_}++ if (exists ${$hrefR}{$_});
-    }
-    foreach (keys %{$hrefR}) {
-        $Ronly{$_}++ unless (exists $intersection{$_});
-    }
-    return [ keys %Ronly ];
-}
-
-sub _symmetric_difference_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my (%intersection, %Lonly, %Ronly, %LorRonly);
-    foreach (keys %{$hrefL}) {
-        if (exists ${$hrefR}{$_}) {
-            $intersection{$_}++;
-        } else {
-            $Lonly{$_}++;
+    # Calculate @xunique
+    # Inputs:  $aref    %seen    %xintersection
+    my (@xunique);
+    for (my $i = 0; $i <= $#{$aref}; $i++) {
+        my %seenthis = %{$seen{$i}};
+        my (@uniquethis, %deductions, %alldeductions);
+        # Get those elements of %xintersection which we'll need 
+        # to subtract from %seenthis
+        foreach (keys %xintersection) {
+            my ($left, $right) = split /_/, $_;
+            if ($left == $i || $right == $i) {
+                $deductions{$_} = $xintersection{$_};
+            }
         }
-    }
-    foreach (keys %{$hrefR}) {
-        $Ronly{$_}++ unless (exists $intersection{$_});
-    }
-    $LorRonly{$_}++ foreach ( (keys %Lonly), (keys %Ronly) );
-    return [ keys %LorRonly ];
-}
-
-sub _symmetric_difference_alt_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen_alt($l, $r);
-    my (%countx, @symmetric_difference);
-    $countx{$_}++ foreach (keys %{$hrefL}, keys %{$hrefR});
-    @symmetric_difference = grep { $countx{$_} == 1 } keys %countx;
-    return \@symmetric_difference;
-}
-
-sub _is_LsubsetR_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my $LsubsetR_status = 1;
-    foreach (keys %{$hrefL}) {
-        if (! exists ${$hrefR}{$_}) {
-            $LsubsetR_status = 0;
-            last;
+        foreach my $ded (keys %deductions) {
+            foreach (keys %{$deductions{$ded}}) {
+                $alldeductions{$_}++;
+            }
         }
-    }
-    return $LsubsetR_status;
-}
-
-sub _is_RsubsetL_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my $RsubsetL_status = 1;
-    foreach (keys %{$hrefR}) {
-        if (! exists ${$hrefL}{$_}) {
-            $RsubsetL_status = 0;
-            last;
+        foreach (keys %seenthis) {
+            push(@uniquethis, $_) unless ($alldeductions{$_});
         }
+        $xunique[$i] = \@uniquethis;
     }
-    return $RsubsetL_status;
+    return \@xunique;
 }
 
-sub _is_LequivalentR_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    return _equiv_engine($hrefL, $hrefR);
-}
+sub _complement_all_engine {
+    my ($aref, $unsortflag) = @_;
+    my ($unionref, $seenref) = _calculate_union_seen_only($aref);
+    my %seen = %{$seenref};
+    my @union = $unsortflag ? keys %{$unionref} : sort(keys %{$unionref});
 
-sub _is_LdisjointR_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my %intersection = ();
-    foreach (keys %{$hrefL}) {
-        $intersection{$_}++ if (exists ${$hrefR}{$_});
-    }
-    keys %intersection == 0 ? 1 : 0;
-}
-
-sub _print_subset_chart_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my $LsubsetR_status = my $RsubsetL_status = 1;
-    foreach (keys %{$hrefL}) {
-        if (! exists ${$hrefR}{$_}) {
-            $LsubsetR_status = 0;
-            last;
+    # Calculate @xcomplement
+    # Inputs:  $aref @union %seen
+    my (@xcomplement);
+    for (my $i = 0; $i <= $#{$aref}; $i++) {
+        my %seenthis = %{$seen{$i}};
+        my @complementthis = ();
+        foreach (@union) {
+            push(@complementthis, $_) unless (exists $seenthis{$_});
         }
+        $xcomplement[$i] = \@complementthis;
     }
-    foreach (keys %{$hrefR}) {
-        if (! exists ${$hrefL}{$_}) {
-            $RsubsetL_status = 0;
-            last;
-        }
-    }
-    my @subset_array = ($LsubsetR_status, $RsubsetL_status);
-    my $title = 'Subset';
-    _chart_engine_regular(\@subset_array, $title);
-}
-
-sub _print_equivalence_chart_engine {
-    my ($l, $r) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my $LequivalentR_status = _equiv_engine($hrefL, $hrefR);
-    my @equivalent_array = ($LequivalentR_status, $LequivalentR_status);
-    my $title = 'Equivalence';
-    _chart_engine_regular(\@equivalent_array, $title);
-}    
-
-sub _is_member_which_engine {
-    my ($l, $r, $arg) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my (@found);
-    if (exists ${$hrefL}{$arg}) { push @found, 0; }
-    if (exists ${$hrefR}{$arg}) { push @found, 1; }
-    if ( (! exists ${$hrefL}{$arg}) &&
-         (! exists ${$hrefR}{$arg}) )
-       { @found = (); }
-    return \@found;
-}    
-
-sub _are_members_which_engine {
-    my ($l, $r, $arg) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my @args = @{$arg};
-    my (%found);
-    for (my $i=0; $i<=$#args; $i++) {
-        if (exists ${$hrefL}{$args[$i]}) { push @{$found{$args[$i]}}, 0; }
-        if (exists ${$hrefR}{$args[$i]}) { push @{$found{$args[$i]}}, 1; }
-        if ( (! exists ${$hrefL}{$args[$i]}) &&
-             (! exists ${$hrefR}{$args[$i]}) )
-           { @{$found{$args[$i]}} = (); }
-    }
-    return \%found;
-}
-
-sub _is_member_any_engine {
-    my ($l, $r, $arg) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    ( defined ${$hrefL}{$arg} ) ||
-    ( defined ${$hrefR}{$arg} ) ? return 1 : return 0;
-}
-
-sub _are_members_any_engine {
-    my ($l, $r, $arg) = @_;
-    my ($hrefL, $hrefR) = _calc_seen($l, $r);
-    my @args = @{$arg};
-    my (%present);
-    for (my $i=0; $i<=$#args; $i++) {
-        $present{$args[$i]} = ( defined ${$hrefL}{$args[$i]} ) ||
-                              ( defined ${$hrefR}{$args[$i]} ) ? 1 : 0;
-    }
-    return \%present;
+    return \@xcomplement;
 }
 
 1;
+
+
+__END__
+
+=head1 NAME
+
+List::Compare::Base::_Engine - Internal use only
+
+=head1 VERSION
+
+This document refers to version 0.31 of List::Compare::Base::_Engine.
+This version was released August 15, 2004.
+
+=head1 SYNOPSIS
+
+This module contains subroutines used within List::Compare and 
+List::Compare::Functional.  They are not intended to be publicly callable.
+
+=head1 AUTHOR
+
+James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please 
+include 'List::Compare' or 'List-Compare' in your subject line.
+
+Creation date:  May 20, 2002.  Last modification date:  August 15, 2004. 
+Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
+This is free software and may be distributed under the same terms as Perl
+itself.
+
+=cut 
 

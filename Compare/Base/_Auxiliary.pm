@@ -1,10 +1,7 @@
 package List::Compare::Base::_Auxiliary;
-$VERSION = 0.3;
-# As of:  05/21/2004
-# Holds subroutines used within various List::Compare
-# and List::Compare::Functional
+$VERSION = 0.31;
+# As of:  08/15/2004
 use Carp;
-use Data::Dumper;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
     _validate_2_seenhashes
@@ -29,7 +26,6 @@ use Data::Dumper;
     _prepare_listrefs 
     _subset_engine_multaccel 
     _calc_seen
-    _calc_seen_alt
     _calc_seen1
     _equiv_engine 
     _argument_checker_0 
@@ -37,6 +33,7 @@ use Data::Dumper;
     _argument_checker_1 
     _argument_checker_2 
     _argument_checker_3 
+    _argument_checker_3a 
     _argument_checker_4
     _alt_construct_tester 
     _alt_construct_tester_1 
@@ -62,6 +59,7 @@ use Data::Dumper;
         _argument_checker_1 
         _argument_checker_2 
         _argument_checker_3 
+        _argument_checker_3a 
         _argument_checker_4
     ) ],
     tester => [ qw(
@@ -75,7 +73,6 @@ use Data::Dumper;
 );
 use strict;
 
-# L:C, L:C:B:_Auxiliary
 sub _validate_2_seenhashes {
     my ($refL, $refR) = @_;
     my (%seenL, %seenR);
@@ -112,7 +109,6 @@ sub _validate_2_seenhashes {
     return (\%seenL, \%seenR);
 }
 
-# L:C, L:C:F, L:C:B:_Auxiliary 
 sub _validate_seen_hash {
     if (@_ > 2) {
         _validate_multiple_seenhashes( [@_] );
@@ -145,7 +141,6 @@ sub _validate_seen_hash {
     }
 }
 
-# L:C:B:_Auxiliary
 sub _validate_multiple_seenhashes {
     my $hashrefsref = shift;
     my @hashrefs = @{$hashrefsref};
@@ -173,7 +168,6 @@ sub _validate_multiple_seenhashes {
     }
 }
 
-# L:C:B:_Auxiliary
 sub _list_builder {
     my ($aref, $x) = @_;
     if (ref(${$aref}[$x]) eq 'HASH') {
@@ -183,7 +177,6 @@ sub _list_builder {
     }
 }
 
-# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_union_xintersection_only {
     my $aref = shift;
     my (%union, %xintersection);
@@ -207,7 +200,6 @@ sub _calculate_union_xintersection_only {
     return (\%union, \%xintersection);
 }
 
-# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_seen_xintersection_only {
     my $aref = shift;
     my (%xintersection, %seen);
@@ -230,7 +222,6 @@ sub _calculate_seen_xintersection_only {
     return (\%seen, \%xintersection);
 }
 
-# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_seen_only {
     my $aref = shift;
     my (%seen);
@@ -244,7 +235,6 @@ sub _calculate_seen_only {
     return \%seen;
 }
 
-# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_xintersection_only {
     my $aref = shift;
     my (%xintersection);
@@ -266,7 +256,6 @@ sub _calculate_xintersection_only {
     return \%xintersection;
 }
 
-# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_union_only {
     my $aref = shift;
     my (%union);
@@ -278,7 +267,6 @@ sub _calculate_union_only {
     return \%union;
 }
 
-# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_union_seen_only {
     my $aref = shift;
     my (%union, %seen);
@@ -293,7 +281,6 @@ sub _calculate_union_seen_only {
     return (\%union, \%seen);
 }
 
-# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_hash_intersection {
     my $xintersectionref = shift;
     my @xkeys = keys %{$xintersectionref};
@@ -309,7 +296,6 @@ sub _calculate_hash_intersection {
     return \%intersection;
 }
 
-# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _calculate_hash_shared {
     my $xintersectionref = shift;
     my (%shared);
@@ -319,7 +305,6 @@ sub _calculate_hash_shared {
     return \%shared;
 }
 
-# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _subset_subengine {
     my $aref = shift;
     my (@xsubset);
@@ -338,7 +323,6 @@ sub _subset_subengine {
     return \@xsubset;
 }
 
-# L:C:B:Regular, L:C:B:_Auxiliary, L:C:B:_Engine
 sub _chart_engine_regular {
     my $aref = shift;
     my @sub_or_eqv = @$aref;
@@ -351,7 +335,6 @@ sub _chart_engine_regular {
     print '       1:    ', $sub_or_eqv[1], '    1', "\n\n";
 }
 
-# L:C:Functional, L:C:B:Multiple, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _chart_engine_multiple {
     my $aref = shift;
     my @sub_or_eqv = @$aref;
@@ -383,7 +366,6 @@ sub _chart_engine_multiple {
     1; # force return true value
 }
 
-# L:C:Functional, L:C:B:_Auxiliary, L:C:Multiple::Accelerated
 sub _equivalent_subengine {
     my $aref = shift;
     my $xsubsetref = _subset_subengine($aref);
@@ -399,23 +381,19 @@ sub _equivalent_subengine {
     return \@xequivalent;
 }
 
-# L:C:B:Multiple, L:C:B:_Auxiliary
 sub _index_message1 {
     my ($index, $dataref) = @_;
-    my %data = %$dataref;
     my $method = (caller(1))[3];
     croak "Argument to method $method must be the array index of the target list \n  in list of arrays passed as arguments to the constructor: $!"
         unless (
                 $index =~ /^\d+$/ 
            and  0 <= $index 
-           and  $index <= $data{'maxindex'}
+           and  $index <= ${$dataref}{'maxindex'}
         );
 }
 
-# L:C:B:Multiple, L:C:B:_Auxiliary
 sub _index_message2 {
     my $dataref = shift;
-    my %data =%$dataref;
     my ($index_left, $index_right);
     my $method = (caller(1))[3];
     croak "Method $method requires 2 arguments: $!"
@@ -430,14 +408,13 @@ sub _index_message2 {
                 unless (
                         $_ =~ /^\d+$/ 
                    and  0 <= $_ 
-                   and  $_ <= $data{'maxindex'}
+                   and  $_ <= ${$dataref}{'maxindex'}
                 );
         }
     }
     return ($index_left, $index_right);
 }
 
-# L:C:B:_Auxiliary, L:C:B:Multiple::Accelerated 
 sub _index_message3 {
     my ($index, $maxindex) = @_;
     my $method = (caller(1))[3];
@@ -449,7 +426,6 @@ sub _index_message3 {
         );
 }
 
-# L:C:B:_Auxiliary, L:C:B:Multiple::Accelerated 
 sub _index_message4 {
     my $maxindex = shift;
     my ($index_left, $index_right);
@@ -473,19 +449,16 @@ sub _index_message4 {
     return ($index_left, $index_right);
 }
 
-# L:C, L:C:B:_Auxiliary, L:C:B:Multiple::Accelerated 
 sub _prepare_listrefs {
     my $dataref = shift;
     delete ${$dataref}{'unsort'};
     my (@listrefs);
     foreach my $lref (sort {$a <=> $b} keys %{$dataref}) {
-#        push(@listrefs, ${$dataref}{$lref}) unless $lref eq 'unsort';
         push(@listrefs, ${$dataref}{$lref});
     };
     return \@listrefs;
 }
 
-# L:C:B:_Auxiliary, L:C:B:Multiple::Accelerated 
 sub _subset_engine_multaccel {
     my $dataref = shift;
     my $aref = _prepare_listrefs($dataref);
@@ -495,47 +468,27 @@ sub _subset_engine_multaccel {
     return ${$xsubsetref}[$index_left][$index_right];
 }
 
-# L:C:Functional, L:C:B:_Engine, L:C:B:_Auxiliary
 sub _calc_seen {
     my ($refL, $refR) = @_;
-    if (ref($refL) eq 'HASH' and ref($refR) eq 'HASH') {
-        return ($refL, $refR);
-    } elsif (ref($refL) eq 'ARRAY' and ref($refR) eq 'ARRAY') {
+    if (ref($refL) eq 'ARRAY' and ref($refR) eq 'ARRAY') {
         my (%seenL, %seenR);
         foreach (@$refL) { $seenL{$_}++ }
         foreach (@$refR) { $seenR{$_}++ }
         return (\%seenL, \%seenR); 
-    } else {
-        croak "Improper mixing of arguments; accelerated calculation not possible:  $!";
-    }
-}
-
-sub _calc_seen_alt {
-    my ($refL, $refR) = @_;
-    if (ref($refL) eq 'HASH' and ref($refR) eq 'HASH') {
+    } elsif (ref($refL) eq 'HASH' and ref($refR) eq 'HASH') {
         return ($refL, $refR);
-    } elsif (ref($refL) eq 'ARRAY' and ref($refR) eq 'ARRAY') {
-        my (%seenL, %seenR);
-        @seenL{@$refL} = @$refL;
-        @seenR{@$refR} = @$refR;
-        return (\%seenL, \%seenR); 
     } else {
         croak "Improper mixing of arguments; accelerated calculation not possible:  $!";
     }
 }
 
-# L:C:B:_Engine, L:C:B:_Auxiliary
 sub _equiv_engine {
     my ($hrefL, $hrefR) = @_;
     my (%intersection, %Lonly, %Ronly, %LorRonly);
     my $LequivalentR_status = 0;
     
     foreach (keys %{$hrefL}) {
-        if (exists ${$hrefR}{$_}) {
-            $intersection{$_}++;
-        } else {
-            $Lonly{$_}++;
-        }
+        exists ${$hrefR}{$_} ? $intersection{$_}++ : $Lonly{$_}++;
     }
 
     foreach (keys %{$hrefR}) {
@@ -547,7 +500,6 @@ sub _equiv_engine {
     return $LequivalentR_status;
 }
 
-# L:C, L:C:B:_Auxiliary
 sub _argument_checker_0 {
     my @args = @_;
     my $first_ref = ref($args[0]);
@@ -568,14 +520,12 @@ sub _argument_checker_0 {
     return (@args);
 }
 
-# L:C, L:C:Functional
 sub _argument_checker {
     my $argref = shift;
     my @args = _argument_checker_0(@{$argref});
     return (@args);
 }
 
-# L:C:Functional
 sub _argument_checker_1 {
     my $argref = shift;
     my @args = @{$argref};
@@ -584,7 +534,6 @@ sub _argument_checker_1 {
     return (_argument_checker($args[0]), ${$args[1]}[0]);
 }
 
-# L:C:Functional
 sub _argument_checker_2 {
     my $argref = shift;
     my @args = @$argref;
@@ -593,7 +542,6 @@ sub _argument_checker_2 {
     return (_argument_checker($args[0]), $args[1]);
 }
 
-# L:C:Functional
 # _argument_checker_3 is currently set-up to handle either 1 or 2 arguments
 # in get_unique and get_complement
 # The first argument is an arrayref holding refs to lists ('unsorted' has been 
@@ -613,6 +561,16 @@ sub _argument_checker_3 {
     }
 }
 
+sub _argument_checker_3a {
+    my $argref = shift;
+    my @args = @{$argref};
+    if (@args == 1) {
+        return [ _argument_checker($args[0]) ];
+    } else {
+        croak "Subroutine call requires exactly 1 reference as argument:  $!";
+    }
+}
+
 sub _argument_checker_4 {
     my $argref = shift;
     my @args = @{$argref};
@@ -620,6 +578,11 @@ sub _argument_checker_4 {
         return (_argument_checker($args[0]), [0,1]);
     } elsif (@args == 2) {
         if (@{$args[1]} == 2) {
+            my $last_index = $#{$args[0]};
+            foreach my $i (@{$args[1]}) {
+		croak "No element in index position $i in list of list references passed as first argument to function: $!"
+                    unless ($i =~ /^\d+$/ and $i <= $last_index);
+            }
             return (_argument_checker($args[0]), $args[1]);
         } else {
             croak "Must provide index positions corresponding to two lists: $!";
@@ -630,7 +593,6 @@ sub _argument_checker_4 {
     }
 }
 
-# L:C:Functional, L:C:B:_Auxiliary
 sub _calc_seen1 {
     my @listrefs = @_;
     # _calc_seen1() is applied after _argument_checker(), which checks to make
@@ -638,9 +600,7 @@ sub _calc_seen1 {
     # or all seenhashrefs
     # hence, _calc_seen1 only needs to determine whether it's dealing with 
     # arrayrefs or seenhashrefs, then, if arrayrefs, calculate seenhashes
-    if (ref($listrefs[0]) eq 'HASH') {
-        return \@listrefs;
-    } elsif (ref($listrefs[0]) eq 'ARRAY') {
+    if (ref($listrefs[0]) eq 'ARRAY') {
         my (@seenrefs);
         foreach my $aref (@listrefs) {
             my (%seenthis);
@@ -650,6 +610,8 @@ sub _calc_seen1 {
             push(@seenrefs, \%seenthis);
         }
         return \@seenrefs;
+    } elsif (ref($listrefs[0]) eq 'HASH') {
+        return \@listrefs;
     } else {
         croak "Indeterminate case in _calc_seen1: $!";
     }
@@ -668,14 +630,15 @@ sub _alt_construct_tester {
        $argref = ${$hashref}{'lists'};
        $unsorted = ${$hashref}{'unsorted'} ? 1 : '';
     } else {
-        $unsorted = shift(@args) if ($args[0] eq '-u' or $args[0] eq '--unsorted');
+        $unsorted = shift(@args) 
+            if ($args[0] eq '-u' or $args[0] eq '--unsorted');
         $argref = shift(@args); 
     }
     return ($argref, $unsorted);
 }
 
 # _alt_construct_tester_1 prepares for _argument_checker_1 in
-# is_member_which is_member_any
+# is_member_which is_member_which_ref is_member_any
 sub _alt_construct_tester_1 {
     my @args = @_;
     my ($argref);
@@ -685,9 +648,9 @@ sub _alt_construct_tester_1 {
         die "Need to define 'lists' key properly: $!"
            unless ( ${$hashref}{'lists'}
                 and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
-        @returns = defined ${$hashref}{'item'}
-                        ? (${$hashref}{'lists'}, [${$hashref}{'item'}])
-                        : (${$hashref}{'lists'});
+        die "Need to define 'item' key properly: $!"
+           unless ${$hashref}{'item'};
+        @returns = ( ${$hashref}{'lists'}, [${$hashref}{'item'}] );
         $argref = \@returns;
     } else {
         $argref = \@args; 
@@ -706,6 +669,9 @@ sub _alt_construct_tester_2 {
         die "Need to define 'lists' key properly: $!"
            unless ( ${$hashref}{'lists'}
                 and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
+        die "Need to define 'items' key properly: $!"
+           unless ( ${$hashref}{'items'}
+                and (ref(${$hashref}{'items'}) eq 'ARRAY') );
         @returns = defined ${$hashref}{'items'}
                         ? (${$hashref}{'lists'}, ${$hashref}{'items'})
                         : (${$hashref}{'lists'});
@@ -765,17 +731,49 @@ sub _alt_construct_tester_4 {
 sub _alt_construct_tester_5 {
     my @args = @_;
     my ($argref);
-    if (@args == 1 and (ref($args[0]) eq 'HASH')) {
-       my $hashref = shift;
-       die "Need to define 'lists' key properly: $!"
-           unless ( ${$hashref}{'lists'}
-                and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
-       $argref = ${$hashref}{'lists'};
+    if (@args == 1) {
+        if (ref($args[0]) eq 'HASH') {
+           my $hashref = shift;
+           die "Need to define 'lists' key properly: $!"
+               unless ( ${$hashref}{'lists'}
+                    and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
+           $argref = ${$hashref}{'lists'};
+        } else {
+           $argref = shift(@args); 
+        }
     } else {
-        $argref = shift(@args); 
+        croak "Subroutine call requires exactly 1 reference as argument:  $!";
     }
     return $argref;
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+List::Compare::Base::_Auxiliary - Internal use only
+
+=head1 VERSION
+
+This document refers to version 0.31 of List::Compare::Base::_Auxiliary.
+This version was released August 15, 2004.
+
+=head1 SYNOPSIS
+
+This module contains subroutines used within List::Compare and 
+List::Compare::Functional.  They are not intended to be publicly callable.
+
+=head1 AUTHOR
+
+James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please 
+include 'List::Compare' or 'List-Compare' in your subject line.
+
+Creation date:  May 20, 2002.  Last modification date:  August 15, 2004. 
+Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
+This is free software and may be distributed under the same terms as Perl
+itself.
+
+=cut 
 

@@ -1,6 +1,6 @@
 # MANIFEST for List::Compare
-# $VERSION = 0.3;
-# as of:  05/21/2004
+# $VERSION = 0.31;
+# as of:  08/01/2004
 Changes
 Compare.pm
 Compare/Base/_Auxiliary.pm
@@ -33,7 +33,9 @@ t/25_alt_functional.t
 t/26_alt_functional_multiple.t
 t/27_alt_functional_sh.t
 t/28_alt_functional_multiple_sh.t
+t/29_unqall.t
+t/30_unqall_unsorted.t
+t/31_unqall_functional.t 
+t/32_unqall_functional_unsorted.t 
 t/Test/ListCompareSpecial.pm
-
-
 META.yml                                Module meta-data (added by MakeMaker)

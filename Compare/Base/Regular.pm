@@ -1,6 +1,6 @@
 package List::Compare::Base::Regular;
-$VERSION = 0.22;
-# As of:  November 23, 2003 
+$VERSION = 0.24;
+# As of:  March 28, 2004 
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl

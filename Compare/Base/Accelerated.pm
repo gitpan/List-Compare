@@ -1,6 +1,6 @@
 package List::Compare::Base::Accelerated;
-$VERSION = 0.22;
-# as of:  November 23, 2003
+$VERSION = 0.24;
+# as of:  March 28, 2004
 use strict;
 use Carp;
 use List::Compare::Base::_Engine qw|

@@ -5,12 +5,9 @@
 
 ######################### We start with some black magic to print on failure.
 
-# Change 1..1 below to 1..last_test_to_print .
-# (It may become useful if the test is moved to ./t subdirectory.)
-
-BEGIN { $last_test_to_print = 
-770; $| = 1; print "1..$last_test_to_print\n"; } # 11/22/2003
-END {print "not ok 1\n" unless $loaded;}
+END {print "not ok 1\n" unless $loaded;} # 3/28/2004
+use Test::Simple tests =>
+770;
 use lib ("./t");
 use List::Compare::SeenHash;
 use Test::ListCompareSpecial;
@@ -1339,13 +1336,13 @@ ok($lcshaccu_e);                        # 767
 my ($f5, $f6, $f7);
 
 eval { $f5 = List::Compare::SeenHash->new('-a', \%h0, \%h5) };
-ok_capture_error($@);                   # 768
+ok(ok_capture_error($@));               # 768
 
 eval { $f6 = List::Compare::SeenHash->new('-a', \%h6, \%h0) };
-ok_capture_error($@);                   # 769
+ok(ok_capture_error($@));               # 769
 
 eval { $f7 = List::Compare::SeenHash->new('-a', \%h6, \%h7) };
-ok_capture_error($@);                   # 770
+ok(ok_capture_error($@));               # 770
 
 
 

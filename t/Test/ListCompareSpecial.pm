@@ -1,26 +1,17 @@
 package Test::ListCompareSpecial;
 # Contains test subroutines for distribution with List::Compare
-# As of:  November 21, 2003
+# As of:  March 28, 2004
 require Exporter;
-our @ISA         = qw(Exporter);
-our @EXPORT      = qw( ok  $testnum );
-our @EXPORT_OK   = qw( ok_capture_error ok_seen_a  ok_seen_h ok_any_h _capture ); 
+our @ISA       = qw(Exporter);
+our @EXPORT_OK = qw( ok_capture_error ok_seen_a  ok_seen_h ok_any_h _capture ); 
 our %EXPORT_TAGS = (
     seen => [ qw( ok_capture_error ok_seen_a  ok_seen_h ok_any_h _capture ) ],
 );
 
-$testnum = 1;
-
-sub ok {
-    my $condition = shift;
-    print $condition ? "ok $testnum\n" : "not ok $testnum\n";
-    $testnum++;
-}
-
 sub ok_capture_error {
     my $condition = shift;
-    print $condition ? "\nok $testnum  IGNORE PRINTOUT;\n        bad values have been correctly detected during initialization.\n" : "not ok $testnum\n";
-    $testnum++;
+    print "\nIGNORE PRINTOUT above during 'make test TEST_VERBOSE=1'\n        testing for bad values\n";
+    return $condition;
 }
 
 sub ok_seen_h {
@@ -63,4 +54,23 @@ sub _capture { my $str = $_[0]; }
 
 1;
 
+#######################################################################
+
+# Code below from earlier version of Test/ListCompareSpecial
+# deleted once test suite adopted Test::Simple as testing modality
+
+#|our @EXPORT      = qw( ok  $testnum );
+#|$testnum = 1;
+
+#|sub ok {
+#|    my $condition = shift;
+#|    print $condition ? "ok $testnum\n" : "not ok $testnum\n";
+#|    $testnum++;
+#|}
+
+#|sub ok_capture_error {
+#|    my $condition = shift;
+#|    print $condition ? "\nok $testnum  IGNORE PRINTOUT;\n        bad values have been correctly detected during initialization.\n" : "not ok $testnum\n";
+#|    $testnum++;
+#|}
 

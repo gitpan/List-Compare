@@ -4,6 +4,7 @@ Compare/Base/Accelerated.pm
 Compare/Base/_Engine.pm
 Compare/Base/Multiple.pm
 Compare/Base/Regular.pm
+Compare/Base/Multiple/Accelerated.pm
 Compare/Functional.pm
 Compare/SeenHash.pm
 MANIFEST
@@ -17,6 +18,8 @@ t/05_accelerated_sh.t
 t/06_multiple_sh.t
 t/07_functional.t
 t/08_functional_sh.t
+t/09_multaccel.t
+t/10_multaccel_sh.t
 t/Test/ListCompareSpecial.pm
 
 

@@ -1,8 +1,8 @@
 package List::Compare::Base::_Engine;
-$VERSION = 0.22;
+$VERSION = 0.24;
 # Holds subroutines used within both 
 # List::Compare::Base::Accelerated and List::Compare::Functional
-# As of November 23, 2003
+# As of March 28, 2004
 use Carp;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|

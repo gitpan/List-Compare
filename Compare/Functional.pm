@@ -1,5 +1,5 @@
 package List::Compare::Functional;
-$VERSION = 0.22;   # November 23, 2003 
+$VERSION = 0.24;   # March 28, 2004 
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
     get_intersection
@@ -381,8 +381,8 @@ List::Compare::Functional - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.22 of List::Compare::Functional.  
-This version was released November 23, 2003.  The first released 
+This document refers to version 0.24 of List::Compare::Functional.  
+This version was released March 28, 2004.  The first released 
 version of List::Compare::Functional was v0.21.  Its version numbers 
 are set to be consistent with the other parts of the List::Compare 
 distribution.
@@ -629,11 +629,8 @@ Return current List::Compare::Functional version number.
 
 =head2 Comparing Two Lists Held in Seen-Hashes
 
-=over 4
-
-=item * What Is a Seen-Hash?
-
-A seen-hash is a hash where the value for a given element represents the number 
+What is a seen-hash?  A seen-hash is a hash where the value for a given 
+element represents the number 
 of times the element's key is observed in a list.  For the purposes of 
 List::Compare::Functional, what is crucial is whether an item is observed in a 
 list or not; how many times the item occurs in a list is, I<with one exception,> 
@@ -785,7 +782,7 @@ in their 'original' form, I<i.e.>, no aliases for those subroutines:
     print_equivalence_chart()
     get_bag()
     get_bag_ref()
-    
+
 =item *
 
 Tag group C<:aliases> contains all List::Compare::Functional subroutines 
@@ -801,7 +798,7 @@ people on the planet still using those early versions.
 
 James E. Keenan (jkeenan@cpan.org).
 
-Creation date:  May 20, 2002.  Last modification date:  November 23, 2003. 
+Creation date:  May 20, 2002.  Last modification date:  March 28, 2004. 
 Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

@@ -1,9 +1,46 @@
 package List::Compare;
-$VERSION = 0.22;   # November 23, 2003 
+$VERSION = 0.24;   # March 28, 2004 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
 use base qw(List::Compare::Base::Regular);
+
+#sub new {
+#    my $class = shift;
+#    my @args = @_;
+#    my ($unsorted, $accelerated, $self, $dataref, $unsortflag);
+#    $unsorted = ($args[0] eq '-u' or $args[0] eq '--unsorted')
+#                ? shift(@args) : '';
+#    $accelerated = shift(@args) 
+#	if ($args[0] eq '-a' or $args[0] eq '--accelerated');
+#    foreach (@args) {
+#        croak "Must pass array references: $!" unless ref($_) eq 'ARRAY';
+#    }
+#
+#    # bless a ref to an empty hash into the invoking class
+#    if (@args > 2) {
+#        $class .= '::Multiple';
+#        $self = bless {}, ref($class) || $class;
+#    } elsif (@args == 2) {
+#        if ($accelerated) {
+#            $class .= '::Accelerated';
+#            $self = bless {}, ref($class) || $class;
+#        } else {
+#            $self = bless {}, ref($class) || $class;
+#        }
+#    } else {
+#        croak "Must pass at least 2 array references to \&new: $!";
+#    }
+#    
+#    # do necessary calculations and store results in a hash
+#    # take a reference to that hash
+#    $unsortflag = $unsorted ? 1 : 0;
+#    $dataref = $self->_init($unsortflag, @args);
+#    
+#    # initialize the object from the prepared values (Damian, p. 98)
+#    %$self = %$dataref;
+#    return $self;
+#}
 
 sub new {
     my $class = shift;
@@ -19,8 +56,13 @@ sub new {
 
     # bless a ref to an empty hash into the invoking class
     if (@args > 2) {
-        $class .= '::Multiple';
-        $self = bless {}, ref($class) || $class;
+        if ($accelerated) {
+            $class .= '::Multiple::Accelerated';
+            $self = bless {}, ref($class) || $class;
+        } else {
+            $class .= '::Multiple';
+            $self = bless {}, ref($class) || $class;
+        }
     } elsif (@args == 2) {
         if ($accelerated) {
             $class .= '::Accelerated';
@@ -353,6 +395,55 @@ sub get_version {
 
 1;
 
+################################################################################
+
+package List::Compare::Multiple::Accelerated;
+use Carp;
+use base qw(List::Compare::Base::Multiple::Accelerated);
+
+#### objectives for List::Compare::Multiple::Accelerated #####
+
+# User wants to compare >= 3 lists, but is looking for only 1 comparison in output.
+#
+# &List::Compare::Multiple::Accelerated::_init will resemble 
+# &List::Compare::Accelerated_init in that it will be very small, consisting only of 
+# 1 hash key for each list and 1 for the 'unsortflag'
+#
+# What was &List::Compare::Multiple::_init will be broken up into smaller components
+# and assigned to a chain of smaller 
+# subroutines that only do as much calculation as is needed to return a particular 
+# comparison.
+#
+# Hopefully these smaller subroutines will be placeable within an internal module 
+# that can handle both the object-oriented and functional interfaces to this task.
+
+###############################################################
+
+sub _init {
+    my $self = shift;
+    my $unsortflag = shift;
+    my @listrefs = @_;
+    my %data = ();
+    for (my $i=0; $i<=$#listrefs; $i++) {
+        $data{$i} = $listrefs[$i];
+    }
+    $data{'unsort'} = $unsortflag ? 1 : 0;
+    return \%data;
+}    
+
+#    my @bag = ();
+#    foreach my $aref (@arrayrefs) {
+#        push @bag, $_ foreach @$aref;
+#    }
+#    @bag = sort(@bag) unless $unsortflag;
+
+sub get_version {
+    return $List::Compare::VERSION;
+}
+
+1;
+
+
 __END__
 
 =head1 NAME
@@ -361,8 +452,8 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.22 of List::Compare.  This version was
-released November 23, 2003.
+This document refers to version 0.24 of List::Compare.  This version was
+released March 28, 2004.
 
 =head1 SYNOPSIS
 
@@ -942,6 +1033,34 @@ full array, use the following alternative methods:
 
 =back
 
+=head2 Multiple Accelerated Case:  Compare Three or More Lists, 
+but Request Only a Single Comparison among the Lists
+
+If you are certain that you will only want the results of a single 
+comparison among three or more lists, computation may be accelerated 
+by passing C<'-a'> as the first argument to the constructor.
+
+    @Al     = qw(abel abel baker camera delta edward fargo golfer);
+    @Bob    = qw(baker camera delta delta edward fargo golfer hilton);
+    @Carmen = qw(fargo golfer hilton icon icon jerky kappa);
+    @Don    = qw(fargo icon jerky);
+    @Ed     = qw(fargo icon icon jerky);
+
+    $lcma = List::Compare->new('-a', 
+                \@Al, \@Bob, \@Carmen, \@Don, \@Ed);
+
+As with List::Compare's other cases, should the user not need to have 
+a sorted list returned by a List::Compare method, he/she may achieve a 
+speed boost by constructing the object with the unsorted option:
+
+    $lcma = List::Compare->new('-u', '-a', 
+                \@Al, \@Bob, \@Carmen, \@Don, \@Ed);
+
+or
+
+    $lcma = List::Compare->new('--unsorted', '-a',
+                \@Al, \@Bob, \@Carmen, \@Don, \@Ed);
+
 =head1 DESCRIPTION
 
 =head2 General Comments
@@ -974,7 +1093,7 @@ ask the question:  How many times did this item occur in this list?
 
 =head2 List::Compare Modes
 
-In its current implementation List::Compare has three modes of operation.
+In its current implementation List::Compare has four modes of operation.
 
 =over 4
 
@@ -1051,24 +1170,38 @@ Synopsis above.
 
 =item *
 
+Multiple Accelerated Mode
+
+Beginning with version 0.24, introduced in March 2004, List::Compare now 
+offers the possibility of accelerated computation of a single comparison 
+among three or more lists at a time.  Simply store the extra lists in 
+arrays and pass references to those arrays to the constructor preceded by 
+the C<'-a'> argument as was done with the simple (two lists only) 
+accelerated mode.  List::Compare detects that more than two lists have been 
+passed to the constructor and silently switches into Multiple Accelerated 
+mode.
+
+=item *
+
 Unsorted Option
 
 When List::Compare is used to return lists representing various comparisons 
 of two or more lists (I<e.g.>, the lists' union or intersection), the lists 
 returned are, by default, sorted using Perl's default C<sort> mode:  
 ASCII-betical sorting.  Sorting produces results which are more easily 
-human-readable but entails a performance cost.
+human-readable but may entail a performance cost.
 
-Should the user not need sorted results, he/she can avoid the performance 
-cost by calling List::Compare's constructor using the unsorted option.  
-This is done by calling C<'-u'> or C<'--unsorted'> as the first argument 
-passed to the constructor, I<i.e.>, as an argument called before any 
-references to lists are passed to the constructor.
+Should the user not need sorted results, he/she can avoid the potential 
+performance cost by calling List::Compare's constructor using the unsorted 
+option.  This is done by calling C<'-u'> or C<'--unsorted'> as the first 
+argument passed to the constructor, I<i.e.>, as an argument called before 
+any references to lists are passed to the constructor.
 
-Note that if are calling List::Compare in the Accelerated mode I<and> wish 
-to have the lists returned in unsorted order, you I<first> pass the 
-argument for the unsorted option (C<'-u'> or C<'--unsorted'>) and I<then> 
-pass the argument for the Accelerated mode (C<'-a'> or C<'--accelerated'>).
+Note that if are calling List::Compare in the Accelerated or Multiple 
+Accelerated mode I<and> wish to have the lists returned in unsorted order, 
+you I<first> pass the argument for the unsorted option 
+(C<'-u'> or C<'--unsorted'>) and I<then> pass the argument for the 
+Accelerated mode (C<'-a'> or C<'--accelerated'>).
  
 =back
 
@@ -1401,7 +1534,7 @@ you must first install the Want module, also available on CPAN.
 
 James E. Keenan (jkeenan@cpan.org).
 
-Creation date:  May 20, 2002.  Last modification date:  November 23, 2003. 
+Creation date:  May 20, 2002.  Last modification date:  March 28, 2004. 
 Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

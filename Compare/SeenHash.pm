@@ -1,5 +1,5 @@
 package List::Compare::SeenHash;
-$VERSION = 0.22;   # November 23, 2003 
+$VERSION = 0.24;   # March 28, 2004 
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
@@ -407,8 +407,8 @@ List::Compare::SeenHash - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.22 of List::Compare::SeenHash.  This version 
-was released November 23, 2003.
+This document refers to version 0.24 of List::Compare::SeenHash.  This version 
+was released March 28, 2004.
 
 =head1 SYNOPSIS
 
@@ -780,9 +780,10 @@ references to the arrays to the constructor.
 
     $lcshm = List::Compare::SeenHash->new(\%Al, \%Bob, \%Carmen, \%Don, \%Ed);
 
-As with List::Compare::SeenHash's Regular case, should the user not need to have 
-a sorted list returned by a List::Compare::SeenHash method, he/she may achieve a 
-speed boost by constructing the object with the unsorted option:
+As with List::Compare::SeenHash's Regular case, should the user not 
+need to have a sorted list returned by a List::Compare::SeenHash 
+method, he/she may achieve a speed boost by constructing the object 
+with the unsorted option:
 
     $lcshm = List::Compare::SeenHash->new(
         '-u', \@Al, \@Bob, \@Carmen, \@Don, \@Ed);
@@ -1194,7 +1195,7 @@ defensive maneuver, it has been defined for Multiple mode so as to return
 suitable results but also to generate a carp message that advises the user to 
 re-code.
 
-=head2 A Non-Object_Oriented Approach:  List::Compare::Functional
+=head2 A Non-Object-Oriented Approach:  List::Compare::Functional
 
 Version 0.21 of List::Compare introduced List::Compare::Functional, a 
 functional (I<i.e.>, non-object-oriented) interface to list comparison 
@@ -1223,7 +1224,7 @@ See discussion in the documentation to List::Compare.
 
 James E. Keenan (jkeenan@cpan.org).
 
-Creation date:  May 20, 2002.  Last modification date:  November 23, 2003. 
+Creation date:  May 20, 2002.  Last modification date:  March 28, 2004. 
 Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

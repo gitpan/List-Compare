@@ -1,5 +1,5 @@
 package List::Compare;
-$VERSION = 0.15;   # September 7, 2002
+$VERSION = 0.16;   # 03/08/2003 
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
@@ -43,18 +43,16 @@ sub _init {
     my $self = shift;
     my ($refL, $refR) = @_;
     my %data = ();
-    my @L = @$refL;
-    my @R = @$refR;
     my %seenL = my %seenR = ();
-    my @bag = sort(@L, @R);
+    my @bag = sort(@$refL, @$refR);
 
     my %intersection = my %union = ();
     my %Lonly = my %Ronly = my %LorRonly = ();
     my $LsubsetR_status = my $RsubsetL_status = 1;
     my $LequivalentR_status = 0;
 
-    foreach (@L) { $seenL{$_}++ } 
-    foreach (@R) { $seenR{$_}++ } 
+    foreach (@$refL) { $seenL{$_}++ } 
+    foreach (@$refR) { $seenR{$_}++ } 
 
     foreach (keys %seenL) {
         $union{$_}++;
@@ -76,13 +74,13 @@ sub _init {
 
     $LequivalentR_status = 1 if ( (keys %LorRonly) == 0);
 
-    foreach (@L) {
+    foreach (@$refL) {
         if (! exists $seenR{$_}) {
             $LsubsetR_status = 0;
             last;
         }
     }
-    foreach (@R) {
+    foreach (@$refR) {
         if (! exists $seenL{$_}) {
             $RsubsetL_status = 0;
             last;
@@ -91,8 +89,8 @@ sub _init {
     
     %seenL = %seenR = ();
  
-    $data{'union'}                = [ sort keys %union ];
     $data{'intersection'}         = [ sort keys %intersection ];
+    $data{'union'}                = [ sort keys %union ];
     $data{'unique'}               = [ sort keys %Lonly ];
     $data{'complement'}           = [ sort keys %Ronly ];
     $data{'symmetric_difference'} = [ sort keys %LorRonly ];
@@ -103,50 +101,109 @@ sub _init {
     return \%data;
 }
 
-sub get_union {
-    my $class = shift;
-    my %data = %$class;
-    return @{ $data{'union'} };
+sub get_intersection {
+    return @{ get_intersection_ref(shift) };
 }
 
-sub get_intersection {
+sub get_intersection_ref {
     my $class = shift;
     my %data = %$class;
-    return @{ $data{'intersection'} };
+    return $data{'intersection'};
+}
+
+sub get_union {
+    return @{ get_union_ref(shift) };
+}
+
+sub get_union_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'union'};
+}
+
+sub get_shared {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    carp "When comparing only 2 lists, $method defaults to \n  ", 'get_union()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_union($class);
+}
+
+sub get_shared_ref {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    carp "When comparing only 2 lists, $method defaults to \n  ", 'get_union_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_union_ref($class);
 }
 
 sub get_unique {
+    return @{ get_unique_ref(shift) };
+}
+
+sub get_unique_ref {
     my $class = shift;
     my %data = %$class;
-    return @{ $data{'unique'} };
+    return $data{'unique'};
 }
 
 *get_Lonly = \&get_unique;
 *get_Aonly = \&get_unique;
+*get_Lonly_ref = \&get_unique_ref;
+*get_Aonly_ref = \&get_unique_ref;
 
 sub get_complement {
+    return @{ get_complement_ref(shift) };
+}
+
+sub get_complement_ref {
     my $class = shift;
     my %data = %$class;
-    return @{ $data{'complement'} };
+    return $data{'complement'};
 }
 
 *get_Ronly = \&get_complement;
 *get_Bonly = \&get_complement;
+*get_Ronly_ref = \&get_complement_ref;
+*get_Bonly_ref = \&get_complement_ref;
 
 sub get_symmetric_difference {
+    return @{ get_symmetric_difference_ref(shift) };
+}
+
+sub get_symmetric_difference_ref {
     my $class = shift;
     my %data = %$class;
-    return @{ $data{'symmetric_difference'} };
+    return $data{'symmetric_difference'};
 }
 
 *get_symdiff  = \&get_symmetric_difference;
 *get_LorRonly = \&get_symmetric_difference;
 *get_AorBonly = \&get_symmetric_difference;
+*get_symdiff_ref  = \&get_symmetric_difference_ref;
+*get_LorRonly_ref = \&get_symmetric_difference_ref;
+*get_AorBonly_ref = \&get_symmetric_difference_ref;
+
+sub get_nonintersection {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    carp "When comparing only 2 lists, $method defaults to \n  ", 'get_symmetric_difference()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_symmetric_difference($class);
+}
+
+sub get_nonintersection_ref {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    carp "When comparing only 2 lists, $method defaults to \n  ", 'get_symmetric_difference_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_symmetric_difference_ref($class);
+}
 
 sub get_bag {
+    return @{ get_bag_ref(shift) };
+}
+
+sub get_bag_ref {
     my $class = shift;
     my %data = %$class;
-    return @{ $data{'bag'} };
+    return $data{'bag'};
 }
 
 sub is_LsubsetR {
@@ -176,7 +233,7 @@ sub is_LequivalentR {
 sub print_subset_chart {
     my $class = shift;
     my %data = %$class;
-	my @subset_array = ($data{'LsubsetR_status'}, $data{'RsubsetL_status'});
+    my @subset_array = ($data{'LsubsetR_status'}, $data{'RsubsetL_status'});
     my $title = 'Subset';
     _chart_engine(\@subset_array, $title);
 }
@@ -205,20 +262,6 @@ sub get_version {
     return $List::Compare::VERSION;
 }
 
-sub get_shared {
-    my $class = shift;
-	my $method = (caller(0))[3];
-	carp "When comparing only 2 lists, $method defaults to \n  \&get_union.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
-	&get_union($class);
-}
-
-sub get_nonintersection {
-    my $class = shift;
-	my $method = (caller(0))[3];
-	carp "When comparing only 2 lists, $method defaults to \n  \&get_symmetric_difference.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
-	&get_symmetric_difference($class);
-}
-
 1;
 
 ################################################################################
@@ -243,7 +286,51 @@ sub _calc_seen {
     return (\%seenL, \%seenR); 
 }
 
+sub get_intersection {
+    return @{ get_intersection_ref(shift) };
+}
+
+sub get_intersection_ref {
+    my $class = shift;
+    my %data = %$class;
+    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
+    my %intersection = ();
+    foreach (keys %{$hrefL}) {
+        $intersection{$_}++ if (exists ${$hrefR}{$_});
+    }
+    return [ sort keys %intersection ];
+}
+
+sub get_union {
+    return @{ get_union_ref(shift) };
+}
+
+sub get_union_ref {
+    my $class = shift;
+    my %data = %$class;
+    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
+    my %union = ();
+    $union{$_}++ foreach ( (keys %{$hrefL}), (keys %{$hrefR}) );
+    return [ sort keys %union ];
+}
+
+sub get_shared {
+    return @{ get_shared_ref(shift) };
+}
+
+sub get_shared_ref {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing only 2 lists, \&$method defaults to \n  \&get_union_ref.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    &get_union_ref($class);
+}
+
 sub get_unique {
+    return @{ get_unique_ref(shift) };
+}
+
+sub get_unique_ref {
     my $class = shift;
     my %data = %$class;
     my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
@@ -258,13 +345,19 @@ sub get_unique {
             $Lonly{$_}++;
         }
     }
-    return sort keys %Lonly;
+    return [ sort keys %Lonly ];
 }
 
 *get_Lonly = \&get_unique;
 *get_Aonly = \&get_unique;
+*get_Lonly_ref = \&get_unique_ref;
+*get_Aonly_ref = \&get_unique_ref;
 
 sub get_complement {
+    return @{ get_complement_ref(shift) };
+}
+
+sub get_complement_ref {
     my $class = shift;
     my %data = %$class;
     my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
@@ -278,33 +371,19 @@ sub get_complement {
     foreach (keys %{$hrefR}) {
         $Ronly{$_}++ unless (exists $intersection{$_});
     }
-    return sort keys %Ronly;
+    return [ sort keys %Ronly ];
 }
 
 *get_Ronly = \&get_complement;
 *get_Bonly = \&get_complement;
-
-sub get_union {
-    my $class = shift;
-    my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my %union = ();
-    $union{$_}++ foreach ( (keys %{$hrefL}), (keys %{$hrefR}) );
-    return sort keys %union;
-}
-
-sub get_intersection {
-    my $class = shift;
-    my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my %intersection = ();
-    foreach (keys %{$hrefL}) {
-        $intersection{$_}++ if (exists ${$hrefR}{$_});
-    }
-    return sort keys %intersection;
-}
+*get_Ronly_ref = \&get_complement_ref;
+*get_Bonly_ref = \&get_complement_ref;
 
 sub get_symmetric_difference {
+    return @{ get_symmetric_difference_ref(shift) };
+}
+
+sub get_symmetric_difference_ref {
     my $class = shift;
     my %data = %$class;
     my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
@@ -324,12 +403,37 @@ sub get_symmetric_difference {
     }
 
     $LorRonly{$_}++ foreach ( (keys %Lonly), (keys %Ronly) );
-    return sort keys %LorRonly;
+    return [ sort keys %LorRonly ];
 }
 
 *get_symdiff  = \&get_symmetric_difference;
 *get_LorRonly = \&get_symmetric_difference;
 *get_AorBonly = \&get_symmetric_difference;
+*get_symdiff_ref  = \&get_symmetric_difference_ref;
+*get_LorRonly_ref = \&get_symmetric_difference_ref;
+*get_AorBonly_ref = \&get_symmetric_difference_ref;
+
+sub get_nonintersection {
+    return @{ get_nonintersection_ref(shift) };
+}
+
+sub get_nonintersection_ref {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing only 2 lists, \&$method defaults to \n  \&get_symmetric_difference_ref.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    &get_symmetric_difference_ref($class);
+}
+
+sub get_bag {
+    return @{ get_bag_ref(shift) };
+}
+
+sub get_bag_ref {
+    my $class = shift;
+    my %data = %$class;
+    return [ sort(@{$data{'L'}}, @{$data{'R'}}) ]; 
+}
 
 sub is_LsubsetR {
     my $class = shift;
@@ -380,7 +484,7 @@ sub print_subset_chart {
             last;
         }
     }
-	my @subset_array = ($LsubsetR_status, $RsubsetL_status);
+    my @subset_array = ($LsubsetR_status, $RsubsetL_status);
     my $title = 'Subset';
     _chart_engine(\@subset_array, $title);
 }
@@ -390,7 +494,7 @@ sub is_LequivalentR {
     my %data = %$class;
     my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
     my $LequivalentR_status = 0;
-	$LequivalentR_status = _equiv_engine($hrefL, $hrefR);
+    $LequivalentR_status = _equiv_engine($hrefL, $hrefR);
 }
 
 *is_LeqvlntR = \&is_LequivalentR;
@@ -400,7 +504,7 @@ sub print_equivalence_chart {
     my %data = %$class;
     my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
     my $LequivalentR_status = 0;
-	$LequivalentR_status = _equiv_engine($hrefL, $hrefR);
+    $LequivalentR_status = _equiv_engine($hrefL, $hrefR);
     my @equivalent_array = ($LequivalentR_status, $LequivalentR_status);
     my $title = 'Equivalence';
     _chart_engine(\@equivalent_array, $title);
@@ -419,7 +523,7 @@ sub _chart_engine {
 }
 
 sub _equiv_engine {
-	my ($hrefL, $hrefR) = @_;
+    my ($hrefL, $hrefR) = @_;
     my %intersection = ();
     my %Lonly = my %Ronly = my %LorRonly = ();
     my $LequivalentR_status = 0;
@@ -438,33 +542,11 @@ sub _equiv_engine {
 
     $LorRonly{$_}++ foreach ( (keys %Lonly), (keys %Ronly) );
     $LequivalentR_status = 1 if ( (keys %LorRonly) == 0);
-	return $LequivalentR_status;
-}
-
-sub get_bag {
-    my $class = shift;
-    my %data = %$class;
-    return sort(@{$data{'L'}}, @{$data{'R'}}); 
+    return $LequivalentR_status;
 }
 
 sub get_version {
     return $List::Compare::VERSION;
-}
-
-sub get_shared {
-    my $class = shift;
-	my $method = (caller(0))[3];
-	$method =~ s/.*::(\w*)$/$1/;
-	carp "When comparing only 2 lists, \&$method defaults to \n  \&get_union.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
-	&get_union($class);
-}
-
-sub get_nonintersection {
-    my $class = shift;
-	my $method = (caller(0))[3];
-	$method =~ s/.*::(\w*)$/$1/;
-	carp "When comparing only 2 lists, \&$method defaults to \n  \&get_symmetric_difference.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
-	&get_symmetric_difference($class);
 }
 
 1;
@@ -626,128 +708,174 @@ sub _init {
         for (my $g = 0; $g <= $#xsubset; $g++) {
             $xequivalent[$f][$g] = 0;
             $xequivalent[$f][$g] = 1
-                if ($xsubset[$f][$g] 
-                 && $xsubset[$g][$f]);
+                if ($xsubset[$f][$g] and $xsubset[$g][$f]);
         }
     }
     
     $data{'maxindex'}               = $maxindex;
-    $data{'bag'}                    = \@bag;
-    $data{'union'}                  = \@union;
     $data{'intersection'}           = \@intersection;
     $data{'nonintersection'}        = \@nonintersection;
+    $data{'union'}                  = \@union;
     $data{'shared'}                 = \@shared;
     $data{'symmetric_difference'}   = \@symmetric_difference;
     $data{'xunique'}                = \%xunique;
     $data{'xcomplement'}            = \%xcomplement;
     $data{'xsubset'}                = \@xsubset;
     $data{'xequivalent'}            = \@xequivalent;
+    $data{'bag'}                    = \@bag;
     return \%data;
 }    
 
-sub get_bag {
+sub get_intersection {
+    return @{ get_intersection_ref(shift) };
+}
+
+sub get_intersection_ref {
     my $class = shift;
     my %data = %$class;
-    return @{ $data{'bag'} };
+    return $data{'intersection'};
 }
 
 sub get_union {
-    my $class = shift;
-    my %data = %$class;
-    return @{ $data{'union'} };
+    return @{ get_union_ref(shift) };
 }
 
-sub get_intersection {
+sub get_union_ref {
     my $class = shift;
     my %data = %$class;
-    return @{ $data{'intersection'} };
-}
-
-sub get_nonintersection {
-    my $class = shift;
-    my %data = %$class;
-    return @{ $data{'nonintersection'} };
+    return $data{'union'};
 }
 
 sub get_shared {
-    my $class = shift;
-    my %data = %$class;
-    return @{ $data{'shared'} };
+    return @{ get_shared_ref(shift) };
 }
 
-sub get_symmetric_difference {
+sub get_shared_ref {
     my $class = shift;
     my %data = %$class;
-    return @{ $data{'symmetric_difference'} };
+    return $data{'shared'};
 }
-
-*get_symdiff  = \&get_symmetric_difference;
-
-sub get_LorRonly {
-    my $class = shift;
-    my $method = (caller(0))[3];
-	$method =~ s/.*::(\w*)$/$1/;
-    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  \&get_symmetric_difference.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
-    &get_symmetric_difference($class);
-}    
-
-*get_AorBonly = \&get_LorRonly;
 
 sub get_unique {
     my $class = shift;
     my %data = %$class;
-    my $index = '';
-    $index = defined $_[0] ? shift : 0;
-    _index_message1($index, \%data);
-    my %temp = %{$data{'xunique'}};
-    return @{$temp{$index}};
+    my $index = defined $_[0] ? shift : 0;
+    return @{ get_unique_ref($class, $index) };
 }
 
-#sub get_Lonly {
-#    my $class = shift;
-#    my $method = (caller(0))[3];
-#	$method =~ s/.*::(\w*)$/$1/;
-#    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  \&get_unique.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
-#    &get_unique($class);
-#}    
+sub get_unique_ref {
+    my $class = shift;
+    my %data = %$class;
+    my $index = defined $_[0] ? shift : 0;
+    _index_message1($index, \%data);
+    return ${$data{'xunique'}}{$index};
+}
 
 sub get_Lonly {
     my ($class, $index) = @_;
     my $method = (caller(0))[3];
-	$method =~ s/.*::(\w*)$/$1/;
-    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  \&get_unique.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
-    &get_unique($class, $index);
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_unique()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_unique($class, $index);
+}    
+
+sub get_Lonly_ref {
+    my ($class, $index) = @_;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_unique_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_unique_ref($class, $index);
 }    
 
 *get_Aonly = \&get_Lonly;
+*get_Aonly_ref = \&get_Lonly_ref;
 
 sub get_complement {
     my $class = shift;
     my %data = %$class;
-    my $index = '';
-    $index = defined $_[0] ? shift : 0;
-    _index_message1($index, \%data);
-    my %temp = %{$data{'xcomplement'}};
-    return @{$temp{$index}};
+    my $index = defined $_[0] ? shift : 0;
+    return @{ get_complement_ref($class, $index) };
 }
 
-#sub get_Ronly {
-#    my $class = shift;
-#    my $method = (caller(0))[3];
-#	$method =~ s/.*::(\w*)$/$1/;
-#    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  \&get_complement.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
-#    &get_complement($class);
-#}    
+sub get_complement_ref {
+    my $class = shift;
+    my %data = %$class;
+    my $index = defined $_[0] ? shift : 0;
+    _index_message1($index, \%data);
+    my %temp = %{$data{'xcomplement'}};
+    return ${$data{'xcomplement'}}{$index};
+}
 
 sub get_Ronly {
     my ($class, $index) = @_;
     my $method = (caller(0))[3];
-	$method =~ s/.*::(\w*)$/$1/;
-    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  \&get_complement.  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_complement()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
     &get_complement($class, $index);
 }    
 
+sub get_Ronly_ref {
+    my ($class, $index) = @_;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_complement_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    &get_complement_ref($class, $index);
+}    
+
 *get_Bonly = \&get_Ronly;
+*get_Bonly_ref = \&get_Ronly_ref;
+
+sub get_symmetric_difference {
+    return @{ get_symmetric_difference_ref(shift) };
+}
+
+sub get_symmetric_difference_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'symmetric_difference'};
+}
+
+*get_symdiff  = \&get_symmetric_difference;
+*get_symdiff_ref  = \&get_symmetric_difference_ref;
+
+sub get_LorRonly {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_symmetric_difference()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_symmetric_difference($class);
+}    
+
+sub get_LorRonly_ref {
+    my $class = shift;
+    my $method = (caller(0))[3];
+    $method =~ s/.*::(\w*)$/$1/;
+    carp "When comparing 3 or more lists, \&$method or its alias defaults to \n  ", 'get_symmetric_difference_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_symmetric_difference_ref($class);
+}    
+
+*get_AorBonly = \&get_LorRonly;
+*get_AorBonly_ref = \&get_LorRonly_ref;
+
+sub get_nonintersection {
+    return @{ get_nonintersection_ref(shift) };
+}
+
+sub get_nonintersection_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'nonintersection'};
+}
+
+sub get_bag {
+    return @{ get_bag_ref(shift) };
+}
+
+sub get_bag_ref {
+    my $class = shift;
+    my %data = %$class;
+    return $data{'bag'};
+}
 
 sub is_LsubsetR {
     my $class = shift;
@@ -764,7 +892,7 @@ sub is_RsubsetL {
     my $class = shift;
     my %data = %$class;
     my $method = (caller(0))[3];
-	$method =~ s/.*::(\w*)$/$1/;
+    $method =~ s/.*::(\w*)$/$1/;
     carp "When comparing 3 or more lists, \&$method or its alias is restricted to \n  asking if the list which is the 2nd argument to the constructor \n    is a subset of the list which is the 1st argument.\n      For greater flexibility, please re-code with \&is_LsubsetR: $!";
     @_ = (1,0);
     my ($index_left, $index_right) = _index_message2(\%data, @_);
@@ -843,9 +971,9 @@ sub _index_message1 {
     my $method = (caller(1))[3];
     croak "Argument to method $method must be the array index of the target list \n  in list of arrays passed as arguments to the constructor: $!"
         unless (
-               $index =~ /^\d+$/ 
-            && 0 <= $index 
-            && $index <= $data{'maxindex'}
+                $index =~ /^\d+$/ 
+           and  0 <= $index 
+           and  $index <= $data{'maxindex'}
         );
 }
 
@@ -864,9 +992,9 @@ sub _index_message2 {
         foreach ($index_left, $index_right) {
             croak "Each argument to method $method must be a valid array index for the target list \n  in list of arrays passed as arguments to the constructor: $!"
                 unless (
-                       $_ =~ /^\d+$/ 
-                    && 0 <= $_ 
-                    && $_ <= $data{'maxindex'}
+                        $_ =~ /^\d+$/ 
+                   and  0 <= $_ 
+                   and  $_ <= $data{'maxindex'}
                 );
         }
     }
@@ -874,7 +1002,6 @@ sub _index_message2 {
 }
 
 1;
-
 
 __END__
 
@@ -884,8 +1011,8 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.15 of List::Compare.  This version was
-released September 7, 2002.
+This document refers to version 0.16 of List::Compare.  This version was
+released March 8, 2002.
 
 =head1 SYNOPSIS
 
@@ -910,25 +1037,40 @@ Get those items which appear in either list (their union).
 Get those items which appear only in the first list.
 
     @Lonly = $lc->get_unique;
-    @Lonly = $lc->get_Lonly;	# alias
+    @Lonly = $lc->get_Lonly;    # alias
 
 Get those items which appear only in the second list.
 
     @Ronly = $lc->get_complement;
-    @Ronly = $lc->get_Ronly;	# alias
+    @Ronly = $lc->get_Ronly;    # alias
 
 Get those items which appear in either the first or the second list, but
 not both.
 
     @LorRonly = $lc->get_symmetric_difference;
-    @LorRonly = $lc->get_symdiff;		# alias
-    @LorRonly = $lc->get_LorRonly;		# alias
+    @LorRonly = $lc->get_symdiff;        # alias
+    @LorRonly = $lc->get_LorRonly;        # alias
 
 Make a bag of all those items in both lists.  The bag differs from the 
 union of the two lists in that it holds as many copies of individual 
 elements as appear in the original lists.
 
     @bag = $lc->get_bag;
+
+An alternative approach to the above methods:  If you do not immediately 
+require an array as the return value of the method call, but simply need 
+a I<reference> to an array, use one of the following parallel methods:
+
+    $intersection_ref = $lc->get_intersection_ref;
+    $union_ref        = $lc->get_union_ref;
+    $Lonly_ref        = $lc->get_unique_ref;
+    $Lonly_ref        = $lc->get_Lonly_ref;                   # alias
+    $Ronly_ref        = $lc->get_complement_ref;
+    $Ronly_ref        = $lc->get_Ronly_ref;                   # alias
+    $LorRonly_ref     = $lc->get_symmetric_difference_ref;
+    $LorRonly_ref     = $lc->get_symdiff_ref;               # alias
+    $LorRonly_ref     = $lc->get_LorRonly_ref;               # alias
+    $bag_ref          = $lc->get_bag_ref;
 
 Return a true value if L is a subset of R.
 
@@ -942,7 +1084,7 @@ Return a true value if L and R are equivalent, I<i.e.> if every element
 in L appears at least once in R and I<vice versa>.
 
     $eqv = $lc->is_LequivalentR;
-    $eqv = $lc->is_LeqvlntR;		# alias
+    $eqv = $lc->is_LeqvlntR;        # alias
 
 Pretty-print a chart showing whether one list is a subset of the other.
 
@@ -971,18 +1113,24 @@ argument to the constructor.
 All the comparison methods available in the Simple case are available to 
 the user in the Accelerated case as well.
 
-    @intersection = $lca->get_intersection;
-    @union        = $lca->get_union;
-    @Lonly        = $lca->get_unique;
-    @Ronly        = $lca->get_complement;
-    @LorRonly     = $lca->get_symmetric_difference;
-    @bag          = $lca->get_bag;
-    $LR           = $lca->is_LsubsetR;
-    $RL           = $lca->is_RsubsetL;
-    $eqv          = $lca->is_LequivalentR;
-                    $lca->print_subset_chart;
-                    $lca->print_equivalence_chart;
-    $vers         = $lca->get_version;
+    @intersection =     $lca->get_intersection;
+    @union        =     $lca->get_union;
+    @Lonly        =     $lca->get_unique;
+    @Ronly        =     $lca->get_complement;
+    @LorRonly     =     $lca->get_symmetric_difference;
+    @bag          =     $lca->get_bag;
+    $intersection_ref = $lca->get_intersection_ref;
+    $union_ref        = $lca->get_union_ref;
+    $Lonly_ref        = $lca->get_unique_ref;
+    $Ronly_ref        = $lca->get_complement_ref;
+    $LorRonly_ref     = $lca->get_symmetric_difference_ref;
+    $bag_ref          = $lca->get_bag_ref;
+    $LR           =     $lca->is_LsubsetR;
+    $RL           =     $lca->is_RsubsetL;
+    $eqv          =     $lca->is_LequivalentR;
+                        $lca->print_subset_chart;
+                        $lca->print_equivalence_chart;
+    $vers         =     $lca->get_version;
 
 All the aliases for methods available in the Simple case are available to 
 the user in the Accelerated case as well.
@@ -1053,6 +1201,17 @@ as appear in the original lists.
 
     @bag = $lcm->get_bag;
 
+An alternative approach to the above methods:  If you do not immediately 
+require an array as the return value of the method call, but simply need 
+a I<reference> to an array, use one of the following parallel methods:
+
+    $intersection_ref = $lcm->get_intersection_ref;
+    $union_ref        = $lcm->get_union_ref;
+    $Lonly_ref        = $lcm->get_unique_ref(2);
+    $Ronly_ref        = $lcm->get_complement_ref(3);
+    $LorRonly_ref     = $lcm->get_symmetric_difference_ref;
+    $bag_ref          = $lcm->get_bag_ref;
+
 To determine whether one particular list is a subset of another list 
 passed to the constructor, pass to C<is_LsubsetR> the index position of 
 the presumed subset, followed by the index position of the presumed 
@@ -1106,6 +1265,12 @@ difference);
 
     @shared = $lcm->get_shared;
 
+If you only need a reference to an array as a return value rather than a 
+full array, use the following alternative methods:
+
+    $nonintersection_ref = $lcm->get_nonintersection_ref;
+    $shared_ref = $lcm->get_shared_ref;
+
 =back
 
 =head1 DESCRIPTION
@@ -1113,7 +1278,7 @@ difference);
 =head2 General Comments
 
 List::Compare is an object-oriented implementation of very common Perl 
-code (see "History, References and Development" below) used to
+code (see L<"History, References and Development"> below) used to
 determine interesting relationships between two or more lists at a time.  
 A List::Compare object is created and automatically computes the values
 needed to supply List::Compare methods with appropriate results.  In the
@@ -1337,7 +1502,7 @@ List::Compare, it is an object-oriented module.  A sophisticated feature of
 Array::Compare is that it allows the user to specify how 'whitespace' in an
 array (an element which is undefined, the empty string, or whitespace
 within an element) should be evaluated for purpose of determining equality
-or difference.	It does not directly provide methods for intersection and
+or difference.    It does not directly provide methods for intersection and
 union.
 
 =item *
@@ -1346,7 +1511,7 @@ List::Util - A selection of general-utility list subroutines
 (L<http://search.cpan.org/author/GBARR/Scalar-List-Utils-1.0701/lib/List/Util.pm>)
 
 List::Util, by Graham Barr, exports a variety of simple,
-useful functions for operating on one list at a time.	The C<min> function
+useful functions for operating on one list at a time.    The C<min> function
 returns the lowest numerical value in a list; the C<max> function returns
 the highest value; and so forth.  List::Compare differs from List::Util in
 that it is object-oriented and that it works on two strings at a time
@@ -1402,12 +1567,13 @@ you must first install the Want module, also available on CPAN.
 
 James E. Keenan (jkeen@concentric.net).
 
-Creation date:  May 20, 2002.  Last modification date:  September 7, 2002. 
-Copyright (c) 2002 James E. Keenan.  United States.  All rights reserved. 
+Creation date:  May 20, 2002.  Last modification date:  March 8, 2003. 
+Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.
 
 =cut 
+
 
 
 

@@ -1,5 +1,5 @@
 package List::Compare::Functional;
-$VERSION = 0.29;   # May 16, 2004 
+$VERSION = 0.3;   # May 21, 2004 
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
     get_intersection
@@ -502,8 +502,8 @@ List::Compare::Functional - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.29 of List::Compare::Functional.  
-This version was released May 16, 2004.  The first released 
+This document refers to version 0.3 of List::Compare::Functional.  
+This version was released May 21, 2004.  The first released 
 version of List::Compare::Functional was v0.21.  Its version numbers 
 are set to be consistent with the other parts of the List::Compare 
 distribution.
@@ -1633,7 +1633,7 @@ James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please
 include 'List::Compare::Functional' or 'List-Compare-Functional' in your 
 subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  May 16, 2004. 
+Creation date:  May 20, 2002.  Last modification date:  May 21, 2004. 
 Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

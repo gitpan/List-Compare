@@ -1,6 +1,6 @@
 package List::Compare::Base::_Auxiliary;
-$VERSION = 0.29;
-# As of:  05/16/2004
+$VERSION = 0.3;
+# As of:  05/21/2004
 # Holds subroutines used within various List::Compare
 # and List::Compare::Functional
 use Carp;

@@ -1,6 +1,6 @@
 # MANIFEST for List::Compare
-# $VERSION = 0.29;
-# as of:  05/16/2004
+# $VERSION = 0.3;
+# as of:  05/21/2004
 Changes
 Compare.pm
 Compare/Base/_Auxiliary.pm

@@ -1,8 +1,8 @@
 package List::Compare::Base::_Engine;
-$VERSION = 0.29;
+$VERSION = 0.3;
 # Holds subroutines used within both 
 # List::Compare::Base::Accelerated and List::Compare::Functional
-# As of 05/16/2004
+# As of 05/21/2004
 use Carp;
 use List::Compare::Base::_Auxiliary qw(
     _chart_engine_regular

@@ -110,4 +110,8 @@ transferred directly into List::Compare
 	- further implication of deprecation of List::Compare::SeenHash is that all the code in List::Compare::Base::Regular, L:C:B:Accelerated, L:C:B:Multiple and L:C:B:Multiple::Accelerated is no longer shared between List::Compare and List::Compare::SeenHash and hence can be taken back into List::Compare; thereby eliminating the 'use base' calls from List::Compare.
 
 0.29  Sun May 16 2004
+	- implementation of alternative ('Adlerian') interface wherein a single hash reference is passed to constructor or function 
+
+0.30  Fri May 21 2004
+	- documentation corrections only
 

@@ -1,9 +1,10 @@
 package List::Compare::Base::_Auxiliary;
-$VERSION = 0.28;
-# As of:  04/25/2004
+$VERSION = 0.29;
+# As of:  05/16/2004
 # Holds subroutines used within various List::Compare
 # and List::Compare::Functional
 use Carp;
+use Data::Dumper;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
     _validate_2_seenhashes
@@ -37,6 +38,12 @@ use Carp;
     _argument_checker_2 
     _argument_checker_3 
     _argument_checker_4
+    _alt_construct_tester 
+    _alt_construct_tester_1 
+    _alt_construct_tester_2 
+    _alt_construct_tester_3 
+    _alt_construct_tester_4 
+    _alt_construct_tester_5 
 |;
 %EXPORT_TAGS = (
     calculate => [ qw(
@@ -56,6 +63,14 @@ use Carp;
         _argument_checker_2 
         _argument_checker_3 
         _argument_checker_4
+    ) ],
+    tester => [ qw(
+        _alt_construct_tester 
+        _alt_construct_tester_1 
+        _alt_construct_tester_2 
+        _alt_construct_tester_3 
+        _alt_construct_tester_4 
+        _alt_construct_tester_5 
     ) ],
 );
 use strict;
@@ -553,55 +568,65 @@ sub _argument_checker_0 {
     return (@args);
 }
 
-# L:C, L:C:Functional, L:C:B:_Auxiliary
+# L:C, L:C:Functional
 sub _argument_checker {
     my $argref = shift;
     my @args = _argument_checker_0(@{$argref});
     return (@args);
 }
 
-# L:C:Functional, L:C:B:_Auxiliary
+# L:C:Functional
 sub _argument_checker_1 {
-    my @argrefs = @_;
+    my $argref = shift;
+    my @args = @{$argref};
     croak "Subroutine call requires 2 references as arguments:  $!"
-        unless @argrefs == 2;
-    return (_argument_checker($argrefs[0]), ${$argrefs[1]}[0]);
+        unless @args == 2;
+    return (_argument_checker($args[0]), ${$args[1]}[0]);
 }
 
-# L:C:Functional, L:C:B:_Auxiliary
+# L:C:Functional
 sub _argument_checker_2 {
-    my @argrefs = @_;
+    my $argref = shift;
+    my @args = @$argref;
     croak "Subroutine call requires 2 references as arguments:  $!"
-        unless @argrefs == 2;
-    return (_argument_checker($argrefs[0]), $argrefs[1]);
+        unless @args == 2;
+    return (_argument_checker($args[0]), $args[1]);
 }
 
-# L:C:Functional, L:C:B:_Auxiliary
+# L:C:Functional
+# _argument_checker_3 is currently set-up to handle either 1 or 2 arguments
+# in get_unique and get_complement
+# The first argument is an arrayref holding refs to lists ('unsorted' has been 
+# stripped off).
+# The second argument is an arrayref holding a single item (index number of 
+# item being tested)
 sub _argument_checker_3 {
-    my @argrefs = @_;
-    if (@argrefs == 1) {
-        return (_argument_checker($argrefs[0]), 0);
-    } elsif (@argrefs == 2) {
-        return (_argument_checker($argrefs[0]), ${$argrefs[1]}[0]);
+    my $argref = shift;
+    my @args = @{$argref};
+    if (@args == 1) {
+        return (_argument_checker($args[0]), 0);
+    } elsif (@args == 2) {
+        return (_argument_checker($args[0]), ${$args[1]}[0]);
     } else {
         croak "Subroutine call requires 1 or 2 references as arguments:  $!"
-            unless (@argrefs == 1 or @argrefs == 2);
+            unless (@args == 1 or @args == 2);
     }
 }
 
 sub _argument_checker_4 {
-    my @argrefs = @_;
-    if (@argrefs == 1) {
-        return (_argument_checker($argrefs[0]), [0,1]);
-    } elsif (@argrefs == 2) {
-        if (@{$argrefs[1]} == 2) {
-            return (_argument_checker($argrefs[0]), $argrefs[1]);
+    my $argref = shift;
+    my @args = @{$argref};
+    if (@args == 1) {
+        return (_argument_checker($args[0]), [0,1]);
+    } elsif (@args == 2) {
+        if (@{$args[1]} == 2) {
+            return (_argument_checker($args[0]), $args[1]);
         } else {
             croak "Must provide index positions corresponding to two lists: $!";
         }
     } else {
         croak "Subroutine call requires 1 or 2 references as arguments: $!"
-            unless (@argrefs == 1 or @argrefs == 2);
+            unless (@args == 1 or @args == 2);
     }
 }
 
@@ -628,6 +653,128 @@ sub _calc_seen1 {
     } else {
         croak "Indeterminate case in _calc_seen1: $!";
     }
+}
+
+# _alt_construct_tester prepares for _argument_checker in 
+# get_union get_intersection get_symmetric_difference get_shared get_nonintersection
+sub _alt_construct_tester {
+    my @args = @_;
+    my ($argref, $unsorted);
+    if (@args == 1 and (ref($args[0]) eq 'HASH')) {
+       my $hashref = shift;
+       die "Need to define 'lists' key properly: $!"
+           unless ( ${$hashref}{'lists'}
+                and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
+       $argref = ${$hashref}{'lists'};
+       $unsorted = ${$hashref}{'unsorted'} ? 1 : '';
+    } else {
+        $unsorted = shift(@args) if ($args[0] eq '-u' or $args[0] eq '--unsorted');
+        $argref = shift(@args); 
+    }
+    return ($argref, $unsorted);
+}
+
+# _alt_construct_tester_1 prepares for _argument_checker_1 in
+# is_member_which is_member_any
+sub _alt_construct_tester_1 {
+    my @args = @_;
+    my ($argref);
+    if (@args == 1 and (ref($args[0]) eq 'HASH')) {
+        my (@returns);
+        my $hashref = $args[0];
+        die "Need to define 'lists' key properly: $!"
+           unless ( ${$hashref}{'lists'}
+                and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
+        @returns = defined ${$hashref}{'item'}
+                        ? (${$hashref}{'lists'}, [${$hashref}{'item'}])
+                        : (${$hashref}{'lists'});
+        $argref = \@returns;
+    } else {
+        $argref = \@args; 
+    }
+    return $argref;
+}
+
+# _alt_construct_tester_2 prepares for _argument_checker_2 in
+# are_members_which are_members_any
+sub _alt_construct_tester_2 {
+    my @args = @_;
+    my ($argref);
+    if (@args == 1 and (ref($args[0]) eq 'HASH')) {
+        my (@returns);
+        my $hashref = $args[0];
+        die "Need to define 'lists' key properly: $!"
+           unless ( ${$hashref}{'lists'}
+                and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
+        @returns = defined ${$hashref}{'items'}
+                        ? (${$hashref}{'lists'}, ${$hashref}{'items'})
+                        : (${$hashref}{'lists'});
+        $argref = \@returns;
+    } else {
+        $argref = \@args; 
+    }
+    return $argref;
+}
+
+# _alt_construct_tester_3 prepares for _argument_checker_3 in
+# get_unique get_complement 
+sub _alt_construct_tester_3 {
+    my @args = @_;
+    my ($argref, $unsorted);
+    if (@args == 1 and (ref($args[0]) eq 'HASH')) {
+        my (@returns);
+        my $hashref = $args[0];
+        die "Need to define 'lists' key properly: $!"
+           unless ( ${$hashref}{'lists'}
+                and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
+        @returns = defined ${$hashref}{'item'}
+                        ? (${$hashref}{'lists'}, [${$hashref}{'item'}])
+                        : (${$hashref}{'lists'});
+        $argref = \@returns;
+        $unsorted = ${$hashref}{'unsorted'} ? 1 : '';
+    } else {
+        $unsorted = shift(@args) if ($args[0] eq '-u' or $args[0] eq '--unsorted');
+        $argref = \@args; 
+    }
+    return ($argref, $unsorted);
+}
+
+# _alt_construct_tester_4 prepares for _argument_checker_4 in
+# is_LsubsetR is_RsubsetL is_LequivalentR is_LdisjointR
+sub _alt_construct_tester_4 {
+    my @args = @_;
+    my ($argref);
+    if (@args == 1 and (ref($args[0]) eq 'HASH')) {
+        my (@returns);
+        my $hashref = $args[0];
+        die "Need to define 'lists' key properly: $!"
+           unless ( ${$hashref}{'lists'}
+                and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
+        @returns = defined ${$hashref}{'pair'}
+                        ? (${$hashref}{'lists'}, ${$hashref}{'pair'})
+                        : (${$hashref}{'lists'});
+        $argref = \@returns;
+    } else {
+        $argref = \@args; 
+    }
+    return $argref;
+}
+
+# _alt_construct_tester_5 prepares for _argument_checker in
+# print_subset_chart print_equivalence_chart
+sub _alt_construct_tester_5 {
+    my @args = @_;
+    my ($argref);
+    if (@args == 1 and (ref($args[0]) eq 'HASH')) {
+       my $hashref = shift;
+       die "Need to define 'lists' key properly: $!"
+           unless ( ${$hashref}{'lists'}
+                and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
+       $argref = ${$hashref}{'lists'};
+    } else {
+        $argref = shift(@args); 
+    }
+    return $argref;
 }
 
 1;

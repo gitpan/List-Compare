@@ -1,4 +1,4 @@
-# 13_simple_sh_rev.t # as of 05/08/2004
+# 21_alt_construct_simple_sh_rev.t # as of 05/08/2004
 
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
@@ -85,7 +85,7 @@ my %h7 = (
 my %h8 = map {$_, 1} qw(kappa lambda mu);
 
 
-my $lcsh  = List::Compare->new(\%h0, \%h1);
+my $lcsh  = List::Compare->new( { lists => [\%h0, \%h1] } );
 
 ok($lcsh);                              # 2
 
@@ -689,7 +689,7 @@ ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));# 366
 $vers = $lcsh->get_version;
 ok($vers);                              # 367
 
-my $lcsh_s  = List::Compare->new(\%h2, \%h3);
+my $lcsh_s  = List::Compare->new( { lists => [\%h2, \%h3] } );
 ok($lcsh_s);                            # 368
 
 $LR = $lcsh_s->is_LsubsetR;
@@ -713,7 +713,7 @@ ok(! $eqv);                             # 374
 $disj = $lcsh_s->is_LdisjointR;
 ok(! $disj);                            # 375
 
-my $lcsh_e  = List::Compare->new(\%h3, \%h4);
+my $lcsh_e  = List::Compare->new( { lists => [\%h3, \%h4] } );
 
 ok($lcsh_e);                            # 376
 
@@ -726,7 +726,7 @@ ok($eqv);                               # 378
 $disj = $lcsh_e->is_LdisjointR;
 ok(! $disj);                            # 379
 
-my $lcsh_dj  = List::Compare->new(\%h4, \%h8);
+my $lcsh_dj  = List::Compare->new( { lists => [\%h4, \%h8] } );
 
 ok($lcsh_dj);                           # 380
 
@@ -737,8 +737,7 @@ ok($disj);                              # 383
 
 ########## BELOW:  Tests for '-u' option ##########
 
-# my $lcshu  = List::Compare::SeenHash->new('-u', \%h0, \%h1);
-my $lcshu  = List::Compare->new('-u', \%h0, \%h1);
+my $lcshu  = List::Compare->new( { unsorted => 1, lists => [\%h0, \%h1] } );
 
 ok($lcshu);                             # 384
 
@@ -1342,7 +1341,7 @@ ok(ok_any_h( $memb_hash_ref, 'zebra',  0 ));# 748
 $vers = $lcshu->get_version;
 ok($vers);                              # 749
 
-my $lcshu_s  = List::Compare->new('-u', \%h2, \%h3);
+my $lcshu_s  = List::Compare->new( { unsorted => 1, lists => [\%h2, \%h3] } );
 ok($lcshu_s);                           # 750
 
 $LR = $lcshu_s->is_LsubsetR;
@@ -1366,7 +1365,7 @@ ok(! $eqv);                             # 756
 $disj = $lcshu_s->is_LdisjointR;
 ok(! $disj);                            # 757
 
-my $lcshu_e  = List::Compare->new('-u', \%h3, \%h4);
+my $lcshu_e  = List::Compare->new( { unsorted => 1, lists => [\%h3, \%h4] } );
 
 ok($lcshu_e);                           # 758
 
@@ -1379,7 +1378,7 @@ ok($eqv);                               # 760
 $disj = $lcshu_e->is_LdisjointR;
 ok(! $disj);                            # 761
 
-my $lcush_dj  = List::Compare->new('-u', \%h4, \%h8);
+my $lcush_dj  = List::Compare->new( { unsorted => 1, lists => [\%h4, \%h8] } );
 
 ok($lcush_dj);                          # 762
 
@@ -1390,26 +1389,26 @@ ok($disj);                              # 765
 
 ########## BELOW:  Tests for '--unsorted' option ##########
 
-my $lcshun  = List::Compare->new('--unsorted', \%h0, \%h1);
+my $lcshun  = List::Compare->new( { unsorted => 1, lists => [\%h0, \%h1] } );
 ok($lcshun);                            # 766
 
-my $lcshun_s  = List::Compare->new('--unsorted', \%h2, \%h3);
+my $lcshun_s  = List::Compare->new( { unsorted => 1, lists => [\%h2, \%h3] } );
 ok($lcshun_s);                          # 767
 
-my $lcshun_e  = List::Compare->new('--unsorted', \%h3, \%h4);
+my $lcshun_e  = List::Compare->new( { unsorted => 1, lists => [\%h3, \%h4] } );
 ok($lcshun_e);                          # 768
 
 ########## BELOW:  Tests for bad values in seen-hash ##########
 
 my ($f5, $f6, $f7);
 
-eval { $f5 = List::Compare->new(\%h0, \%h5) };
+eval { $f5 = List::Compare->new( { lists => [\%h0, \%h5] } ) };
 ok(ok_capture_error($@));               # 769
 
-eval { $f6 = List::Compare->new(\%h6, \%h0) };
+eval { $f6 = List::Compare->new( { lists => [\%h6, \%h0] } ) };
 ok(ok_capture_error($@));               # 770
 
-eval { $f7 = List::Compare->new(\%h6, \%h7) };
+eval { $f7 = List::Compare->new( { lists => [\%h6, \%h7] } ) };
 ok(ok_capture_error($@));               # 771
 
 

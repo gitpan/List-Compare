@@ -1,5 +1,5 @@
 package List::Compare;
-$VERSION = 0.28;   # April 25, 2004 
+$VERSION = 0.29;   # May 16, 2004 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
@@ -10,15 +10,25 @@ use List::Compare::Base::_Auxiliary qw(
 
 sub new {
     my $class = shift;
-    my @args = @_;
-    my ($unsorted, $accelerated, $self, $dataref, $unsortflag);
-    $unsorted = ($args[0] eq '-u' or $args[0] eq '--unsorted')
-                ? shift(@args) : '';
-    $accelerated = shift(@args) 
-        if ($args[0] eq '-a' or $args[0] eq '--accelerated');
-    my $argument_error_status = 1;
-    my ($nextarg);
-    my @testargs = @args[1..$#args];
+    my (@args, $unsorted, $accelerated, $self, $dataref, $unsortflag);
+    my ($argument_error_status, $nextarg, @testargs);
+    if (@_ == 1 and (ref($_[0]) eq 'HASH')) {
+       my $argref = shift;
+       die "Need to define 'lists' key properly: $!"
+           unless ( ${$argref}{'lists'}
+                and (ref(${$argref}{'lists'}) eq 'ARRAY') );
+       @args = @{${$argref}{'lists'}};
+       $unsorted = ${$argref}{'unsorted'} ? 1 : '';
+       $accelerated = ${$argref}{'accelerated'} ? 1 : '';
+    } else {
+        @args = @_;
+        $unsorted = ($args[0] eq '-u' or $args[0] eq '--unsorted')
+            ? shift(@args) : '';
+        $accelerated = shift(@args) 
+            if ($args[0] eq '-a' or $args[0] eq '--accelerated');
+    }
+    $argument_error_status = 1;
+    @testargs = @args[1..$#args];
     if (ref($args[0]) eq 'ARRAY' or ref($args[0]) eq 'HASH') {
         while (defined ($nextarg = shift(@testargs))) {
             unless (ref($nextarg) eq ref($args[0])) {
@@ -1603,8 +1613,8 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.28 of List::Compare.  This version was
-released April 25, 2004.
+This document refers to version 0.29 of List::Compare.  This version was
+released May 16, 2004.
 
 =head1 SYNOPSIS
 
@@ -1626,7 +1636,7 @@ The bare essentials:
 
 =over 4
 
-=item *
+=item * Constructor
 
 Create a List::Compare object.  Put the two lists into arrays (named or 
 anonymous) and pass references to the arrays to the constructor.
@@ -1646,6 +1656,21 @@ by constructing the List::Compare object with the unsorted option:
 or
 
     $lc = List::Compare->new('--unsorted', \@Llist, \@Rlist);
+
+=item * Alternative Constructor
+
+If you prefer a more explicit delineation of the types of arguments passed 
+to a function, you may use this 'single hashref' kind of constructor to build a 
+List::Compare object:
+
+    $lc = List::Compare->new( { lists => [\@Llist, \@Rlist] } );
+
+or
+
+    $lc = List::Compare->new( {
+        lists    => [\@Llist, \@Rlist],
+        unsorted => 1,
+    } );
 
 =item *
 
@@ -1870,6 +1895,10 @@ Return current List::Compare version number.
 
 =head2 Accelerated Case:  When User Only Wants a Single Comparison
 
+=over 4
+
+=item * Constructor
+
 If you are certain that you will only want the results of a I<single> 
 comparison, computation may be accelerated by passing C<'-a'> or 
 C<'--accelerated> as the first argument to the constructor.
@@ -1893,6 +1922,26 @@ with the unsorted option:
 or
 
     $lca = List::Compare->new('--unsorted', '--accelerated', \@Llist, \@Rlist);
+
+=item * Alternative Constructor
+
+You may use the 'single hashref' constructor format to build a List::Compare 
+object calling for the Accelerated mode:
+
+    $lca = List::Compare->new( {
+        lists    => [\@Llist, \@Rlist],
+        accelerated => 1,
+    } );
+
+or
+
+    $lca = List::Compare->new( {
+        lists    => [\@Llist, \@Rlist],
+        accelerated => 1,
+        unsorted => 1,
+    } );
+
+=item * Methods 
 
 All the comparison methods available in the Regular case are available to 
 you in the Accelerated case as well.
@@ -1927,7 +1976,13 @@ you in the Accelerated case as well.
 All the aliases for methods available in the Regular case are available to 
 you in the Accelerated case as well.
 
+=back
+
 =head2 Multiple Case:  Compare Three or More Lists
+
+=over 4
+
+=item * Constructor
 
 Create a List::Compare object.  Put each list into an array and pass
 references to the arrays to the constructor.
@@ -1950,7 +2005,23 @@ or
 
     $lcm = List::Compare->new('--unsorted', \@Al, \@Bob, \@Carmen, \@Don, \@Ed);
 
-B<Multiple Mode Methods Analogous to Regular and Accelerated Mode Methods>
+=item * Alternative Constructor
+
+You may use the 'single hashref' constructor format to build a List::Compare 
+object to process three or more lists at once:
+
+    $lcm = List::Compare->new( {
+        lists    => [\@Al, \@Bob, \@Carmen, \@Don, \@Ed],
+    } );
+
+or
+
+    $lcm = List::Compare->new( {
+        lists    => [\@Al, \@Bob, \@Carmen, \@Don, \@Ed],
+        unsorted => 1,
+    } );
+
+=item * Multiple Mode Methods Analogous to Regular and Accelerated Mode Methods
 
 Each List::Compare method available in the Regular and Accelerated cases 
 has an analogue in the Multiple case.  However, the results produced 
@@ -2240,7 +2311,7 @@ Return current List::Compare version number:
 
 =back
 
-B<Multiple Mode Methods Not Analogous to Regular and Accelerated Mode Methods>
+=item * Multiple Mode Methods Not Analogous to Regular and Accelerated Mode Methods
 
 =over 4
 
@@ -2270,8 +2341,14 @@ full array, use the following alternative methods:
 
 =back
 
+=back
+
 =head2 Multiple Accelerated Case:  Compare Three or More Lists 
 but Request Only a Single Comparison among the Lists
+
+=over 4
+
+=item * Constructor
 
 If you are certain that you will only want the results of a single 
 comparison among three or more lists, computation may be accelerated 
@@ -2309,6 +2386,26 @@ Example:
     $lcmaex = List::Compare->new('--unsorted', '--accelerated',
                    \@alpha, \@beta, \@gamma);
 
+=item * Alternative Constructor
+
+The 'single hashref' format may be used to construct a List::Compare 
+object which calls for accelerated processing of three or more lists at once:
+
+    $lcmaex = List::Compare->new( {
+        accelerated => 1,
+        lists       => [\@alpha, \@beta, \@gamma],
+    } );
+
+or
+
+    $lcmaex = List::Compare->new( {
+        unsorted    => 1,
+        accelerated => 1,
+        lists       => [\@alpha, \@beta, \@gamma],
+    } );
+
+=item * Methods
+
 For the purpose of supplying a numerical argument to a method which 
 optionally takes such an argument, C<'--unsorted'> and C<'--accelerated> 
 are skipped, C<@alpha> is C<0>, C<@beta> is C<1>, and so forth.  To get a 
@@ -2316,7 +2413,13 @@ list of those items unique to C<@gamma>, you would call:
 
     @gamma_only = $lcmaex->get_unique(2);
 
+=back
+
 =head2 Passing Seen-hashes to the Constructor Instead of Arrays
+
+=over 4
+
+=item * When Seen-Hashes Are Already Available to You
 
 Suppose that in a particular Perl program, you had to do extensive munging of 
 data from an external source and that, once you had correctly parsed a line 
@@ -2353,9 +2456,13 @@ seen-hash, why shouldn't you be able to pass (references to) seen-hashes
 I<directly> to the constructor and avoid unnecessary array 
 assignments before the constructor is called?
 
+=item * Constructor
+
 You can now do so:
 
     $lcsh = List::Compare->new(\%Llist, \%Rlist);
+
+=item * Methods
 
 I<All> of List::Compare's output methods are supported I<without further 
 modification> when references to seen-hashes are passed to the constructor.
@@ -2387,6 +2494,8 @@ modification> when references to seen-hashes are passed to the constructor.
                             [ qw| abel baker fargo hilton zebra | ]);
     $vers             = $lcsh->get_version;
 
+=item * Accelerated Mode and Seen-Hashes
+
 To accelerate processing when you want only a single comparison among two or 
 more lists, you can pass C<'-a'> or C<'--accelerated> to the constructor 
 before passing references to seen-hashes.
@@ -2400,6 +2509,8 @@ to seen-hashes.  Thus,
 
 will generate meaningful comparisons of three or more lists simultaneously.
 
+=item * Unsorted Results and Seen-Hashes
+
 If you do not need sorted lists returned, pass C<'-u'> or C<--unsorted> to the 
 constructor before passing references to seen-hashes.
 
@@ -2410,6 +2521,29 @@ constructor before passing references to seen-hashes.
 As was true when we were using List::Compare's Multiple and Multiple Accelerated 
 modes, do not count any unsorted or accelerated option when determining the 
 array index of a particular seen-hash reference passed to the constructor.
+
+=item * Alternative Constructor
+
+The 'single hashref' form of constructor is also available to build 
+List::Compare objects where seen-hashes are used as arguments:
+
+    $lcshu  = List::Compare->new( {
+        unsorted => 1,
+        lists    => [\%Llist, \%Rlist],
+    } );
+
+    $lcshau = List::Compare->new( {
+        unsorted    => 1,
+        accelerated => 1,
+        lists       => [\%Llist, \%Rlist],
+    } );
+
+    $lcshmu = List::Compare->new( {
+        unsorted => 1,
+        lists    => [\%Alpha, \%Beta, \%Gamma],
+    } );
+
+=back
 
 =head1 DISCUSSION:  Principles 
 
@@ -2731,6 +2865,10 @@ to accept both kinds of arguments, I adapted List::Compare in the same
 manner.  This meant that List::Compare::SeenHash and its related installation 
 tests could be deprecated and deleted from the CPAN distribution.
 
+A remark by David H. Adler at a New York Perlmongers meeting in April 2004 
+led me to develop the 'single hashref' alternative constructor format, 
+introduced in version 0.29 the following month.
+
 =head2 If You Like List::Compare, You'll Love ...
 
 While preparing this module for distribution via CPAN, I had occasion to
@@ -2835,7 +2973,7 @@ you must first install the Want module, also available on CPAN.
 James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please 
 include 'List::Compare' or 'List-Compare' in your subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  April 25, 2004. 
+Creation date:  May 20, 2002.  Last modification date:  May 16, 2004. 
 Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

@@ -109,3 +109,5 @@ transferred directly into List::Compare
 	- correction of error in internal subroutine _argument_checker_0
 	- further implication of deprecation of List::Compare::SeenHash is that all the code in List::Compare::Base::Regular, L:C:B:Accelerated, L:C:B:Multiple and L:C:B:Multiple::Accelerated is no longer shared between List::Compare and List::Compare::SeenHash and hence can be taken back into List::Compare; thereby eliminating the 'use base' calls from List::Compare.
 
+0.29  Sun May 16 2004
+

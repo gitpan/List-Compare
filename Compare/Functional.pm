@@ -1,5 +1,5 @@
 package List::Compare::Functional;
-$VERSION = 0.28;   # April 25, 2004 
+$VERSION = 0.29;   # May 16, 2004 
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
     get_intersection
@@ -93,7 +93,7 @@ use List::Compare::Base::_Auxiliary qw(
     _equivalent_subengine
     _calc_seen1
 );
-use List::Compare::Base::_Auxiliary qw(:calculate :checker);
+use List::Compare::Base::_Auxiliary qw(:calculate :checker :tester);
 
 
 sub get_union {
@@ -101,10 +101,10 @@ sub get_union {
 }
 
 sub get_union_ref {
-    my @args = @_;
-    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
-        ? return          _union_engine(_argument_checker(@args[1..$#args]))
-        : return [ sort @{_union_engine(_argument_checker(@args))} ];
+    my ($argref, $unsorted) = _alt_construct_tester(@_);
+    $unsorted  
+        ? return          _union_engine(_argument_checker($argref))
+        : return [ sort @{_union_engine(_argument_checker($argref))} ];
 }
 
 sub _union_engine {
@@ -118,10 +118,10 @@ sub get_intersection {
 }
 
 sub get_intersection_ref {
-    my @args = @_;
-    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
-        ? return          _intersection_engine(_argument_checker(@args[1..$#args]))
-        : return [ sort @{_intersection_engine(_argument_checker(@args))} ];
+    my ($argref, $unsorted) = _alt_construct_tester(@_);
+    $unsorted  
+        ? return          _intersection_engine(_argument_checker($argref))
+        : return [ sort @{_intersection_engine(_argument_checker($argref))} ];
 }
 
 sub _intersection_engine {
@@ -136,10 +136,10 @@ sub get_unique {
 }
 
 sub get_unique_ref {
-    my @args = @_;
-    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
-        ? return          _unique_engine(_argument_checker_3(@args[1..$#args]))
-        : return [ sort @{_unique_engine(_argument_checker_3(@args))} ];
+    my ($argref, $unsorted) = _alt_construct_tester_3(@_);
+    $unsorted
+        ? return          _unique_engine(_argument_checker_3($argref))
+        : return [ sort @{_unique_engine(_argument_checker_3($argref))} ];
 }
 
 sub _unique_engine {
@@ -181,10 +181,10 @@ sub get_complement {
 }
 
 sub get_complement_ref {
-    my @args = @_;
-    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
-        ? return          _complement_engine(_argument_checker_3(@args[1..$#args]))
-        : return [ sort @{_complement_engine(_argument_checker_3(@args))} ];
+    my ($argref, $unsorted) = _alt_construct_tester_3(@_);
+    $unsorted
+        ? return          _complement_engine(_argument_checker_3($argref))
+        : return [ sort @{_complement_engine(_argument_checker_3($argref))} ];
 }
 
 sub _complement_engine {
@@ -213,10 +213,10 @@ sub get_symmetric_difference {
 }
 
 sub get_symmetric_difference_ref {
-    my @args = @_;
-    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
-        ? return          _symmetric_difference_engine(_argument_checker(@args[1..$#args]))
-        : return [ sort @{_symmetric_difference_engine(_argument_checker(@args))} ];
+    my ($argref, $unsorted) = _alt_construct_tester(@_);
+    $unsorted  
+        ? return          _symmetric_difference_engine(_argument_checker($argref))
+        : return [ sort @{_symmetric_difference_engine(_argument_checker($argref))} ];
 }
 
 sub _symmetric_difference_engine {
@@ -241,10 +241,10 @@ sub get_shared {
 }
 
 sub get_shared_ref {
-    my @args = @_;
-    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
-        ? return          _shared_engine(_argument_checker(@args[1..$#args]))
-        : return [ sort @{_shared_engine(_argument_checker(@args))} ];
+    my ($argref, $unsorted) = _alt_construct_tester(@_);
+    $unsorted  
+        ? return          _shared_engine(_argument_checker($argref))
+        : return [ sort @{_shared_engine(_argument_checker($argref))} ];
 }
 
 sub _shared_engine {
@@ -262,10 +262,10 @@ sub get_nonintersection {
 }
 
 sub get_nonintersection_ref {
-    my @args = @_;
-    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
-        ? return          _nonintersection_engine(_argument_checker(@args[1..$#args]))
-        : return [ sort @{_nonintersection_engine(_argument_checker(@args))} ];
+    my ($argref, $unsorted) = _alt_construct_tester(@_);
+    $unsorted  
+        ? return          _nonintersection_engine(_argument_checker($argref))
+        : return [ sort @{_nonintersection_engine(_argument_checker($argref))} ];
 }
 
 sub _nonintersection_engine {
@@ -284,7 +284,8 @@ sub _nonintersection_engine {
 }
 
 sub is_LsubsetR {
-    return _is_LsubsetR_engine(_argument_checker_4(@_));
+    my $argref = _alt_construct_tester_4(@_);
+    return _is_LsubsetR_engine(_argument_checker_4($argref));
 }
 
 sub _is_LsubsetR_engine {
@@ -294,7 +295,8 @@ sub _is_LsubsetR_engine {
 }
 
 sub is_RsubsetL {
-    return _is_RsubsetL_engine(_argument_checker_4(@_));
+    my $argref = _alt_construct_tester_4(@_);
+    return _is_RsubsetL_engine(_argument_checker_4($argref));
 }
 
 sub _is_RsubsetL_engine {
@@ -310,7 +312,8 @@ sub _subset_engine {
 }
 
 sub is_LequivalentR {
-    return _is_LequivalentR_engine(_argument_checker_4(@_));
+    my $argref = _alt_construct_tester_4(@_);
+    return _is_LequivalentR_engine(_argument_checker_4($argref));
 }
 
 *is_LeqvlntR = \&is_LequivalentR;
@@ -323,7 +326,8 @@ sub _is_LequivalentR_engine {
 }
 
 sub is_LdisjointR {
-    return _is_LdisjointR_engine(_argument_checker_4(@_));
+    my $argref = _alt_construct_tester_4(@_);
+    return _is_LdisjointR_engine(_argument_checker_4($argref));
 }
 
 sub _is_LdisjointR_engine {
@@ -344,7 +348,8 @@ sub _is_LdisjointR_engine {
 }
 
 sub print_subset_chart {
-    _print_subset_chart_engine(_argument_checker(@_));
+    my $argref = _alt_construct_tester_5(@_);
+    _print_subset_chart_engine(_argument_checker($argref));
 }
 
 sub _print_subset_chart_engine {
@@ -355,7 +360,8 @@ sub _print_subset_chart_engine {
 }
 
 sub print_equivalence_chart {
-    _print_equivalence_chart_engine(_argument_checker(@_));
+    my $argref = _alt_construct_tester_5(@_);
+    _print_equivalence_chart_engine(_argument_checker($argref));
 }
 
 sub _print_equivalence_chart_engine {
@@ -370,7 +376,8 @@ sub is_member_which {
 }    
 
 sub is_member_which_ref {
-    return _is_member_which_engine(_argument_checker_1(@_));
+    my $argref = _alt_construct_tester_1(@_);
+    return _is_member_which_engine(_argument_checker_1($argref));
 }    
 
 sub _is_member_which_engine {
@@ -385,7 +392,8 @@ sub _is_member_which_engine {
 }
 
 sub is_member_any {
-    return _is_member_any_engine(_argument_checker_1(@_));
+    my $argref = _alt_construct_tester_1(@_);
+    return _is_member_any_engine(_argument_checker_1($argref));
 }    
 
 sub _is_member_any_engine {
@@ -400,7 +408,8 @@ sub _is_member_any_engine {
 }
 
 sub are_members_which {
-    return _are_members_which_engine(_argument_checker_2(@_));
+    my $argref = _alt_construct_tester_2(@_);
+    return _are_members_which_engine(_argument_checker_2($argref));
 }
 
 sub _are_members_which_engine {
@@ -422,7 +431,10 @@ sub _are_members_which_engine {
 }
 
 sub are_members_any {
-    return _are_members_any_engine(_argument_checker_2(@_));
+#    return _are_members_any_engine(_argument_checker_2(@_));
+    my $argref = _alt_construct_tester_2(@_);
+#    return _are_members_any_engine(_argument_checker_2(@{$argref}));
+    return _are_members_any_engine(_argument_checker_2($argref));
 }    
 
 sub _are_members_any_engine {
@@ -447,10 +459,10 @@ sub get_bag {
 }
 
 sub get_bag_ref {
-    my @args = @_;
-    ($args[0] eq '-u' or $args[0] eq '--unsorted') 
-        ? return          _bag_engine(_argument_checker(@args[1..$#args]))
-        : return [ sort @{_bag_engine(_argument_checker(@args))} ];
+    my ($argref, $unsorted) = _alt_construct_tester(@_);
+    $unsorted  
+        ? return          _bag_engine(_argument_checker($argref))
+        : return [ sort @{_bag_engine(_argument_checker($argref))} ];
 }
 
 sub _bag_engine {
@@ -490,8 +502,8 @@ List::Compare::Functional - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.28 of List::Compare::Functional.  
-This version was released April 25, 2004.  The first released 
+This document refers to version 0.29 of List::Compare::Functional.  
+This version was released May 16, 2004.  The first released 
 version of List::Compare::Functional was v0.21.  Its version numbers 
 are set to be consistent with the other parts of the List::Compare 
 distribution.
@@ -555,11 +567,25 @@ a named array and then pass C<get_intersection()> a reference to that array.
     @to_be_compared = ( \@Llist, \@Rlist );
     @intersection = get_intersection( \@to_be_compared );
 
+Beginning with version 0.29 (May 2004), List::Compare::Functional now offers 
+an additional way of passing arguments to its various functions.  If you 
+prefer to see a more explicit delineation among the types of arguments passed 
+to a function, pass a single hash reference which holds the lists being 
+compared in an anonymous array which is the value corresponding to key C<lists>:
+
+    @intersection = get_intersection( {
+       lists => [ \@Llist, \@Rlist ],
+    } );
+
 =item *
 
 Get those items which appear at least once in either list (their union).
 
     @union = get_union( [ \@Llist, \@Rlist ] );
+
+or
+
+    @union = get_union( { lists => [ \@Llist, \@Rlist ] } );
 
 =item *
 
@@ -567,16 +593,29 @@ Get those items which appear (at least once) only in the first list.
 
     @Lonly = get_unique( [ \@Llist, \@Rlist ] );
 
+or
+
+    @Lonly = get_unique( { lists => [ \@Llist, \@Rlist ] } );
+
 =item *
 
 Get those items which appear (at least once) only in the second list.
 
     @Ronly = get_complement( [ \@Llist, \@Rlist ] );
 
+or
+
+    @Ronly = get_complement( { lists => [ \@Llist, \@Rlist ] } );
+
 =item *
 
     @LorRonly = get_symmetric_difference( [ \@Llist, \@Rlist ] );
+
     @LorRonly = get_symdiff( [ \@Llist, \@Rlist ] );       # alias
+
+or
+
+    @LorRonly = get_symmetric_difference( { lists => [ \@Llist, \@Rlist ] } );
 
 =item *
 
@@ -585,6 +624,10 @@ union of the two lists in that it holds as many copies of individual
 elements as appear in the original lists.
 
     @bag = get_bag( [ \@Llist, \@Rlist ] );
+
+or
+
+    @bag = get_bag( { lists => [ \@Llist, \@Rlist ] } );
 
 =item *
 
@@ -602,6 +645,24 @@ parallel functions:
                             # alias
     $bag_ref          = get_bag_ref(                  [ \@Llist, \@Rlist ] );
 
+or
+
+    $intersection_ref = 
+        get_intersection_ref(         { lists => [ \@Llist, \@Rlist ] } );
+    $union_ref        = 
+        get_union_ref(                { lists => [ \@Llist, \@Rlist ] } );
+    $Lonly_ref        = 
+        get_unique_ref(               { lists => [ \@Llist, \@Rlist ] } );
+    $Ronly_ref        = 
+        get_complement_ref(           { lists => [ \@Llist, \@Rlist ] } );
+    $LorRonly_ref     = 
+        get_symmetric_difference_ref( { lists => [ \@Llist, \@Rlist ] } );
+    $LorRonly_ref     = 
+        get_symdiff_ref(              { lists => [ \@Llist, \@Rlist ] } );
+        # alias
+    $bag_ref          = 
+        get_bag_ref(                  { lists => [ \@Llist, \@Rlist ] } );
+
 =item *
 
 Return a true value if the first list ('L' for 'left') is a subset of the 
@@ -609,11 +670,19 @@ second list ('R' for 'right').
 
     $LR = is_LsubsetR( [ \@Llist, \@Rlist ] );
 
+or
+
+    $LR = is_LsubsetR( { lists => [ \@Llist, \@Rlist ] } );
+
 =item *
 
 Return a true value if R is a subset of L.
 
     $RL = is_RsubsetL( [ \@Llist, \@Rlist ] );
+
+or
+
+    $RL = is_RsubsetL( { lists => [ \@Llist, \@Rlist ] } );
 
 =item *
 
@@ -623,6 +692,10 @@ in L appears at least once in R and I<vice versa>.
     $eqv = is_LequivalentR( [ \@Llist, \@Rlist ] );
     $eqv = is_LeqvlntR( [ \@Llist, \@Rlist ] );            # alias
 
+or
+
+    $eqv = is_LequivalentR( { lists => [ \@Llist, \@Rlist ] } ); 
+
 =item *
 
 Return a true value if L and R are disjoint, I<i.e.,> if L and R have 
@@ -630,11 +703,19 @@ no common elements.
 
     $disj = is_LdisjointR( [ \@Llist, \@Rlist ] );
 
+or
+
+    $disj = is_LdisjointR( { lists => [ \@Llist, \@Rlist ] } ); 
+
 =item *
 
 Pretty-print a chart showing whether one list is a subset of the other.
 
     print_subset_chart( [ \@Llist, \@Rlist ] );
+
+or
+
+    print_subset_chart( { lists => [ \@Llist, \@Rlist ] } ); 
 
 =item *
 
@@ -643,6 +724,10 @@ elements found at least once in both).
 
     print_equivalence_chart( [ \@Llist, \@Rlist ] );
 
+or
+
+    print_equivalence_chart( { lists => [ \@Llist, \@Rlist ] } ); 
+
 =item *
 
 Determine in I<which> (if any) of the lists a given string can be found.  
@@ -650,6 +735,13 @@ In list context, return a list of those indices in the argument list
 corresponding to lists holding the string being tested.
 
     @memb_arr = is_member_which( [ \@Llist, \@Rlist ] , [ 'abel' ] );
+
+or
+
+    @memb_arr = is_member_which( {
+        lists => [ \@Llist, \@Rlist ],  # value is array reference
+        item  => 'abel',                # value is string
+    } );
 
 In the example above, C<@memb_arr> will be:
 
@@ -665,6 +757,13 @@ may wish the above function returned a (scalar) reference to an array
 holding the list:
 
     $memb_arr_ref = is_member_which_ref( [ \@Llist, \@Rlist ] , [ 'baker' ] );
+
+or
+
+    $memb_arr_ref = is_member_which_ref( {
+        lists => [ \@Llist, \@Rlist ],  # value is array reference
+        item  => 'baker',               # value is string
+    } );
 
 In the example above, C<$memb_arr_ref> will be:
 
@@ -689,6 +788,13 @@ array, a reference to which is the second argument passed to that function.
         are_members_which( [ \@Llist, \@Rlist ] , 
                            [ qw| abel baker fargo hilton zebra | ]
                          );
+
+or
+
+    $memb_hash_ref = are_members_which( {
+        lists => [ \@Llist, \@Rlist ],                    # value is arrayref
+        items => [ qw| abel baker fargo hilton zebra | ], # value is arrayref
+    } );
 
 The return value is a reference to a hash of arrays.  The 
 key for each element in this hash is the string being tested.  Each element's 
@@ -716,6 +822,13 @@ and C<0> if not.
 
     $found = is_member_any( [ \@Llist, \@Rlist ] , [ 'abel' ] );
 
+or
+
+    $found = is_member_any( {
+        lists => [ \@Llist, \@Rlist ], # value is array reference
+        item  => 'abel',               # value is string
+    } );
+
 In the example above, C<$found> will be C<1> because C<'abel'> is found in one 
 or more of the lists passed as arguments to C<new()>.
 
@@ -731,6 +844,13 @@ array, a reference to which is the second argument passed to that function.
         are_members_any( [ \@Llist, \@Rlist ] , 
                          [ qw| abel baker fargo hilton zebra | ]
                        );
+
+or
+
+    $memb_hash_ref = are_members_any( {
+        lists => [ \@Llist, \@Rlist ],                    # value is arrayref
+        items => [ qw| abel baker fargo hilton zebra | ], # value is arrayref
+    } );
 
 The return value is a reference to a hash where an element's key is the 
 string being tested and the element's value is C<1> if the string can be 
@@ -774,11 +894,22 @@ Get those items which appear at least once in I<each> list (their intersection).
 
     @intersection = get_intersection( [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] );
 
+or
+
+    @intersection = get_intersection( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
+    } );
+
 =item *
 
 Get those items which appear at least once in I<any> of the lists (their union).
 
     @union = get_union( [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] );
+
+or
+    @union = get_union( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
+    } );
 
 =item *
 
@@ -792,6 +923,13 @@ consideration.  Example:  To get elements unique to C<@Carmen>:
                  [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ], 
                  [ 2 ]
              );
+
+or
+
+    @Lonly = get_unique( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ], # value is arrayref
+        item  => 2,                                      # value is number
+    } );
 
 If no index position is passed to C<get_unique()> it will default to C<0> 
 and report items unique to the first list passed to the function.  Hence,
@@ -816,6 +954,13 @@ elements found in lists other than C<@Don>:
                  [ 3 ]
              );
 
+or
+
+    @Ronly = get_complement( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ], # value is arrayref
+        item  => 3,                                      # value is number
+    } );
+
 If no index position is passed to C<get_complement()> it will default to C<0> 
 and report items found in all lists I<other than> the first list passed to 
 C<get_complement()>.
@@ -834,6 +979,12 @@ Get those items which do I<not> appear in I<more than one> of several lists
     @LorRonly = get_symmetric_difference( [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] );
     @LorRonly = get_symdiff( [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] ); # alias
 
+or
+
+    @LorRonly = get_symmetric_difference( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
+    } );
+
 =item *
 
 Get those items found in I<any> of several lists which do I<not> appear 
@@ -843,12 +994,24 @@ intersection of the lists):
     @nonintersection = get_nonintersection(
                            [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] );
 
+or
+
+    @nonintersection = get_nonintersection( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
+    } );
+
 =item *
 
 Get those items which appear in I<more than one> of several lists 
 (I<i.e.,> all items except those found in their symmetric difference);
 
     @shared = get_shared( [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] );
+
+or
+
+    @shared = get_shared( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
+    } );
 
 =item *
 
@@ -857,6 +1020,12 @@ union of the two lists in that it holds as many copies of individual
 elements as appear in the original lists.
 
     @bag = get_bag( [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] );
+
+or
+
+    @bag = get_bag( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
+    } );
 
 =item *
 
@@ -902,6 +1071,13 @@ Example:  To determine whether C<@Ed> is a subset of C<@Carmen>, call:
               [ 4, 2 ]
           );
 
+or
+
+    $LR = is_LsubsetR( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ], # value is arrayref
+        pair  => [ 4, 2 ],                               # value is arrayref
+    } );
+
 If only the first reference (to the array of lists) is passed to 
 C<is_LsubsetR>, then the function's second argument defaults to C<(0,1)> and 
 compares the first two lists passed to the constructor.  So,
@@ -917,7 +1093,14 @@ compares the first two lists passed to the constructor.  So,
 To reverse the order in which the particular lists are evaluated for 
 superset/subset status, call C<is_RsubsetL>:
 
-    $LR = is_RsubsetL([ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ], [2,4] );
+    $RL = is_RsubsetL([ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ], [2,4] );
+
+or
+
+    $RL = is_RsubsetL( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
+        pair  => [ 2, 4 ],
+    } );
 
 =item *
 
@@ -943,7 +1126,13 @@ Example:  To determine whether C<@Don> and C<@Ed> are equivalent, call:
                [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
                [3,4]
            );
-               
+
+or
+
+    $eqv = is_LequivalentR( {
+        items => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
+        pair  => [3,4],
+    } );
 
 If no arguments are passed, C<is_LequivalentR> defaults to C<[0,1]> and 
 compares the first two lists passed to the function. So,
@@ -972,6 +1161,13 @@ Example:  To determine whether C<@Don> and C<@Ed> are disjoint, call:
                [3,4]
            );
 
+or
+
+    $disj = is_LdisjointR( {
+        items => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
+        pair  => [3,4]
+    } );
+
 =item *
 
 Pretty-print a chart showing the subset relationships among the various 
@@ -979,12 +1175,20 @@ source lists:
 
     print_subset_chart( [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] );
 
+or
+
+    print_subset_chart( { lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] } );
+
 =item *
 
 Pretty-print a chart showing the equivalence relationships among the 
 various source lists:
 
     print_equivalence_chart( [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] );
+
+or
+
+    print_equivalence_chart( { lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ] } );
 
 =item *
 
@@ -997,6 +1201,13 @@ single-item list consisting of the string being tested.
                     [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
                     [ 'abel' ]
                 );
+
+or
+
+    @memb_arr = is_member_which( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ], # value is arrayref
+        item  => 'abel',                                 # value is string
+    } );
 
 In list context, return a list of those indices in the function's 
 argument list corresponding to lists holding the string being tested.  
@@ -1016,6 +1227,13 @@ wish the above function returned a reference to an array holding the list:
                         [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
                         [ 'jerky' ]
                     );
+
+or
+
+    $memb_arr_ref = is_member_which_ref( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ], # value is arrayref
+        item  => 'jerky',                                # value is string
+    } );
 
 In the example above, C<$memb_arr_ref> will be:
 
@@ -1041,6 +1259,13 @@ holds a list of the strings being tested.
                          [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
                          [ qw| abel baker fargo hilton zebra | ]
                      );
+
+or
+
+    $memb_hash_ref = are_members_which( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],  # value is arrayref
+        items => [ qw| abel baker fargo hilton zebra | ], # value is arrayref
+    } );
 
 The return valus is a reference to a hash of arrays.  In this hash, 
 each element's value is a reference to an anonymous array whose 
@@ -1075,6 +1300,13 @@ holds a single-item list of the string being tested.
                     [ 'abel' ]
                 );
 
+or
+
+    $found = is_member_any( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ], # value is arrayref
+        item  => 'abel',                                 # value is string
+    } );
+
 The return value is C<1> if a specified string can be found in I<any> of 
 the lists and C<0> if not.  In the example above, C<$found> will be 
 C<1> because C<abel> is found in one or more of the lists passed as 
@@ -1091,6 +1323,13 @@ holds a list of the strings being tested.
                          [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],
                          [ qw| abel baker fargo hilton zebra | ]
                      );
+
+or
+
+    $memb_hash_ref = are_members_any( {
+        lists => [ \@Al, \@Bob, \@Carmen, \@Don, \@Ed ],  # value is arrayref
+        items => [ qw| abel baker fargo hilton zebra | ], # value is arrayref
+    } );
 
 The return value is a reference to a hash where an element's key is the 
 string being tested and the element's value is C<1> if the string can be 
@@ -1166,6 +1405,28 @@ list of three or more references to seen-hashes.  Thus,
 
     @union = get_intersection( [ \%Alpha, \%Beta, \%Gamma ] );
 
+The 'single hashref' format for List::Compare::Functional functions is 
+also available when passing seen-hashes as arguments.  Examples:
+
+    @intersection = get_intersection( {
+        lists => [ \%Alpha, \%Beta, \%Gamma ],
+    } );
+
+    @Ronly = get_complement( {
+        lists => [ \%Alpha, \%Beta, \%Gamma ],
+        item  => 3,
+    } );
+
+    $LR = is_LsubsetR( {
+        lists => [ \%Alpha, \%Beta, \%Gamma ],
+        pair  => [ 4, 2 ],
+    } );
+
+    $memb_hash_ref = are_members_any( {
+        lists => [ \%Alpha, \%Beta, \%Gamma ],
+        items => [ qw| abel baker fargo hilton zebra | ], 
+    } );
+
 =head2 Faster Results with the Unsorted Option
 
 By default, List::Compare::Function functions return lists sorted in Perl's 
@@ -1184,6 +1445,13 @@ option:
 For greater readability, the option may be spelled out:
 
     @intersection = get_intersection('--unsorted',  [ \@Llist, \@Rlist ] );
+
+or
+
+    @intersection = get_intersection( {
+        unsorted => 1,
+        lists    => [ \@Llist, \@Rlist ],
+    } );
 
 Should you need a reference to an unsorted list as the return value, you 
 may call the unsorted option as follows:
@@ -1365,7 +1633,7 @@ James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please
 include 'List::Compare::Functional' or 'List-Compare-Functional' in your 
 subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  April 25, 2004. 
+Creation date:  May 20, 2002.  Last modification date:  May 16, 2004. 
 Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

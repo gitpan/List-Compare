@@ -1,6 +1,6 @@
 # MANIFEST for List::Compare
-# $VERSION = 0.28;
-# as of:  04/25/2004
+# $VERSION = 0.29;
+# as of:  05/16/2004
 Changes
 Compare.pm
 Compare/Base/_Auxiliary.pm
@@ -21,6 +21,18 @@ t/13_simple_sh_rev.t
 t/14_accelerated_sh_rev.t
 t/15_multiple_sh_rev.t
 t/16_multaccel_sh_rev.t
+t/17_alt_construct_simple.t
+t/18_alt_construct_accelerated.t
+t/19_alt_construct_multiple.t
+t/20_alt_construct_multaccel.t
+t/21_alt_construct_simple_sh.t
+t/22_alt_construct_accelerated_sh.t
+t/23_alt_construct_multiple_sh.t
+t/24_alt_construct_multaccel_sh.t
+t/25_alt_functional.t
+t/26_alt_functional_multiple.t
+t/27_alt_functional_sh.t
+t/28_alt_functional_multiple_sh.t
 t/Test/ListCompareSpecial.pm
 
 

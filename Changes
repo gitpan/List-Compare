@@ -54,3 +54,6 @@ Revision history for Perl extension List::Compare.
 	- corrected one error in POD
 	- removed e-mail addresses of authors of other modules from POD
 
+0.15  Sat Sep 07 2002
+	- conformed CPAN addresses of other modules to new structure of search.cpan.org
+ 

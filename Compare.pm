@@ -1,5 +1,5 @@
 package List::Compare;
-$VERSION = 0.14;   # August 18, 2002
+$VERSION = 0.15;   # September 7, 2002
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
@@ -884,8 +884,8 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.14 of List::Compare.  This version was
-released August 18, 2002.
+This document refers to version 0.15 of List::Compare.  This version was
+released September 7, 2002.
 
 =head1 SYNOPSIS
 
@@ -1314,8 +1314,7 @@ these modules.
 =item *
 
 Algorithm::Diff - Compute 'intelligent' differences between two files/lists
-(L<http://search.cpan.org/doc/NEDKONZ/Algorithm-Diff-1.15/lib/Algorithm/Dif
-f.pm>)
+(L<http://search.cpan.org/author/NEDKONZ/Algorithm-Diff-1.15/lib/Algorithm/Diff.pm>)
 
 Algorithm::Diff is a sophisticated module originally written by Mark-Jason
 Dominus and now maintained by Ned Konz. Think of the Unix C<diff> utility 
@@ -1329,7 +1328,7 @@ union, subset status, etc.
 =item *
 
 Array::Compare - Perl extension for comparing arrays
-(L<http://search.cpan.org/doc/DAVECROSS/Array-Compare-1.03/Compare.pm>)
+(L<http://search.cpan.org/author/DAVECROSS/Array-Compare-1.03/Compare.pm>)
 
 Array::Compare, by Dave Cross, asks whether two arrays
 are the same or different by doing a C<join> on each string with a
@@ -1344,8 +1343,7 @@ union.
 =item *
 
 List::Util - A selection of general-utility list subroutines
-(L<http://search.cpan.org/doc/GBARR/Scalar-List-Utils-1.0701/lib/List/Util.
-pm>)
+(L<http://search.cpan.org/author/GBARR/Scalar-List-Utils-1.0701/lib/List/Util.pm>)
 
 List::Util, by Graham Barr, exports a variety of simple,
 useful functions for operating on one list at a time.	The C<min> function
@@ -1356,23 +1354,23 @@ rather than just one -- but it aims to be as simple and useful as
 List::Util.  List::Util will be included in the standard Perl 
 distribution as of Perl 5.8.0.
 
-Lists::Util (L<http://search.cpan.org/doc/TBONE/List-Utils-0.01/Utils.pm>), 
+Lists::Util (L<http://search.cpan.org/author/TBONE/List-Utils-0.01/Utils.pm>), 
 by Terrence Brannon, provides methods which extend List::Util's functionality.
 
 =item *
 
 Quantum::Superpositions 
-(L<http://search.cpan.org/doc/DCONWAY/Quantum-Superpositions-1.03/lib/Quantum/Superpositions.pm>), 
+(L<http://search.cpan.org/author/DCONWAY/Quantum-Superpositions-1.03/lib/Quantum/Superpositions.pm>), 
 by Damian Conway, is useful if, in addition to comparing lists, you need to
 emulate quantum supercomputing as well.  Not for the eigen-challenged.
 
 =item *
 
 Set::Scalar - basic set operations
-(L<http://search.cpan.org/doc/JHI/Set-Scalar-1.17/lib/Set/Scalar.pm>)
+(L<http://search.cpan.org/author/JHI/Set-Scalar-1.17/lib/Set/Scalar.pm>)
 
 Set::Bag - bag (multiset) class
-(L<http://search.cpan.org/doc/JHI/Set-Bag-1.007/lib/Set/Bag.pm>)
+(L<http://search.cpan.org/author/JHI/Set-Bag-1.007/Bag.pm>)
 
 Both of these modules are by Jarkko Hietaniemi.  Set::Scalar
 has methods to return the intersection, union, difference and symmetric
@@ -1390,7 +1388,7 @@ has more than one instance of an element in a list.
 
 Set::Array - Arrays as objects with lots of handy methods (including set
 comparisons) and support for method chaining.
-(L<http://search.cpan.org/doc/DJBERG/Set-Array-0.08/Array.pm>)
+(L<http://search.cpan.org/author/DJBERG/Set-Array-0.08/Array.pm>)
 
 Set::Array, by Daniel Berger, "aims to provide
 built-in methods for operations that people are always asking how to do,and
@@ -1404,7 +1402,7 @@ you must first install the Want module, also available on CPAN.
 
 James E. Keenan (jkeen@concentric.net).
 
-Creation date:  May 20, 2002.  Last modification date:  August 18, 2002. 
+Creation date:  May 20, 2002.  Last modification date:  September 7, 2002. 
 Copyright (c) 2002 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

@@ -1,8 +1,8 @@
 package List::Compare;
-$VERSION = 0.13;   # August 3, 2002
+$VERSION = 0.14;   # August 18, 2002
 
 use strict;
-use warnings;
+# use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
 
 sub new {
@@ -884,8 +884,8 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.13 of List::Compare.  This version was
-released August 3, 2002.
+This document refers to version 0.14 of List::Compare.  This version was
+released August 18, 2002.
 
 =head1 SYNOPSIS
 
@@ -1214,6 +1214,8 @@ List::Compare further takes this complexity into account by offering the
 new methods C<get_shared> and C<get_nonintersection> described in the Synopsis 
 above.
 
+=back
+
 =head2 Miscellaneous Methods
 
 It would not really be appropriate to call C<get_shared> and C<get_nonintersection> 
@@ -1372,7 +1374,7 @@ Set::Scalar - basic set operations
 Set::Bag - bag (multiset) class
 (L<http://search.cpan.org/doc/JHI/Set-Bag-1.007/lib/Set/Bag.pm>)
 
-Both of these modules are by Jarkko Hietaniemi <jhi@iki.fi>.  Set::Scalar
+Both of these modules are by Jarkko Hietaniemi.  Set::Scalar
 has methods to return the intersection, union, difference and symmetric
 difference of two sets, as well as methods to return items unique to a
 first set and complementary to it in a second set.  It has methods for
@@ -1390,7 +1392,7 @@ Set::Array - Arrays as objects with lots of handy methods (including set
 comparisons) and support for method chaining.
 (L<http://search.cpan.org/doc/DJBERG/Set-Array-0.08/Array.pm>)
 
-Set::Array, by Daniel Berger <djberg96@hotmail.com>, "aims to provide
+Set::Array, by Daniel Berger, "aims to provide
 built-in methods for operations that people are always asking how to do,and
 which already exist in languages like Ruby."  Among the many methods in
 this module are some for intersection, union, etc.  To install Set::Array,
@@ -1402,7 +1404,7 @@ you must first install the Want module, also available on CPAN.
 
 James E. Keenan (jkeen@concentric.net).
 
-Creation date:  May 20, 2002.  Last modification date:  August 3, 2002. 
+Creation date:  May 20, 2002.  Last modification date:  August 18, 2002. 
 Copyright (c) 2002 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

@@ -48,3 +48,9 @@ Revision history for Perl extension List::Compare.
 0.13  Sat Aug 03 2002
 	- corrected documentation errors found in v0.12
 	- released to CPAN
+
+0.14  Sun Aug 18 2002
+	- commented out 'use warnings;' to permit module to run on pre-5.6 versions
+	- corrected one error in POD
+	- removed e-mail addresses of authors of other modules from POD
+

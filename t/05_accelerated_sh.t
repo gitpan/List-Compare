@@ -6,9 +6,9 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $last_test_to_print = 321; $| = 1; print "1..$last_test_to_print\n"; } # 05/18/2003 
+BEGIN { $last_test_to_print = 301; $| = 1; print "1..$last_test_to_print\n"; } # 05/18/2003 
 END {print "not ok 1\n" unless $loaded;}
-use List::Compare;
+use List::Compare::SeenHash;
 $loaded = 1;
 my $testnum = 1;
 ok($loaded);                            # 1
@@ -16,23 +16,60 @@ ok($loaded);                            # 1
 ######################### End of black magic.
 
 my %seen = ();
-my (@unique, @complement, @intersection, @union, @symmetric_difference, @bag);
-my ($unique_ref, $complement_ref, $intersection_ref, $union_ref, $symmetric_difference_ref, $bag_ref);
+my (@unique, @complement, @intersection, @union, @symmetric_difference);
+my ($unique_ref, $complement_ref, $intersection_ref, $union_ref, $symmetric_difference_ref);
 my ($LR, $RL, $eqv, $return);
 my (@nonintersection, @shared);
 my ($nonintersection_ref, @shared_ref);
 
-my @a0 = qw(abel abel baker camera delta edward fargo golfer);
-my @a1 = qw(baker camera delta delta edward fargo golfer hilton);
-my @a2 = qw(fargo golfer hilton icon icon jerky);
-my @a3 = qw(fargo golfer hilton icon icon);
-my @a4 = qw(fargo fargo golfer hilton icon);
 
-my $lc    = List::Compare->new(\@a0, \@a1);
+my %h0 = (
+	abel     => 2,
+	baker    => 1,
+	camera   => 1,
+	delta    => 1,
+	edward   => 1,
+	fargo    => 1,
+	golfer   => 1,
+);
 
-ok($lc);                                # 2
+my %h1 = (
+	baker    => 1,
+	camera   => 1,
+	delta    => 2,
+	edward   => 1,
+	fargo    => 1,
+	golfer   => 1,
+	hilton   => 1,
+);
 
-@union = $lc->get_union;
+my %h2 = (
+	fargo    => 1,
+	golfer   => 1,
+	hilton   => 1,
+	icon     => 2,
+	jerky    => 1,	
+);
+
+my %h3 = (
+	fargo    => 1,
+	golfer   => 1,
+	hilton   => 1,
+	icon     => 2,
+);
+
+my %h4 = (
+	fargo    => 2,
+	golfer   => 1,
+	hilton   => 1,
+	icon     => 1,
+);
+
+my $lcsha   = List::Compare::SeenHash->new('-a', \%h0, \%h1);
+
+ok($lcsha);                             # 2
+
+@union = $lcsha->get_union;
 $seen{$_}++ foreach (@union);
 ok(exists $seen{'abel'});               # 3
 ok(exists $seen{'baker'});              # 4
@@ -46,7 +83,7 @@ ok(! exists $seen{'icon'});             # 11
 ok(! exists $seen{'jerky'});            # 12
 %seen = ();
 
-$union_ref = $lc->get_union_ref;
+$union_ref = $lcsha->get_union_ref;
 $seen{$_}++ foreach (@{$union_ref});
 ok(exists $seen{'abel'});               # 13
 ok(exists $seen{'baker'});              # 14
@@ -60,7 +97,7 @@ ok(! exists $seen{'icon'});             # 21
 ok(! exists $seen{'jerky'});            # 22
 %seen = ();
 
-@shared = $lc->get_shared;
+@shared = $lcsha->get_shared;
 $seen{$_}++ foreach (@shared);
 ok(exists $seen{'abel'});               # 23
 ok(exists $seen{'baker'});              # 24
@@ -74,7 +111,7 @@ ok(! exists $seen{'icon'});             # 31
 ok(! exists $seen{'jerky'});            # 32
 %seen = ();
 
-$shared_ref = $lc->get_shared_ref;
+$shared_ref = $lcsha->get_shared_ref;
 $seen{$_}++ foreach (@{$shared_ref});
 ok(exists $seen{'abel'});               # 33
 ok(exists $seen{'baker'});              # 34
@@ -88,7 +125,7 @@ ok(! exists $seen{'icon'});             # 41
 ok(! exists $seen{'jerky'});            # 42
 %seen = ();
 
-@intersection = $lc->get_intersection;
+@intersection = $lcsha->get_intersection;
 $seen{$_}++ foreach (@intersection);
 ok(! exists $seen{'abel'});             # 43
 ok(exists $seen{'baker'});              # 44
@@ -102,7 +139,7 @@ ok(! exists $seen{'icon'});             # 51
 ok(! exists $seen{'jerky'});            # 52
 %seen = ();
 
-$intersection_ref = $lc->get_intersection_ref;
+$intersection_ref = $lcsha->get_intersection_ref;
 $seen{$_}++ foreach (@{$intersection_ref});
 ok(! exists $seen{'abel'});             # 53
 ok(exists $seen{'baker'});              # 54
@@ -116,7 +153,7 @@ ok(! exists $seen{'icon'});             # 61
 ok(! exists $seen{'jerky'});            # 62
 %seen = ();
 
-@unique = $lc->get_unique;
+@unique = $lcsha->get_unique;
 $seen{$_}++ foreach (@unique);
 ok(exists $seen{'abel'});               # 63
 ok(! exists $seen{'baker'});            # 64
@@ -130,7 +167,7 @@ ok(! exists $seen{'icon'});             # 71
 ok(! exists $seen{'jerky'});            # 72
 %seen = ();
 
-$unique_ref = $lc->get_unique_ref;
+$unique_ref = $lcsha->get_unique_ref;
 $seen{$_}++ foreach (@{$unique_ref});
 ok(exists $seen{'abel'});               # 73
 ok(! exists $seen{'baker'});            # 74
@@ -144,7 +181,7 @@ ok(! exists $seen{'icon'});             # 81
 ok(! exists $seen{'jerky'});            # 82
 %seen = ();
 
-@unique = $lc->get_Lonly;
+@unique = $lcsha->get_Lonly;
 $seen{$_}++ foreach (@unique);
 ok(exists $seen{'abel'});               # 83
 ok(! exists $seen{'baker'});            # 84
@@ -158,7 +195,7 @@ ok(! exists $seen{'icon'});             # 91
 ok(! exists $seen{'jerky'});            # 92
 %seen = ();
 
-$unique_ref = $lc->get_Lonly_ref;
+$unique_ref = $lcsha->get_Lonly_ref;
 $seen{$_}++ foreach (@{$unique_ref});
 ok(exists $seen{'abel'});               # 93
 ok(! exists $seen{'baker'});            # 94
@@ -172,7 +209,7 @@ ok(! exists $seen{'icon'});             # 101
 ok(! exists $seen{'jerky'});            # 102
 %seen = ();
 
-@unique = $lc->get_Aonly;
+@unique = $lcsha->get_Aonly;
 $seen{$_}++ foreach (@unique);
 ok(exists $seen{'abel'});               # 103
 ok(! exists $seen{'baker'});            # 104
@@ -186,7 +223,7 @@ ok(! exists $seen{'icon'});             # 111
 ok(! exists $seen{'jerky'});            # 112
 %seen = ();
 
-$unique_ref = $lc->get_Aonly_ref;
+$unique_ref = $lcsha->get_Aonly_ref;
 $seen{$_}++ foreach (@{$unique_ref});
 ok(exists $seen{'abel'});               # 113
 ok(! exists $seen{'baker'});            # 114
@@ -200,7 +237,7 @@ ok(! exists $seen{'icon'});             # 121
 ok(! exists $seen{'jerky'});            # 122
 %seen = ();
 
-@complement = $lc->get_complement;
+@complement = $lcsha->get_complement;
 $seen{$_}++ foreach (@complement);
 ok(! exists $seen{'abel'});             # 123
 ok(! exists $seen{'baker'});            # 124
@@ -214,7 +251,7 @@ ok(! exists $seen{'icon'});             # 131
 ok(! exists $seen{'jerky'});            # 132
 %seen = ();
 
-$complement_ref = $lc->get_complement_ref;
+$complement_ref = $lcsha->get_complement_ref;
 $seen{$_}++ foreach (@{$complement_ref});
 ok(! exists $seen{'abel'});             # 133
 ok(! exists $seen{'baker'});            # 134
@@ -228,7 +265,7 @@ ok(! exists $seen{'icon'});             # 141
 ok(! exists $seen{'jerky'});            # 142
 %seen = ();
 
-@complement = $lc->get_Ronly;
+@complement = $lcsha->get_Ronly;
 $seen{$_}++ foreach (@complement);
 ok(! exists $seen{'abel'});             # 143
 ok(! exists $seen{'baker'});            # 144
@@ -242,7 +279,7 @@ ok(! exists $seen{'icon'});             # 151
 ok(! exists $seen{'jerky'});            # 152
 %seen = ();
 
-$complement_ref = $lc->get_Ronly_ref;
+$complement_ref = $lcsha->get_Ronly_ref;
 $seen{$_}++ foreach (@{$complement_ref});
 ok(! exists $seen{'abel'});             # 153
 ok(! exists $seen{'baker'});            # 154
@@ -256,7 +293,7 @@ ok(! exists $seen{'icon'});             # 161
 ok(! exists $seen{'jerky'});            # 162
 %seen = ();
 
-@complement = $lc->get_Bonly;
+@complement = $lcsha->get_Bonly;
 $seen{$_}++ foreach (@complement);
 ok(! exists $seen{'abel'});             # 163
 ok(! exists $seen{'baker'});            # 164
@@ -270,7 +307,7 @@ ok(! exists $seen{'icon'});             # 171
 ok(! exists $seen{'jerky'});            # 172
 %seen = ();
 
-$complement_ref = $lc->get_Bonly_ref;
+$complement_ref = $lcsha->get_Bonly_ref;
 $seen{$_}++ foreach (@{$complement_ref});
 ok(! exists $seen{'abel'});             # 173
 ok(! exists $seen{'baker'});            # 174
@@ -284,7 +321,7 @@ ok(! exists $seen{'icon'});             # 181
 ok(! exists $seen{'jerky'});            # 182
 %seen = ();
 
-@symmetric_difference = $lc->get_symmetric_difference;
+@symmetric_difference = $lcsha->get_symmetric_difference;
 $seen{$_}++ foreach (@symmetric_difference);
 ok(exists $seen{'abel'});               # 183
 ok(! exists $seen{'baker'});            # 184
@@ -298,7 +335,7 @@ ok(! exists $seen{'icon'});             # 191
 ok(! exists $seen{'jerky'});            # 192
 %seen = ();
 
-$symmetric_difference_ref = $lc->get_symmetric_difference_ref;
+$symmetric_difference_ref = $lcsha->get_symmetric_difference_ref;
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
 ok(exists $seen{'abel'});               # 193
 ok(! exists $seen{'baker'});            # 194
@@ -312,7 +349,7 @@ ok(! exists $seen{'icon'});             # 201
 ok(! exists $seen{'jerky'});            # 202
 %seen = ();
 
-@symmetric_difference = $lc->get_symdiff;
+@symmetric_difference = $lcsha->get_symdiff;
 $seen{$_}++ foreach (@symmetric_difference);
 ok(exists $seen{'abel'});               # 203
 ok(! exists $seen{'baker'});            # 204
@@ -326,7 +363,7 @@ ok(! exists $seen{'icon'});             # 211
 ok(! exists $seen{'jerky'});            # 212
 %seen = ();
 
-$symmetric_difference_ref = $lc->get_symdiff_ref;
+$symmetric_difference_ref = $lcsha->get_symdiff_ref;
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
 ok(exists $seen{'abel'});               # 213
 ok(! exists $seen{'baker'});            # 214
@@ -340,7 +377,7 @@ ok(! exists $seen{'icon'});             # 221
 ok(! exists $seen{'jerky'});            # 222
 %seen = ();
 
-@symmetric_difference = $lc->get_LorRonly;
+@symmetric_difference = $lcsha->get_LorRonly;
 $seen{$_}++ foreach (@symmetric_difference);
 ok(exists $seen{'abel'});               # 223
 ok(! exists $seen{'baker'});            # 224
@@ -354,7 +391,7 @@ ok(! exists $seen{'icon'});             # 231
 ok(! exists $seen{'jerky'});            # 232
 %seen = ();
 
-$symmetric_difference_ref = $lc->get_LorRonly_ref;
+$symmetric_difference_ref = $lcsha->get_LorRonly_ref;
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
 ok(exists $seen{'abel'});               # 233
 ok(! exists $seen{'baker'});            # 234
@@ -368,7 +405,7 @@ ok(! exists $seen{'icon'});             # 241
 ok(! exists $seen{'jerky'});            # 242
 %seen = ();
 
-@symmetric_difference = $lc->get_AorBonly;
+@symmetric_difference = $lcsha->get_AorBonly;
 $seen{$_}++ foreach (@symmetric_difference);
 ok(exists $seen{'abel'});               # 243
 ok(! exists $seen{'baker'});            # 244
@@ -382,7 +419,7 @@ ok(! exists $seen{'icon'});             # 251
 ok(! exists $seen{'jerky'});            # 252
 %seen = ();
 
-$symmetric_difference_ref = $lc->get_AorBonly_ref;
+$symmetric_difference_ref = $lcsha->get_AorBonly_ref;
 $seen{$_}++ foreach (@{$symmetric_difference_ref});
 ok(exists $seen{'abel'});               # 253
 ok(! exists $seen{'baker'});            # 254
@@ -396,7 +433,7 @@ ok(! exists $seen{'icon'});             # 261
 ok(! exists $seen{'jerky'});            # 262
 %seen = ();
 
-@nonintersection = $lc->get_nonintersection;
+@nonintersection = $lcsha->get_nonintersection;
 $seen{$_}++ foreach (@nonintersection);
 ok(exists $seen{'abel'});               # 263
 ok(! exists $seen{'baker'});            # 264
@@ -410,7 +447,7 @@ ok(! exists $seen{'icon'});             # 271
 ok(! exists $seen{'jerky'});            # 272
 %seen = ();
 
-$nonintersection_ref = $lc->get_nonintersection_ref;
+$nonintersection_ref = $lcsha->get_nonintersection_ref;
 $seen{$_}++ foreach (@{$nonintersection_ref});
 ok(exists $seen{'abel'});               # 273
 ok(! exists $seen{'baker'});            # 274
@@ -424,95 +461,69 @@ ok(! exists $seen{'icon'});             # 281
 ok(! exists $seen{'jerky'});            # 282
 %seen = ();
 
-@bag = $lc->get_bag;
-$seen{$_}++ foreach (@bag);
-ok($seen{'abel'} == 2);                 # 283
-ok($seen{'baker'} == 2);                # 284
-ok($seen{'camera'} == 2);               # 285
-ok($seen{'delta'} == 3);                # 286
-ok($seen{'edward'} == 2);               # 287
-ok($seen{'fargo'} == 2);                # 288
-ok($seen{'golfer'} == 2);               # 289
-ok($seen{'hilton'} == 1);               # 290
-ok(! exists $seen{'icon'});             # 291
-ok(! exists $seen{'jerky'});            # 292
-%seen = ();
+$LR = $lcsha->is_LsubsetR;
+ok(! $LR);                              # 283
 
-$bag_ref = $lc->get_bag_ref;
-$seen{$_}++ foreach (@{$bag_ref});
-ok($seen{'abel'} == 2);                 # 293
-ok($seen{'baker'} == 2);                # 294
-ok($seen{'camera'} == 2);               # 295
-ok($seen{'delta'} == 3);                # 296
-ok($seen{'edward'} == 2);               # 297
-ok($seen{'fargo'} == 2);                # 298
-ok($seen{'golfer'} == 2);               # 299
-ok($seen{'hilton'} == 1);               # 300
-ok(! exists $seen{'icon'});             # 301
-ok(! exists $seen{'jerky'});            # 302
-%seen = ();
+$LR = $lcsha->is_AsubsetB;
+ok(! $LR);                              # 284
 
-$LR = $lc->is_LsubsetR;
-ok(! $LR);                              # 303
+$RL = $lcsha->is_RsubsetL;
+ok(! $RL);                              # 285
 
-$LR = $lc->is_AsubsetB;
-ok(! $LR);                              # 304
+$RL = $lcsha->is_BsubsetA;
+ok(! $RL);                              # 286
 
-$RL = $lc->is_RsubsetL;
-ok(! $RL);                              # 305
+$eqv = $lcsha->is_LequivalentR;
+ok(! $eqv);                             # 287
 
-$RL = $lc->is_BsubsetA;
-ok(! $RL);                              # 306
+$eqv = $lcsha->is_LeqvlntR;
+ok(! $eqv);                             # 288
 
-$eqv = $lc->is_LequivalentR;
-ok(! $eqv);                             # 307
+$return = $lcsha->print_subset_chart;
+ok($return);                            # 289
 
-$eqv = $lc->is_LeqvlntR;
-ok(! $eqv);                             # 308
+$return = $lcsha->print_equivalence_chart;
+ok($return);                            # 290
 
-$return = $lc->print_subset_chart;
-ok($return);                            # 309
+$vers = $lcsha->get_version;
+ok($vers);                              # 291
 
-$return = $lc->print_equivalence_chart;
-ok($return);                            # 310
+my $lcsha_s  = List::Compare::SeenHash->new(\%h2, \%h3);
 
-$vers = $lc->get_version;
-ok($vers);                              # 311
+ok($lcsha_s);                           # 292
 
-my $lc_s  = List::Compare->new(\@a2, \@a3);
+$LR = $lcsha_s->is_LsubsetR;
+ok(! $LR);                              # 293
 
-ok($lc_s);                              # 312
+$LR = $lcsha_s->is_AsubsetB;
+ok(! $LR);                              # 294
 
-$LR = $lc_s->is_LsubsetR;
-ok(! $LR);                              # 313
+$RL = $lcsha_s->is_RsubsetL;
+ok($RL);                                # 295
 
-$LR = $lc_s->is_AsubsetB;
-ok(! $LR);                              # 314
+$RL = $lcsha_s->is_BsubsetA;
+ok($RL);                                # 296
 
-$RL = $lc_s->is_RsubsetL;
-ok($RL);                                # 315
+$eqv = $lcsha_s->is_LequivalentR;
+ok(! $eqv);                             # 297
 
-$RL = $lc_s->is_BsubsetA;
-ok($RL);                                # 316
+$eqv = $lcsha_s->is_LeqvlntR;
+ok(! $eqv);                             # 298
 
-$eqv = $lc_s->is_LequivalentR;
-ok(! $eqv);                             # 317
+my $lcsha_e  = List::Compare::SeenHash->new(\%h3, \%h4);
 
-$eqv = $lc_s->is_LeqvlntR;
-ok(! $eqv);                             # 318
+ok($lcsha_e);                           # 299
 
-my $lc_e  = List::Compare->new(\@a3, \@a4);
+$eqv = $lcsha_e->is_LequivalentR;
+ok($eqv);                               # 300
 
-ok($lc_e);                              # 319
+$eqv = $lcsha_e->is_LeqvlntR;
+ok($eqv);                               # 301
 
-$eqv = $lc_e->is_LequivalentR;
-ok($eqv);                               # 320
-
-$eqv = $lc_e->is_LeqvlntR;
-ok($eqv);                               # 321
 
 sub ok {
 	my $condition = shift;
 	print $condition ? "ok $testnum\n" : "not ok $testnum\n";
 	$testnum++;
 }
+

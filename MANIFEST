@@ -1,8 +1,16 @@
 Changes
 Compare.pm
+Compare/Base/Accelerated.pm
+Compare/Base/Multiple.pm
+Compare/Base/Regular.pm
+Compare/SeenHash.pm
 MANIFEST
 Makefile.PL
 README
 t/01_simple.t
 t/02_accelerated.t
 t/03_multiple.t
+t/04_simple_sh.t
+t/05_accelerated_sh.t
+t/06_multiple_sh.t
+

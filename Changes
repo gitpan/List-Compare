@@ -57,7 +57,12 @@ Revision history for Perl extension List::Compare.
 0.15  Sat Sep 07 2002
 	- conformed CPAN addresses of other modules to new structure of search.cpan.org
 
-0.16 Sat Mar 08 2003
+0.16  Sat Mar 08 2003
 	- for each method which returned an array, added an analogous method which
 	  returns a reference to that array
+
+0.17  Thu May 22 2003
+	- eliminated certain synthetic variables
+	- created List::Compare::SeenHash
+
  

@@ -190,7 +190,27 @@ sub is_RsubsetL {
 
 *is_BsubsetA  = \&is_RsubsetL;
 
-sub member_which {
+sub is_member_which {
+    return @{ is_member_which_ref(@_) };
+}    
+
+sub is_member_which_ref {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument (no references):  $!"
+        unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
+    my %data = %$class;
+    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
+    my ($arg, @found);
+    $arg = shift;
+    if (exists ${$hrefL}{$arg}) { push @found, 0; }
+    if (exists ${$hrefR}{$arg}) { push @found, 1; }
+    if ( (! exists ${$hrefL}{$arg}) &&
+         (! exists ${$hrefR}{$arg}) )
+       { @found = (); }
+    return \@found;
+}    
+
+sub are_members_which {
     my $class = shift;
     croak "Method call needs at least one argument:  $!" unless (@_);
     my %data = %$class;
@@ -209,20 +229,31 @@ sub member_which {
     return \%found;
 }
 
-sub single_member_which {
+sub is_member_any {
     my $class = shift;
     croak "Method call requires exactly 1 argument (no references):  $!"
         unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
     my %data = %$class;
+    my $arg = shift;
     my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my ($arg, @found);
-    $arg = shift;
-    if (exists ${$hrefL}{$arg}) { push @found, 0; }
-    if (exists ${$hrefR}{$arg}) { push @found, 1; }
-    if ( (! exists ${$hrefL}{$arg}) &&
-         (! exists ${$hrefR}{$arg}) )
-       { @found = (); }
-    return wantarray ? @found : \@found;
+    ( defined ${$hrefL}{$arg} ) ||
+    ( defined ${$hrefR}{$arg} ) ? return 1 : return 0;
+}    
+
+sub are_members_any {
+    my $class = shift;
+    croak "Method call needs at least one argument:  $!" unless (@_);
+    my %data = %$class;
+    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
+    my (@args, %present);
+    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
+        ?  @{$_[0]}
+        :  @_;
+    for (my $i=0; $i<=$#args; $i++) {
+        $present{$args[$i]} = ( defined ${$hrefL}{$args[$i]} ) ||
+                              ( defined ${$hrefR}{$args[$i]} ) ? 1 : 0;
+    }
+    return \%present;
 }    
 
 sub print_subset_chart {

@@ -67,4 +67,15 @@ Revision history for Perl extension List::Compare.
 
 0.18  Sun Jun 1 2003
 	- added methods member_which(), single_member_which()
+
+0.19  Sun Jun 1 2003
+	- added methods member_any(), single_member_any()
+	- fixed annoying carping messages when running 'make test'
+
+0.20 Fri Jun 6 2003
+	- updated documentation discussing changes since v0.17
+	- changed names of recently added methods to is_member_which(), is_member_which_ref(),
+	  are_members(), is_member_any(), are_members_any()
+
+
  

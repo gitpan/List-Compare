@@ -4,6 +4,7 @@ package List::Compare::Base::Multiple;
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
+use Data::Dumper;
 
 sub get_intersection {
     return @{ get_intersection_ref(shift) };
@@ -183,7 +184,25 @@ sub is_LequivalentR {
 
 *is_LeqvlntR = \&is_LequivalentR;
 
-sub member_which {
+sub is_member_which {
+    return @{ is_member_which_ref(@_) };
+}    
+
+sub is_member_which_ref {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument (no references):  $!"
+        unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
+    my %data = %$class;
+    my %seen = %{$data{'seen'}};
+    my ($arg, @found);
+    $arg = shift;
+    foreach (sort keys %seen) {
+        push @found, $_ if (exists $seen{$_}{$arg});
+    }
+    return \@found;
+}    
+
+sub are_members_which {
     my $class = shift;
     croak "Method call needs at least one argument:  $!" unless (@_);
     my %data = %$class;
@@ -193,29 +212,49 @@ sub member_which {
         ?  @{$_[0]}
         :  @_;
     for (my $i=0; $i<=$#args; $i++) {
-    	my (@not_found);
-    	foreach (sort keys %seen) {
-    		exists ${$seen{$_}}{$args[$i]}
-    			? push @{$found{$args[$i]}}, $_
-    			: push @not_found, $_;
-    	}
-		$found{$args[$i]} = [] if (@not_found == keys %seen);
+        my (@not_found);
+        foreach (sort keys %seen) {
+            exists ${$seen{$_}}{$args[$i]}
+                ? push @{$found{$args[$i]}}, $_
+                : push @not_found, $_;
+        }
+        $found{$args[$i]} = [] if (@not_found == keys %seen);
     }
     return \%found;
 }    
 
-sub single_member_which {
+sub is_member_any {
     my $class = shift;
     croak "Method call requires exactly 1 argument (no references):  $!"
         unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
     my %data = %$class;
     my %seen = %{$data{'seen'}};
-    my ($arg, @found);
+    my ($arg, $k);
     $arg = shift;
-	foreach (sort keys %seen) {
-		push @found, $_ if (exists $seen{$_}{$arg});
-	}
-    return wantarray ? @found : \@found;
+    while ( $k = each %seen ) {
+        return 1 if (defined $seen{$k}{$arg});
+    }
+    return 0;
+}    
+
+sub are_members_any {
+    my $class = shift;
+    croak "Method call needs at least one argument:  $!" unless (@_);
+    my %data = %$class;
+    my %seen = %{$data{'seen'}};
+    my (@args, %present);
+    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
+        ?  @{$_[0]}
+        :  @_;
+    for (my $i=0; $i<=$#args; $i++) {
+        foreach (keys %seen) {
+            unless (defined $present{$args[$i]}) {
+                $present{$args[$i]} = 1 if $seen{$_}{$args[$i]};
+            }
+        }
+        $present{$args[$i]} = 0 if (! defined $present{$args[$i]});
+    }
+    return \%present;
 }    
 
 sub print_subset_chart {

@@ -1,5 +1,5 @@
 package List::Compare::SeenHash;
-$VERSION = 0.18;   # June 1, 2003 
+$VERSION = 0.20;   # June 6, 2003 
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
@@ -374,8 +374,8 @@ List::Compare::SeenHash - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.18 of List::Compare::SeenHash.  This version 
-was released June 1, 2003.
+This document refers to version 0.20 of List::Compare::SeenHash.  This version 
+was released June 6, 2003.
 
 =head1 SYNOPSIS
 
@@ -387,6 +387,10 @@ List::Compare::SeenHash, what is crucial is whether an item is observed in a
 list or not; less crucial is how many times the item occurs in a list.
 
 =head2 Regular Case:  Compare Two Lists
+
+=over 4
+
+=item *
 
 Create a List::Compare::SeenHash object.  Build seen-hashes corresponding to 
 two lists, then pass references to the seen-hashes to the constructor.
@@ -413,23 +417,33 @@ two lists, then pass references to the seen-hashes to the constructor.
 
     $lcsh = List::Compare::SeenHash->new(\%Llist, \%Rlist);
 
+=item *
+
 Get those items which appear at least once in both lists (their intersection).
 
     @intersection = $lcsh->get_intersection;
 
+=item *
+
 Get those items which appear at least once in either list (their union).
 
     @union = $lcsh->get_union;
+
+=item *
 
 Get those items which appear (at least once) only in the first list.
 
     @Lonly = $lcsh->get_unique;
     @Lonly = $lcsh->get_Lonly;    # alias
 
+=item *
+
 Get those items which appear (at least once) only in the second list.
 
     @Ronly = $lcsh->get_complement;
     @Ronly = $lcsh->get_Ronly;            # alias
+
+=item *
 
 Get those items which appear at least once in either the first or the second 
 list, but not both.
@@ -437,6 +451,8 @@ list, but not both.
     @LorRonly = $lcsh->get_symmetric_difference;
     @LorRonly = $lcsh->get_symdiff;       # alias
     @LorRonly = $lcsh->get_LorRonly;      # alias
+
+=item *
 
 An alternative approach to the above methods:  If you do not immediately 
 require an array as the return value of the method call, but simply need 
@@ -452,6 +468,8 @@ a I<reference> to an array, use one of the following parallel methods:
     $LorRonly_ref     = $lcsh->get_symdiff_ref;               # alias
     $LorRonly_ref     = $lcsh->get_LorRonly_ref;              # alias
 
+=item *
+
 Return a true value if L is a subset of R.
 
     $LR = $lcsh->is_LsubsetR;
@@ -460,35 +478,80 @@ Return a true value if R is a subset of L.
 
     $RL = $lcsh->is_RsubsetL;
 
+=item *
+
 Return a true value if L and R are equivalent, I<i.e.> if every element 
 in L appears at least once in R and I<vice versa>.
 
     $eqv = $lcsh->is_LequivalentR;
     $eqv = $lcsh->is_LeqvlntR;            # alias
 
+=item *
+
 Pretty-print a chart showing whether one list is a subset of the other.
 
     $lcsh->print_subset_chart;
+
+=item *
 
 Pretty-print a chart showing whether the two lists are equivalent (same 
 elements found at least once in both).
 
     $lcsh->print_equivalence_chart;
 
-Determine in which (if any) of the lists passed to the constructor a given 
-string or strings can be found.  Get a reference to a hash of arrays where 
-an element's key is the string being tested and the element's value is a 
-reference to an anonymous array holding a list of the indices in the list of 
-arguments passed to the constructor corresponding to lists holding that key.
+=item *
 
-    $memb_hash_ref = $lcsh->member_which(qw| abel baker fargo hilton zebra |);
+Determine in I<which> (if any) of the lists passed to the constructor a given 
+string can be found.  In list context, return a list of those indices in the 
+constructor's argument list corresponding to lists holding the string being 
+tested.
 
-Instead of passing a list to C<member_which()>, you may also pass a reference 
-to an array.
+    @memb_arr = $lcsh->is_member_which('abel');
 
-    $memb_hash_ref = $lcsh->member_which([ qw| abel baker fargo hilton zebra | ]);
+In the example above, C<@memb_arr> will be:
 
-In the two examples above, the result will be:
+    ( 0 )
+
+because C<'abel'> is found only in C<@Al> which holds position C<0> in the 
+list of arguments passed to C<new()>.
+
+=item *
+
+As with other List::Compare methods which return a list, you may wish the 
+above method returned a (scalar) reference to an array holding the list:
+
+    $memb_arr_ref = $lcsh->is_member_which_ref('baker');
+
+In the example above, C<$memb_arr_ref> will be:
+
+    [ 0, 1 ]
+
+because C<'baker'> is found in C<@Llist> and C<@Rlist>, which hold positions 
+C<0> and C<1>, respectively, in the list of arguments passed to C<new()>.
+
+B<Note:>  methods C<is_member_which()> and C<is_member_which_ref> test
+only one string at a time and hence take only one argument.  To test more 
+than one string at a time see the next method, C<are_members_which()>.
+
+=item *
+
+Determine in I<which> (if any) of the lists passed to the constructor one or 
+more given strings can be found.  Get a reference to a hash of arrays.  The 
+key for each element in this hash is the string being tested.  Each element's 
+value is a reference to an anonymous array whose elements are those indices in 
+the constructor's argument list corresponding to lists holding the strings 
+being tested.
+
+    $memb_hash_ref = 
+        $lcsh->are_members_which(qw| abel baker fargo hilton zebra |);
+
+Instead of passing a list to C<are_members_which()>, you may also pass a 
+reference to an array.
+
+    $memb_hash_ref = 
+        $lcsh->are_members_which([ qw| abel baker fargo hilton zebra | ]);
+
+In the two examples above, C<$memb_hash_ref> will be:
 
     {
          abel     => [ 0    ],
@@ -498,31 +561,57 @@ In the two examples above, the result will be:
          zebra    => [      ],
     };
 
-Similar to the above, but testing only one string at a time.  Determine in 
-which (if any) of the lists passed to the constructor a single given 
-string can be found.  In list context, get an array holding a list of the 
-indices in the list of arguments passed to the constructor corresponding 
-to lists holding that key.
+B<Note:>  C<are_members_which()> can take more than one argument; 
+C<is_member_which()> and C<is_member_which_ref()> each take only one argument.  
+C<are_members_which()> returns a hash reference; the other methods return 
+either a list or a reference to an array holding that list, depending on 
+context.
 
-    @memb_arr = $lcsh->single_member_which('abel');
+=item *
 
-In the example above, C<@memb_arr> will be:
+Determine whether a given string can be found in I<any> of the lists passed as 
+arguments to the constructor.  Return 1 if a specified string can be found in 
+I<any> of the lists and 0 if not.
 
-    ( 0 )
+    $found = $lcsh->is_member_any('abel');
 
-In scalar context, get a reference to an anonymous array holding a list of 
-the indices in the list of arguments passed to the constructor corresponding 
-to lists holding that key.
+In the example above, C<$found> will be C<1> because C<'abel'> is found in one 
+or more of the lists passed as arguments to C<new()>.
 
-    $memb_arr_ref = $lcsh->single_member_which('baker');
+=item *
 
-In the example above, C<$memb_arr_ref> will be:
+Determine whether a specified string or strings can be found in I<any> of the 
+lists passed as arguments to the constructor.  Get a reference to a hash where 
+an element's key is the string being tested and the element's value is 1 if 
+the string can be found in C<any> of the lists and 0 if not.
 
-    [ 0, 1 ]
+    $memb_hash_ref = $lcsh->are_members_any(qw| abel baker fargo hilton zebra |);
+
+Instead of passing a list to C<are_members_any()>, you may also pass a reference 
+to an array.
+
+    $memb_hash_ref = $lcsh->are_members_any([ qw| abel baker fargo hilton zebra | ]);
+
+In the two examples above, C<$memb_hash_ref> will be:
+
+    {
+         abel     => 1,
+         baker    => 1,
+         fargo    => 1,
+         hilton   => 1,
+         zebra    => 0,
+    };
+
+because, I<e.g.,> C<'zebra'> is not found in either of the lists passed as 
+arguments to C<new()>.
+
+=item *
 
 Return current List::Compare::SeenHash version number.
 
     $vers = $lcsh->get_version;
+
+=back
 
 =head2 Accelerated Case:  When User Only Wants a Single Comparison
 
@@ -570,12 +659,17 @@ the user in the Accelerated case as well.
     $eqv              = $lcsha->is_LequivalentR;
                         $lcsha->print_subset_chart;
                         $lcsha->print_equivalence_chart;
-    $memb_hash_ref    = $lcsha->member_which(
-                                  qw| abel baker fargo hilton zebra |);
-    $memb_hash_ref    = $lcsha->member_which(
-                                  [ qw| abel baker fargo hilton zebra | ]);
-    @memb_arr         = $lcsha->single_member_which('abel');
-    $memb_arr_ref     = $lcsha->single_member_which('baker');
+    @memb_arr         = $lcsha->is_member_which('abel');
+    $memb_arr_ref     = $lcsha->is_member_which_ref('baker');
+    $memb_hash_ref    = $lcsha->are_members_which(
+                            qw| abel baker fargo hilton zebra |);
+    $memb_hash_ref    = $lcsha->are_members_which(
+                            [ qw| abel baker fargo hilton zebra | ]);
+    $found            = $lcsha->is_member_any('abel');
+    $memb_hash_ref    = $lcsha->are_members_any(
+                            qw| abel baker fargo hilton zebra |);
+    $memb_hash_ref    = $lcsha->are_members_any(
+                            [ qw| abel baker fargo hilton zebra | ]);
     $vers             = $lcsha->get_version;
 
 All the aliases for methods available in the Regular case are available to 
@@ -629,25 +723,29 @@ references to the arrays to the constructor.
 
     $lcshm = List::Compare::SeenHash->new(\%Al, \%Bob, \%Carmen, \%Don, \%Ed);
 
-=over 4
-
-=item *
-
-Multiple Mode Methods Analogous to Regular and Accelerated Mode Methods
+B<Multiple Mode Methods Analogous to Regular and Accelerated Mode Methods>
 
 Each List::Compare::SeenHash method available in the Regular and Accelerated 
 cases has an analogue in the Multiple case.  However, the results produced 
 usually require more careful specification.
+
+=over 4
+
+=item *
 
 Get those items found in each of the lists passed to the constructor 
 (their intersection):
 
     @intersection = $lcshm->get_intersection;
 
+=item *
+
 Get those items found in any of the lists passed to the constructor 
 (their union):
 
     @union = $lcshm->get_union;
+
+=item *
 
 To get those items which appear only in one particular list, pass to 
 C<get_unique()> that list's index position in the list of arguments passed 
@@ -658,6 +756,8 @@ constructor's C<@_>.  To get elements unique to C<@Carmen>:
 
 If no index position is passed to C<get_unique()> it will default to 0 
 and report items unique to the first list passed to the constructor.
+
+=item *
 
 To get those items which appear in any list other than one particular 
 list, pass to C<get_complement()> that list's index position in the list 
@@ -671,10 +771,14 @@ If no index position is passed to C<get_complement()> it will default to
 0 and report items found in any list other than the first list passed 
 to the constructor.
 
+=item *
+
 Get those items which do not appear in more than one of the lists 
 passed to the constructor (their symmetric_difference);
 
     @LorRonly = $lcshm->get_symmetric_difference;
+
+=item *
 
 An alternative approach to the above methods:  If you do not immediately 
 require an array as the return value of the method call, but simply need 
@@ -685,6 +789,8 @@ a I<reference> to an array, use one of the following parallel methods:
     $Lonly_ref        = $lcshm->get_unique_ref(2);
     $Ronly_ref        = $lcshm->get_complement_ref(3);
     $LorRonly_ref     = $lcshm->get_symmetric_difference_ref;
+
+=item *
 
 To determine whether one particular list is a subset of another list 
 passed to the constructor, pass to C<is_LsubsetR()> the index position of 
@@ -698,6 +804,8 @@ Example:  To determine whether C<@Ed> is a subset of C<@Carmen>, call:
 If no arguments are passed, C<is_LsubsetR()> defaults to C<(0,1)> and 
 compares the first two lists passed to the constructor.
 
+=item *
+
 To determine whether any two particular lists are equivalent to each 
 other, pass their index positions in the list of arguments passed to 
 the constructor to C<is_LequivalentR>. A true value (1) is returned if 
@@ -709,68 +817,139 @@ determine whether C<@Don> and C<@Ed> are equivalent, call:
 If no arguments are passed, C<is_LequivalentR> defaults to C<(0,1)> and 
 compares the first two lists passed to the constructor.
 
+=item *
+
 Pretty-print a chart showing the subset relationships among the various 
 source lists:
 
     $lcshm->print_subset_chart;
+
+=item *
 
 Pretty-print a chart showing the equivalence relationships among the 
 various source lists:
 
     $lcshm->print_equivalence_chart;
 
-Determine in which (if any) of the lists passed to the constructor a given 
-string or strings can be found.  Get a reference to a hash of arrays where 
-an element's key is the string being tested and the element's value is a 
-reference to an anonymous array holding a list of the indices in the list of 
-arguments passed to the constructor corresponding to lists holding that key.
+=item *
 
-    $memb_hash_ref = $lcshm->member_which(qw| abel baker fargo hilton zebra |);
+Determine in C<which> (if any) of the lists passed to the constructor a given 
+string can be found.  In list context, return a list of those indices in the 
+constructor's argument list corresponding to lists holding the string being 
+tested.
 
-Instead of passing a list to C<member_which()>, you may also pass a reference 
-to an array.
-
-    $memb_hash_ref = $lcshm->member_which([ qw| abel baker fargo hilton zebra | ]);
-
-In the two examples above, the result will be:
-
-    {
-         abel     => [ 0    ],
-         baker    => [ 0, 1 ],
-         fargo    => [ 0, 1 ],
-         hilton   => [    1 ],
-         zebra    => [      ],
-    };
-
-Similar to the above, but testing only one string at a time.  Determine in 
-which (if any) of the lists passed to the constructor a single given 
-string can be found.  In list context, get an array holding a list of the 
-indices in the list of arguments passed to the constructor corresponding 
-to lists holding that key.
-
-    @memb_arr = $lcshm->single_member_which('abel');
+    @memb_arr = $lcshm->is_member_which('abel');
 
 In the example above, C<@memb_arr> will be:
 
     ( 0 )
 
-In scalar context, get a reference to an anonymous array holding a list of 
-the indices in the list of arguments passed to the constructor corresponding 
-to lists holding that key.
+because C<'abel'> is found only in C<@Al> which holds position C<0> in the 
+list of arguments passed to C<new()>.
 
-    $memb_arr_ref = $lcshm->single_member_which('baker');
+=item *
+
+As with other List::Compare methods which return a list, you may wish the 
+above method returned a (scalar) reference to an array holding the list:
+
+    $memb_arr_ref = $lcshm->is_member_which_ref('jerky');
 
 In the example above, C<$memb_arr_ref> will be:
 
-    [ 0, 1 ]
+    [ 3, 4 ]
+
+because I<'jerky'> is found in C<@Don> and C<@Ed>, which hold positions 
+C<3> and C<4>, respectively, in the list of arguments passed to C<new()>.
+
+B<Note:>  methods C<is_member_which()> and C<is_member_which_ref> test
+only one string at a time and hence take only one argument.  To test more 
+than one string at a time see the next method, C<are_members_which()>.
+
+=item *
+
+Determine in C<which> (if any) of the lists passed to the constructor one or 
+more given strings can be found.  Get a reference to a hash of arrays.  The 
+key for each element in this hash is the string being tested.  Each element's 
+value is a reference to an anonymous array whose elements are those indices in 
+the constructor's argument list corresponding to lists holding the strings 
+being tested.
+
+    $memb_hash_ref = 
+        $lcshm->are_members_which(qw| abel baker fargo hilton zebra |);
+
+Instead of passing a list to C<are_members_which()>, you may also pass a 
+reference to an array.
+
+    $memb_hash_ref = 
+        $lcshm->are_members_which([ qw| abel baker fargo hilton zebra | ]);
+
+In the two examples above, C<$memb_hash_ref> will be:
+
+    {
+         abel     => [ 0             ],
+         baker    => [ 0, 1          ],
+         fargo    => [ 0, 1, 2, 3, 4 ],
+         hilton   => [    1, 2       ],
+         zebra    => [               ],
+    };
+
+B<Note:>  C<are_members_which()> can take more than one argument; 
+C<is_member_which()> and C<is_member_which_ref()> each take only one argument.  
+C<are_members_which()> returns a hash reference; the other methods return 
+either a list or a reference to an array holding that list, depending on 
+context.
+
+=item *
+
+Determine whether a given string can be found in I<any> of the lists passed as 
+arguments to the constructor.  Return 1 if a specified string can be found in 
+I<any> of the lists and 0 if not.
+
+    $found = $lcshm->is_member_any('abel');
+
+In the example above, C<$found> will be C<1> because C<'abel'> is found in one 
+or more of the lists passed as arguments to C<new()>.
+
+=item *
+
+Determine whether a specified string or strings can be found in I<any> of the 
+lists passed as arguments to the constructor.  Get a reference to a hash where 
+an element's key is the string being tested and the element's value is 1 if 
+the string can be found in C<any> of the lists and 0 if not.
+
+    $memb_hash_ref = $lcshm->are_members_any(qw| abel baker fargo hilton zebra |);
+
+Instead of passing a list to C<are_members_any()>, you may also pass a reference 
+to an array.
+
+    $memb_hash_ref = $lcshm->are_members_any([ qw| abel baker fargo hilton zebra | ]);
+
+In the two examples above, C<$memb_hash_ref> will be:
+
+    {
+         abel     => 1,
+         baker    => 1,
+         fargo    => 1,
+         hilton   => 1,
+         zebra    => 0,
+    };
+
+because, I<e.g.,> C<'zebra'> is not found in any of the lists passed as 
+arguments to C<new()>.
+
+=item *
 
 Return current List::Compare::SeenHash version number:
 
     $vers = $lcshm->get_version;
 
-=item *
+=back
 
-Multiple Mode Methods Not Analogous to Regular and Accelerated Mode Methods
+B<Multiple Mode Methods Not Analogous to Regular and Accelerated Mode Methods>
+
+=over 4
+
+=item *
 
 Get those items found in any of the lists passed to the constructor which 
 do not appear in all of the lists (I<i.e.,> all items except those found 
@@ -778,11 +957,15 @@ in the intersection of the lists):
 
     @nonintersection = $lcshm->get_nonintersection;
 
+=item *
+
 Get those items which appear in more than one of the lists passed to the 
 constructor (I<i.e.,> all items except those found in their symmetric 
 difference);
 
     @shared = $lcshm->get_shared;
+
+=item *
 
 If you only need a reference to an array as a return value rather than a 
 full array, use the following alternative methods:
@@ -983,13 +1166,15 @@ as I was preparing to attend the first Yet Another Perl Conference::Canada
 conference, held in Ottawa, Ontario, May 15-16, 2003.  (See L<http://yapc.ca>.) 
 The placement in the installation tree of Test::ListCompareSpecial came as a 
 result of a question answered by Michael Graham in his talk "Test::More to 
-Test::Extreme" given at that conference.
+Test::Extreme" given at that conference.  In May-June 2003, Glenn Maciag made 
+valuable suggestions which led to changes in method names and in 
+documentation in v0.20.
 
 =head1 AUTHOR
 
 James E. Keenan (jkeenan@cpan.org).
 
-Creation date:  May 20, 2002.  Last modification date:  June 1, 2003. 
+Creation date:  May 20, 2002.  Last modification date:  June 6, 2003. 
 Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

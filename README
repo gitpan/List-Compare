@@ -1,14 +1,14 @@
 List::Compare - Compare elements of two or more lists
 
-This document refers to version 0.18 of List::Compare.  This version was
-released June 1, 2003.
+This document refers to version 0.20 of List::Compare.  This version was
+released June 5, 2003.
 
 To install this module on your system, place the tarball archive file in a 
 temporary directory and call the following:
 
-% gunzip List-Compare-0.18.tar.gz
-% tar xf List-Compare-0.18.tar
-% cd List-Compare-0.18
+% gunzip List-Compare-0.20.tar.gz
+% tar xf List-Compare-0.20.tar
+% cd List-Compare-0.20
 % perl Makefile.PL
 % make
 % make test
@@ -35,14 +35,18 @@ this version of List::Compare.
 
 Certain methods in this version of List::Compare are included solely 
 for backwards compatibility with earlier versions and are deprecated.  
-When called, they print warning messages via Carp.  These warning 
-messages appear when you call 'make test' as part of the installation 
-process, but may be safely ignored.
+When called, they print warning messages via Carp.  In earlier versions 
+of List::Compare these warning messages would appear when you called 
+'make test' as part of the installation process.  This was harmless 
+but annoying and has been fixed.
 
 From time to time the author writes articles discussing List::Compare 
 and benchmarking it against different versions of itself and against 
 other CPAN modules.  These articles List::Compare will be available at 
 http://www.concentric.net/~Jkeen/list.
+
+In sending e-mail to the author, please put "List::Compare" or 
+"List-Compare" in the subject line.
 
 Author:  James E. Keenan (jkeenan@cpan.org).
 Originally created May 20, 2002.

@@ -124,7 +124,26 @@ sub is_LequivalentR {
 
 *is_LeqvlntR = \&is_LequivalentR;
 
-sub member_which {
+sub is_member_which {
+    return @{ is_member_which_ref(@_) };
+}    
+
+sub is_member_which_ref {
+    my $class = shift;
+    croak "Method call requires exactly 1 argument (no references):  $!"
+        unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
+    my %data = %$class;
+    my ($arg, @found);
+    $arg = shift;
+    if (exists ${$data{'seenL'}}{$arg}) { push @found, 0; }
+    if (exists ${$data{'seenR'}}{$arg}) { push @found, 1; }
+    if ( (! exists ${$data{'seenL'}}{$arg}) &&
+         (! exists ${$data{'seenR'}}{$arg}) )
+       { @found = (); }
+    return \@found;
+}    
+
+sub are_members_which {
     my $class = shift;
     croak "Method call needs at least one argument:  $!" unless (@_);
     my %data = %$class;
@@ -142,19 +161,29 @@ sub member_which {
     return \%found;
 }    
 
-sub single_member_which {
+sub is_member_any {
     my $class = shift;
     croak "Method call requires exactly 1 argument (no references):  $!"
         unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
     my %data = %$class;
-    my ($arg, @found);
-    $arg = shift;
-    if (exists ${$data{'seenL'}}{$arg}) { push @found, 0; }
-    if (exists ${$data{'seenR'}}{$arg}) { push @found, 1; }
-    if ( (! exists ${$data{'seenL'}}{$arg}) &&
-         (! exists ${$data{'seenR'}}{$arg}) )
-       { @found = (); }
-    return wantarray ? @found : \@found;
+    my $arg = shift;
+    ( defined $data{'seenL'}{$arg} ) ||
+    ( defined $data{'seenR'}{$arg} ) ? return 1 : return 0;
+}    
+
+sub are_members_any {
+    my $class = shift;
+    croak "Method call needs at least one argument:  $!" unless (@_);
+    my %data = %$class;
+    my (@args, %present);
+    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
+        ?  @{$_[0]}
+        :  @_;
+    for (my $i=0; $i<=$#args; $i++) {
+    $present{$args[$i]} = ( defined $data{'seenL'}{$args[$i]} ) ||
+                              ( defined $data{'seenR'}{$args[$i]} ) ? 1 : 0;
+    }
+    return \%present;
 }    
 
 sub print_subset_chart {

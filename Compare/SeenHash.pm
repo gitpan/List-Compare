@@ -1,5 +1,5 @@
 package List::Compare::SeenHash;
-$VERSION = 0.20;   # June 6, 2003 
+$VERSION = 0.21;   # October 26, 2003 
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
@@ -162,7 +162,7 @@ sub _init {
                 foreach (sort keys %badentriesL);
         } 
         if (keys %badentriesR) {
-            print "  First hash in arguments:\n\n";
+            print "  Second hash in arguments:\n\n";
             print "     Key:  $_\tValue:  $badentriesR{$_}\n" 
                 foreach (sort keys %badentriesR);
         }
@@ -374,8 +374,8 @@ List::Compare::SeenHash - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.20 of List::Compare::SeenHash.  This version 
-was released June 6, 2003.
+This document refers to version 0.21 of List::Compare::SeenHash.  This version 
+was released October 26, 2003.
 
 =head1 SYNOPSIS
 
@@ -1104,6 +1104,10 @@ defensive maneuver, it has been defined for Multiple mode so as to return
 suitable results but also to generate a carp message that advises the user to 
 re-code.
 
+=head2 A Non-Object_Oriented Approach:  List::Compare::Functional
+
+Version 0.21 of List::Compare introduces List::Compare::Functional, a functional (I<i.e.>, non-object-oriented) interface to list comparison functions.  List::Compare::Functional supports all the functions currently supported in List::Compare::SeenHash's Accelerated mode (described above).  Like the Accelerated mode, it compares only two lists at a time and yields only one comparison at a time.  Unlike the Accelerated mode, however, it does not require use of the C<'-a'> flag in the function call.  An interesting feature of List::Compare::Functional is that in passing arguments to its subroutines you may represent the lists either by array references or by references to seen-hashes.  Please see the documentation for List::Compare::Functional to learn how to import its functions into your main package.
+
 =head1 ASSUMPTIONS AND QUALIFICATIONS
 
 The program was created with Perl 5.6. The use of I<h2xs> to prepare 
@@ -1174,7 +1178,7 @@ documentation in v0.20.
 
 James E. Keenan (jkeenan@cpan.org).
 
-Creation date:  May 20, 2002.  Last modification date:  June 6, 2003. 
+Creation date:  May 20, 2002.  Last modification date:  October 26, 2003. 
 Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

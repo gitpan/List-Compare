@@ -1,5 +1,5 @@
 package List::Compare::Base::Regular;
-# As of:  June 1, 2003 
+# As of:  October 26, 2003 
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
@@ -215,4 +215,5 @@ sub _chart_engine {
 }
 
 1;
+
 

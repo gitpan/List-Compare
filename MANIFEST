@@ -1,8 +1,10 @@
 Changes
 Compare.pm
 Compare/Base/Accelerated.pm
+Compare/Base/_Engine.pm
 Compare/Base/Multiple.pm
 Compare/Base/Regular.pm
+Compare/Functional.pm
 Compare/SeenHash.pm
 MANIFEST
 Makefile.PL
@@ -13,5 +15,9 @@ t/03_multiple.t
 t/04_simple_sh.t
 t/05_accelerated_sh.t
 t/06_multiple_sh.t
+t/07_functional.t
+t/08_functional_sh.t
 t/Test/ListCompareSpecial.pm
 
+
+META.yml                                Module meta-data (added by MakeMaker)

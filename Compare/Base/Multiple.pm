@@ -1,5 +1,5 @@
 package List::Compare::Base::Multiple;
-# As of:  May 31, 2003
+# As of:  October 26, 2003
 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
@@ -341,5 +341,6 @@ sub _index_message2 {
 }
 
 1;
+
 
 

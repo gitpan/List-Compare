@@ -1,23 +1,23 @@
 package List::Compare::Base::Accelerated;
-# As of:  May 31, 2003 
-
+# as of:  October 26, 2003
 use strict;
-# use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
-
-sub _calc_seen {
-    my ($refL, $refR) = @_;
-    if (ref($refL) eq 'HASH' and ref($refR) eq 'HASH') {
-        return ($refL, $refR);
-    } elsif (ref($refL) eq 'ARRAY' and ref($refR) eq 'ARRAY') {
-        my %seenL = my %seenR = ();
-        foreach (@$refL) { $seenL{$_}++ }
-        foreach (@$refR) { $seenR{$_}++ }
-        return (\%seenL, \%seenR); 
-    } else {
-        croak "Improper mixing of arguments; accelerated calculation not possible:  $!";
-    }
-}
+use List::Compare::Base::_Engine qw|
+	_intersection_engine
+	_union_engine
+	_unique_engine
+	_complement_engine
+	_symmetric_difference_engine
+	_is_LsubsetR_engine
+	_is_RsubsetL_engine
+	_is_member_which_engine
+	_are_members_which_engine
+	_is_member_any_engine
+	_are_members_any_engine
+	_print_subset_chart_engine
+	_is_LequivalentR_engine
+	_print_equivalence_chart_engine
+|;
 
 sub get_intersection {
     return @{ get_intersection_ref(shift) };
@@ -26,12 +26,7 @@ sub get_intersection {
 sub get_intersection_ref {
     my $class = shift;
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my %intersection = ();
-    foreach (keys %{$hrefL}) {
-        $intersection{$_}++ if (exists ${$hrefR}{$_});
-    }
-    return [ sort keys %intersection ];
+	return _intersection_engine($data{'L'}, $data{'R'});
 }
 
 sub get_union {
@@ -41,10 +36,7 @@ sub get_union {
 sub get_union_ref {
     my $class = shift;
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my %union = ();
-    $union{$_}++ foreach ( (keys %{$hrefL}), (keys %{$hrefR}) );
-    return [ sort keys %union ];
+	return _union_engine($data{'L'}, $data{'R'});
 }
 
 sub get_shared {
@@ -66,19 +58,7 @@ sub get_unique {
 sub get_unique_ref {
     my $class = shift;
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my %intersection = my %union = ();
-    my %Lonly = ();
-
-    foreach (keys %{$hrefL}) {
-        $union{$_}++;
-        if (exists ${$hrefR}{$_}) {
-            $intersection{$_}++;
-        } else {
-            $Lonly{$_}++;
-        }
-    }
-    return [ sort keys %Lonly ];
+	return _unique_engine($data{'L'}, $data{'R'});
 }
 
 *get_Lonly = \&get_unique;
@@ -93,18 +73,7 @@ sub get_complement {
 sub get_complement_ref {
     my $class = shift;
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my %intersection = my %union = ();
-    my %Ronly = ();
-
-    foreach (keys %{$hrefL}) {
-        $intersection{$_}++ if (exists ${$hrefR}{$_});
-    }
-
-    foreach (keys %{$hrefR}) {
-        $Ronly{$_}++ unless (exists $intersection{$_});
-    }
-    return [ sort keys %Ronly ];
+	return _complement_engine($data{'L'}, $data{'R'});
 }
 
 *get_Ronly = \&get_complement;
@@ -119,24 +88,7 @@ sub get_symmetric_difference {
 sub get_symmetric_difference_ref {
     my $class = shift;
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my %intersection = ();
-    my %Lonly = my %Ronly = my %LorRonly = ();
-
-    foreach (keys %{$hrefL}) {
-        if (exists ${$hrefR}{$_}) {
-            $intersection{$_}++;
-        } else {
-            $Lonly{$_}++;
-        }
-    }
-
-    foreach (keys %{$hrefR}) {
-        $Ronly{$_}++ unless (exists $intersection{$_});
-    }
-
-    $LorRonly{$_}++ foreach ( (keys %Lonly), (keys %Ronly) );
-    return [ sort keys %LorRonly ];
+	return _symmetric_difference_engine($data{'L'}, $data{'R'});
 }
 
 *get_symdiff  = \&get_symmetric_difference;
@@ -161,15 +113,7 @@ sub get_nonintersection_ref {
 sub is_LsubsetR {
     my $class = shift;
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my $LsubsetR_status = 1;
-    foreach (keys %{$hrefL}) {
-        if (! exists ${$hrefR}{$_}) {
-            $LsubsetR_status = 0;
-            last;
-        }
-    }
-    return $LsubsetR_status;
+	return _is_LsubsetR_engine($data{'L'}, $data{'R'});
 }
 
 *is_AsubsetB  = \&is_LsubsetR;
@@ -177,15 +121,7 @@ sub is_LsubsetR {
 sub is_RsubsetL {
     my $class = shift;
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my $RsubsetL_status = 1;
-    foreach (keys %{$hrefR}) {
-        if (! exists ${$hrefL}{$_}) {
-            $RsubsetL_status = 0;
-            last;
-        }
-    }
-    return $RsubsetL_status;
+	return _is_RsubsetL_engine($data{'L'}, $data{'R'});
 }
 
 *is_BsubsetA  = \&is_RsubsetL;
@@ -199,34 +135,18 @@ sub is_member_which_ref {
     croak "Method call requires exactly 1 argument (no references):  $!"
         unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my ($arg, @found);
-    $arg = shift;
-    if (exists ${$hrefL}{$arg}) { push @found, 0; }
-    if (exists ${$hrefR}{$arg}) { push @found, 1; }
-    if ( (! exists ${$hrefL}{$arg}) &&
-         (! exists ${$hrefR}{$arg}) )
-       { @found = (); }
-    return \@found;
+	return _is_member_which_engine($data{'L'}, $data{'R'}, shift);
 }    
 
 sub are_members_which {
     my $class = shift;
     croak "Method call needs at least one argument:  $!" unless (@_);
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my (@args, %found);
+    my (@args);
     @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
         ?  @{$_[0]}
         :  @_;
-    for (my $i=0; $i<=$#args; $i++) {
-        if (exists ${$hrefL}{$args[$i]}) { push @{$found{$args[$i]}}, 0; }
-        if (exists ${$hrefR}{$args[$i]}) { push @{$found{$args[$i]}}, 1; }
-        if ( (! exists ${$hrefL}{$args[$i]}) &&
-             (! exists ${$hrefR}{$args[$i]}) )
-           { @{$found{$args[$i]}} = (); }
-    }
-    return \%found;
+	return _are_members_which_engine($data{'L'}, $data{'R'}, \@args);
 }
 
 sub is_member_any {
@@ -234,56 +154,30 @@ sub is_member_any {
     croak "Method call requires exactly 1 argument (no references):  $!"
         unless (@_ == 1 and ref($_[0]) ne 'ARRAY');
     my %data = %$class;
-    my $arg = shift;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    ( defined ${$hrefL}{$arg} ) ||
-    ( defined ${$hrefR}{$arg} ) ? return 1 : return 0;
+	return _is_member_any_engine($data{'L'}, $data{'R'}, shift);
 }    
 
 sub are_members_any {
     my $class = shift;
     croak "Method call needs at least one argument:  $!" unless (@_);
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my (@args, %present);
+    my (@args);
     @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
         ?  @{$_[0]}
         :  @_;
-    for (my $i=0; $i<=$#args; $i++) {
-        $present{$args[$i]} = ( defined ${$hrefL}{$args[$i]} ) ||
-                              ( defined ${$hrefR}{$args[$i]} ) ? 1 : 0;
-    }
-    return \%present;
+	return _are_members_any_engine($data{'L'}, $data{'R'}, \@args);
 }    
 
 sub print_subset_chart {
     my $class = shift;
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my $LsubsetR_status = my $RsubsetL_status = 1;
-    foreach (keys %{$hrefL}) {
-        if (! exists ${$hrefR}{$_}) {
-            $LsubsetR_status = 0;
-            last;
-        }
-    }
-    foreach (keys %{$hrefR}) {
-        if (! exists ${$hrefL}{$_}) {
-            $RsubsetL_status = 0;
-            last;
-        }
-    }
-    my @subset_array = ($LsubsetR_status, $RsubsetL_status);
-    my $title = 'Subset';
-    _chart_engine(\@subset_array, $title);
+	_print_subset_chart_engine($data{'L'}, $data{'R'});
 }
 
 sub is_LequivalentR {
     my $class = shift;
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my $LequivalentR_status = 0;
-    $LequivalentR_status = _equiv_engine($hrefL, $hrefR);
+	return _is_LequivalentR_engine($data{'L'}, $data{'R'});
 }
 
 *is_LeqvlntR = \&is_LequivalentR;
@@ -291,49 +185,10 @@ sub is_LequivalentR {
 sub print_equivalence_chart {
     my $class = shift;
     my %data = %$class;
-    my ($hrefL, $hrefR) = _calc_seen($data{'L'}, $data{'R'});
-    my $LequivalentR_status = 0;
-    $LequivalentR_status = _equiv_engine($hrefL, $hrefR);
-    my @equivalent_array = ($LequivalentR_status, $LequivalentR_status);
-    my $title = 'Equivalence';
-    _chart_engine(\@equivalent_array, $title);
-}
-
-sub _chart_engine {
-    my $aref = shift;
-    my @sub_or_eqv = @$aref;
-    my $title = shift;
-    my ($v, $w, $t);
-    print "\n";
-    print $title, ' Relationships', "\n\n";
-    print '   Right:    0    1', "\n\n";
-    print 'Left:  0:    1    ', $sub_or_eqv[0], "\n\n";
-    print '       1:    ', $sub_or_eqv[1], '    1', "\n\n";
-}
-
-sub _equiv_engine {
-    my ($hrefL, $hrefR) = @_;
-    my %intersection = ();
-    my %Lonly = my %Ronly = my %LorRonly = ();
-    my $LequivalentR_status = 0;
-    
-    foreach (keys %{$hrefL}) {
-        if (exists ${$hrefR}{$_}) {
-            $intersection{$_}++;
-        } else {
-            $Lonly{$_}++;
-        }
-    }
-
-    foreach (keys %{$hrefR}) {
-        $Ronly{$_}++ unless (exists $intersection{$_});
-    }
-
-    $LorRonly{$_}++ foreach ( (keys %Lonly), (keys %Ronly) );
-    $LequivalentR_status = 1 if ( (keys %LorRonly) == 0);
-    return $LequivalentR_status;
+	_print_equivalence_chart_engine($data{'L'}, $data{'R'});
 }
 
 1;
+
 
 

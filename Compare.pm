@@ -1,5 +1,5 @@
 package List::Compare;
-$VERSION = 0.20;   # June 6, 2003 
+$VERSION = 0.21;   # October 26, 2003 
 use strict;
 # use warnings; # commented out so module will run on pre-5.6 versions of Perl
 use Carp;
@@ -354,8 +354,8 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.20 of List::Compare.  This version was
-released June 6, 2003.
+This document refers to version 0.21 of List::Compare.  This version was
+released October 26, 2003.
 
 =head1 SYNOPSIS
 
@@ -1133,6 +1133,10 @@ will generate meaningful comparisons of three or more lists simultaneously.
 Please see the documentation for List::Compare::SeenHash for a more detailed 
 explanation.
 
+=head2 A Non-Object-Oriented Interface:  List::Compare::Functional
+
+Version 0.21 of List::Compare introduces List::Compare::Functional, a functional (I<i.e.>, non-object-oriented) interface to list comparison functions.  List::Compare::Functional supports all the functions currently supported in List::Compare's Accelerated mode (described above).  Like the Accelerated mode, it compares only two lists at a time and yields only one comparison at a time.  Unlike the Accelerated mode, however, it does not require use of the C<'-a'> flag in the function call.  Please see the documentation for List::Compare::Functional to learn how to import its functions into your main package.
+
 =head1 ASSUMPTIONS AND QUALIFICATIONS
 
 The program was created with Perl 5.6. The use of I<h2xs> to prepare 
@@ -1195,7 +1199,7 @@ as a result of a question answered by Michael Graham in his talk
 "Test::More to Test::Extreme" given at Yet Another Perl Conference::Canada 
 in Ottawa, Ontario, on May 16, 2003.  In May-June 2003, Glenn Maciag made 
 valuable suggestions which led to changes in method names and in 
-documentation in v0.20.
+documentation in v0.20.  Another presentation at Perl Seminar New York in October 2003 prompted me to begin planning List::Compare::Functional.
 
 =head2 If You Like List::Compare, You'll Love ...
 
@@ -1299,7 +1303,7 @@ you must first install the Want module, also available on CPAN.
 
 James E. Keenan (jkeenan@cpan.org).
 
-Creation date:  May 20, 2002.  Last modification date:  June 6, 2003. 
+Creation date:  May 20, 2002.  Last modification date:  October 26, 2003. 
 Copyright (c) 2002-3 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

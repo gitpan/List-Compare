@@ -77,5 +77,9 @@ Revision history for Perl extension List::Compare.
 	- changed names of recently added methods to is_member_which(), is_member_which_ref(),
 	  are_members(), is_member_any(), are_members_any()
 
+0.21 Sun Oct 26 2003
+	- added functional interface to list comparison functions:  List::Compare::Functional; this required changes in List::Compare::Base::Accelerated and the creation of List::Compare::Base::_Engine
+
 
  
+

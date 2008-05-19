@@ -1,5 +1,6 @@
 package List::Compare;
-$VERSION = '0.34';   # November 5, 2007 
+#$Id: Compare.pm 1305 2008-05-18 23:58:27Z jimk $
+$VERSION = '0.35';
 use strict;
 local $^W = 1;
 use Carp;
@@ -13,13 +14,15 @@ sub new {
     my (@args, $unsorted, $accelerated, $self, $dataref, $unsortflag);
     my ($argument_error_status, $nextarg, @testargs);
     if (@_ == 1 and (ref($_[0]) eq 'HASH')) {
-       my $argref = shift;
-       die "Need to define 'lists' key properly: $!"
-           unless ( ${$argref}{'lists'}
-                and (ref(${$argref}{'lists'}) eq 'ARRAY') );
-       @args = @{${$argref}{'lists'}};
-       $unsorted = ${$argref}{'unsorted'} ? 1 : '';
-       $accelerated = ${$argref}{'accelerated'} ? 1 : '';
+        my $argref = shift;
+        die "Need to pass references to 2 or more seen-hashes or \n  to provide a 'lists' key within the single hash being passed by reference"
+            unless exists ${$argref}{'lists'};
+        die "Need to define 'lists' key properly: $!"
+            unless ( ${$argref}{'lists'}
+                 and (ref(${$argref}{'lists'}) eq 'ARRAY') );
+        @args = @{${$argref}{'lists'}};
+        $unsorted = ${$argref}{'unsorted'} ? 1 : '';
+        $accelerated = ${$argref}{'accelerated'} ? 1 : '';
     } else {
         @args = @_;
         $unsorted = ($args[0] eq '-u' or $args[0] eq '--unsorted')
@@ -171,15 +174,15 @@ sub get_union_ref {
 sub get_shared {
     my $class = shift;
     my $method = (caller(0))[3];
-    carp "When comparing only 2 lists, $method defaults to \n  ", 'get_union()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
-    get_union($class);
+    carp "When comparing only 2 lists, $method defaults to \n  ", 'get_intersection()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_intersection($class);
 }
 
 sub get_shared_ref {
     my $class = shift;
     my $method = (caller(0))[3];
-    carp "When comparing only 2 lists, $method defaults to \n  ", 'get_union_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
-    get_union_ref($class);
+    carp "When comparing only 2 lists, $method defaults to \n  ", 'get_intersection_ref()', ".  Though the results returned are valid, \n    please consider re-coding with that method: $!";
+    get_intersection_ref($class);
 }
 
 sub get_unique {
@@ -323,7 +326,7 @@ sub is_member_which_ref {
 
 sub are_members_which {
     my $class = shift;
-    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+    croak "Method call requires exactly 1 argument which must be an array reference\n    holding the items to be tested:  $!"
         unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
     my (@args, %found);
@@ -350,7 +353,7 @@ sub is_member_any {
 
 sub are_members_any {
     my $class = shift;
-    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+    croak "Method call requires exactly 1 argument which must be an array reference\n    holding the items to be tested:  $!"
         unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
     my (@args, %present);
@@ -566,7 +569,7 @@ sub is_member_which_ref {
 
 sub are_members_which {
     my $class = shift;
-    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+    croak "Method call requires exactly 1 argument which must be an array reference\n    holding the items to be tested:  $!"
         unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
     my (@args);
@@ -584,7 +587,7 @@ sub is_member_any {
 
 sub are_members_any {
     my $class = shift;
-    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+    croak "Method call requires exactly 1 argument which must be an array reference\n    holding the items to be tested:  $!"
         unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
     my (@args);
@@ -1220,7 +1223,7 @@ sub is_member_which_ref {
 
 sub are_members_which {
     my $class = shift;
-    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+    croak "Method call requires exactly 1 argument which must be an array reference\n    holding the items to be tested:  $!"
         unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
     my %seen = %{$data{'seen'}};
@@ -1254,7 +1257,7 @@ sub is_member_any {
 
 sub are_members_any {
     my $class = shift;
-    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+    croak "Method call requires exactly 1 argument which must be an array reference\n    holding the items to be tested:  $!"
         unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
     my %seen = %{$data{'seen'}};
@@ -1275,7 +1278,7 @@ sub print_subset_chart {
     my $class = shift;
     my %data = %$class;
     my @subset_array = @{$data{'xsubset'}};
-    my $title = 'subset';
+    my $title = 'Subset';
     _chart_engine_multiple(\@subset_array, $title);
 }
 
@@ -1623,7 +1626,7 @@ sub is_member_which_ref {
 sub are_members_which {
     my $class = shift;
 #    croak "Method call needs at least one argument:  $!" unless (@_);
-    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+    croak "Method call requires exactly 1 argument which must be an array reference\n    holding the items to be tested:  $!"
         unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %{$class};
     my $aref = _prepare_listrefs(\%data);
@@ -1663,7 +1666,7 @@ sub is_member_any {
 sub are_members_any {
     my $class = shift;
 #    croak "Method call needs at least one argument:  $!" unless (@_);
-    croak "Method call requires exactly 1 argument which must be an anonymous array\n    holding the items to be tested:  $!"
+    croak "Method call requires exactly 1 argument which must be an array reference\n    holding the items to be tested:  $!"
         unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
     my $aref = _prepare_listrefs(\%data);
@@ -1689,7 +1692,7 @@ sub print_subset_chart {
     my %data = %$class;
     my $aref = _prepare_listrefs(\%data);
     my $xsubsetref = _subset_subengine($aref);
-    my $title = 'subset';
+    my $title = 'Subset';
     _chart_engine_multiple($xsubsetref, $title);
 }
 
@@ -1747,8 +1750,8 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.34 of List::Compare.  This version was
-released November 5, 2007.
+This document refers to version 0.35 of List::Compare.  This version was
+released May 18, 2008.
 
 =head1 SYNOPSIS
 
@@ -3179,7 +3182,7 @@ or through the web interface at L<http://rt.cpan.org>.
 James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please 
 include 'List::Compare' or 'List-Compare' in your subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  November 5, 2007.
+Creation date:  May 20, 2002.  Last modification date:  May 18, 2008.
 
 =head1 COPYRIGHT
 

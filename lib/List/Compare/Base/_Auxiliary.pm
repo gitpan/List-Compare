@@ -1,6 +1,6 @@
 package List::Compare::Base::_Auxiliary;
-$VERSION = 0.34;
-# As of:  09/18/2005
+#$Id: _Auxiliary.pm 1305 2008-05-18 23:58:27Z jimk $
+$VERSION = 0.35;
 use Carp;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
@@ -74,6 +74,8 @@ use Carp;
 use strict;
 local $^W =1;
 
+my $bad_lists_msg = q{If argument is single hash ref, you must have a 'lists' key whose value is an array ref};
+
 sub _validate_2_seenhashes {
     my ($refL, $refR) = @_;
     my (%seenL, %seenR);
@@ -92,20 +94,22 @@ sub _validate_2_seenhashes {
             $badentriesR{$_} = ${$refR}{$_};
         }
     }
+    my $msg = q{};
     if ( (keys %badentriesL) or (keys %badentriesR) ) {
-        print "\nValues in a 'seen-hash' may only be positive integers.\n";
-        print "  These elements have invalid values:\n\n";
+        $msg .= "\nValues in a 'seen-hash' may only be positive integers.\n";
+        $msg .= "  These elements have invalid values:\n";
         if (keys %badentriesL) {
-            print "  First hash in arguments:\n\n";
-            print "     Key:  $_\tValue:  $badentriesL{$_}\n" 
+            $msg .= "  First hash in arguments:\n";
+            $msg .= "     Key:  $_\tValue:  $badentriesL{$_}\n" 
                 foreach (sort keys %badentriesL);
         } 
         if (keys %badentriesR) {
-            print "  Second hash in arguments:\n\n";
-            print "     Key:  $_\tValue:  $badentriesR{$_}\n" 
+            $msg .= "  Second hash in arguments:\n";
+            $msg .= "     Key:  $_\tValue:  $badentriesR{$_}\n" 
                 foreach (sort keys %badentriesR);
         }
-        croak "Correct invalid values before proceeding:  $!";
+        $msg .= "Correct invalid values before proceeding";
+        croak "$msg:  $!";
     }
     return (\%seenL, \%seenR);
 }
@@ -124,20 +128,22 @@ sub _validate_seen_hash {
             $badentriesR{$_} = ${$r}{$_} 
                 unless (${$r}{$_} =~ /^\d+$/ and ${$r}{$_} > 0);
         }
+        my $msg = q{};
         if ( (keys %badentriesL) or (keys %badentriesR) ) {
-            print "\nValues in a 'seen-hash' may only be numeric.\n";
-            print "  These elements have invalid values:\n\n";
+            $msg .= "\nValues in a 'seen-hash' must be numeric.\n";
+            $msg .= "  These elements have invalid values:\n";
             if (keys %badentriesL) {
-                print "  First hash in arguments:\n\n";
-                print "     Key:  $_\tValue:  $badentriesL{$_}\n" 
+                $msg .= "  First hash in arguments:\n";
+                $msg .= "     Key:  $_\tValue:  $badentriesL{$_}\n" 
                     foreach (sort keys %badentriesL);
             } 
             if (keys %badentriesR) {
-                print "  Second hash in arguments:\n\n";
-                print "     Key:  $_\tValue:  $badentriesR{$_}\n" 
+                $msg .= "  Second hash in arguments:\n";
+                $msg .= "     Key:  $_\tValue:  $badentriesR{$_}\n" 
                     foreach (sort keys %badentriesR);
             }
-            croak "Correct invalid values before proceeding:  $!";
+            $msg .= "Correct invalid values before proceeding";
+            croak "$msg:  $!";
         }
     }
 }
@@ -155,17 +161,19 @@ sub _validate_multiple_seenhashes {
             }
         }
     }
+    my $msg = q{};
     if ($badentriesflag) {
-        print "\nValues in a 'seen-hash' may only be positive integers.\n";
-        print "  These elements have invalid values:\n\n";
+        $msg .= "\nValues in a 'seen-hash' must be positive integers.\n";
+        $msg .= "  These elements have invalid values:\n\n";
         foreach (sort keys %badentries) {
-            print "    Hash $_:\n";
+            $msg .= "    Hash $_:\n";
             my %pairs = %{$badentries{$_}};
             foreach my $val (sort keys %pairs) {
-                print "        Bad key-value pair:  $val\t$pairs{$val}\n";
+                $msg .= "        Bad key-value pair:  $val\t$pairs{$val}\n";
             }
         }
-        croak "Correct invalid values before proceeding:  $!";
+        $msg .= "Correct invalid values before proceeding";
+        croak "$msg:  $!";
     }
 }
 
@@ -504,7 +512,7 @@ sub _equiv_engine {
 sub _argument_checker_0 {
     my @args = @_;
     my $first_ref = ref($args[0]);
-    die "Improper argument: $!" 
+    croak "'$first_ref' must be array ref or hash ref: $!" 
         unless ($first_ref eq 'ARRAY' or $first_ref eq 'HASH');
     my @temp = @args[1..$#args];
     my ($testing);
@@ -523,6 +531,7 @@ sub _argument_checker_0 {
 
 sub _argument_checker {
     my $argref = shift;
+    croak "'$argref' must be an array ref" unless ref($argref) eq 'ARRAY';
     my @args = _argument_checker_0(@{$argref});
     return (@args);
 }
@@ -549,6 +558,8 @@ sub _argument_checker_2 {
 # stripped off).
 # The second argument is an arrayref holding a single item (index number of 
 # item being tested)
+# Note:  Currently we're only checking for the quantity of arguments -- not
+# their types.  This should be fixed.
 sub _argument_checker_3 {
     my $argref = shift;
     my @args = @{$argref};
@@ -581,7 +592,7 @@ sub _argument_checker_4 {
         if (@{$args[1]} == 2) {
             my $last_index = $#{$args[0]};
             foreach my $i (@{$args[1]}) {
-		croak "No element in index position $i in list of list references passed as first argument to function: $!"
+		        croak "No element in index position $i in list of list references passed as first argument to function: $!"
                     unless ($i =~ /^\d+$/ and $i <= $last_index);
             }
             return (_argument_checker($args[0]), $args[1]);
@@ -625,7 +636,7 @@ sub _alt_construct_tester {
     my ($argref, $unsorted);
     if (@args == 1 and (ref($args[0]) eq 'HASH')) {
        my $hashref = shift;
-       die "Need to define 'lists' key properly: $!"
+       croak "$bad_lists_msg: $!"
            unless ( ${$hashref}{'lists'}
                 and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
        $argref = ${$hashref}{'lists'};
@@ -646,10 +657,10 @@ sub _alt_construct_tester_1 {
     if (@args == 1 and (ref($args[0]) eq 'HASH')) {
         my (@returns);
         my $hashref = $args[0];
-        die "Need to define 'lists' key properly: $!"
+       croak "$bad_lists_msg: $!"
            unless ( ${$hashref}{'lists'}
                 and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
-        die "Need to define 'item' key properly: $!"
+        croak "If argument is single hash ref, you must have an 'item' key: $!"
            unless ${$hashref}{'item'};
         @returns = ( ${$hashref}{'lists'}, [${$hashref}{'item'}] );
         $argref = \@returns;
@@ -667,10 +678,10 @@ sub _alt_construct_tester_2 {
     if (@args == 1 and (ref($args[0]) eq 'HASH')) {
         my (@returns);
         my $hashref = $args[0];
-        die "Need to define 'lists' key properly: $!"
+       croak "$bad_lists_msg: $!"
            unless ( ${$hashref}{'lists'}
                 and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
-        die "Need to define 'items' key properly: $!"
+        croak "If argument is single hash ref, you must have an 'items' key whose value is an array ref: $!"
            unless ( ${$hashref}{'items'}
                 and (ref(${$hashref}{'items'}) eq 'ARRAY') );
         @returns = defined ${$hashref}{'items'}
@@ -691,7 +702,7 @@ sub _alt_construct_tester_3 {
     if (@args == 1 and (ref($args[0]) eq 'HASH')) {
         my (@returns);
         my $hashref = $args[0];
-        die "Need to define 'lists' key properly: $!"
+       croak "$bad_lists_msg: $!"
            unless ( ${$hashref}{'lists'}
                 and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
         @returns = defined ${$hashref}{'item'}
@@ -714,7 +725,7 @@ sub _alt_construct_tester_4 {
     if (@args == 1 and (ref($args[0]) eq 'HASH')) {
         my (@returns);
         my $hashref = $args[0];
-        die "Need to define 'lists' key properly: $!"
+       croak "$bad_lists_msg: $!"
            unless ( ${$hashref}{'lists'}
                 and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
         @returns = defined ${$hashref}{'pair'}
@@ -735,7 +746,7 @@ sub _alt_construct_tester_5 {
     if (@args == 1) {
         if (ref($args[0]) eq 'HASH') {
            my $hashref = shift;
-           die "Need to define 'lists' key properly: $!"
+           croak "Need to define 'lists' key properly: $!"
                unless ( ${$hashref}{'lists'}
                     and (ref(${$hashref}{'lists'}) eq 'ARRAY') );
            $argref = ${$hashref}{'lists'};
@@ -758,8 +769,8 @@ List::Compare::Base::_Auxiliary - Internal use only
 
 =head1 VERSION
 
-This document refers to version 0.34 of List::Compare::Base::_Auxiliary.
-This version was released November 5, 2007.
+This document refers to version 0.35 of List::Compare::Base::_Auxiliary.
+This version was released May 18, 2008.
 
 =head1 SYNOPSIS
 
@@ -771,7 +782,7 @@ List::Compare::Functional.  They are not intended to be publicly callable.
 James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please 
 include 'List::Compare' or 'List-Compare' in your subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  November 5, 2007. 
+Creation date:  May 20, 2002.  Last modification date:  May 18, 2008. 
 Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.

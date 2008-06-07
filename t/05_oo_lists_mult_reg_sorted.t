@@ -1,8 +1,8 @@
 # perl
-#$Id: 05_oo_lists_mult_reg_sorted.t 1288 2008-05-11 16:51:26Z jimk $
+#$Id: 05_oo_lists_mult_reg_sorted.t 1317 2008-06-02 23:22:02Z jimk $
 # 05_oo_lists_mult_reg_sorted.t
 use strict;
-use Test::More tests => 106;
+use Test::More tests => 115;
 use List::Compare;
 use lib ("./t");
 use Test::ListCompareSpecial qw( :seen :wrap :arrays :results );
@@ -55,6 +55,12 @@ $unique_ref = $lcm->get_unique_ref(2);
 is_deeply($unique_ref, \@pred, "Got expected unique");
 
 eval { $unique_ref = $lcm->get_unique_ref('jerky') };
+like($@,
+    qr/Argument to method List::Compare::Multiple::get_unique_ref must be the array index/,
+    "Got expected error message"
+);
+
+eval { $unique_ref = $lcm->get_unique_ref(999) };
 like($@,
     qr/Argument to method List::Compare::Multiple::get_unique_ref must be the array index/,
     "Got expected error message"
@@ -192,6 +198,12 @@ $complement_ref = $lcm->get_complement_ref(1);
 is_deeply($complement_ref, \@pred, "Got expected complement");
 
 eval { $complement_ref = $lcm->get_complement_ref('jerky') };
+like($@,
+    qr/Argument to method List::Compare::Multiple::get_complement_ref must be the array index/,
+    "Got expected error message"
+);
+
+eval { $complement_ref = $lcm->get_complement_ref(999) };
 like($@,
     qr/Argument to method List::Compare::Multiple::get_complement_ref must be the array index/,
     "Got expected error message"
@@ -430,6 +442,12 @@ like($@,
     "Got expected error message"
 );
 
+eval { $LR = $lcm->is_LsubsetR('jerky', 3) };
+like($@,
+    qr/Each argument to method List::Compare::Multiple::is_LsubsetR must be a valid array index /,
+    "Got expected error message"
+);
+
 {
     my ($rv, $stdout, $stderr);
     capture(
@@ -478,6 +496,12 @@ like($@,
     "Got expected error message",
 );
 
+eval { $LR = $lcm->is_LequivalentR('jerky', 3) };
+like($@,
+    qr/Each argument to method List::Compare::Multiple::is_LequivalentR must be a valid array index /,
+    "Got expected error message"
+);
+
 {
     my ($rv, $stdout, $stderr);
     capture(
@@ -514,11 +538,20 @@ eval { $memb_arr_ref = $lcm->is_member_which_ref('jerky', 'zebra') };
 like($@, qr/Method call requires exactly 1 argument \(no references\)/,
         "is_member_which_ref() correctly generated error message");
 
+eval { $memb_arr_ref = $lcm->is_member_which_ref( [ 'jerky' ] ) };
+like($@, qr/Method call requires exactly 1 argument \(no references\)/,
+        "is_member_which_ref() correctly generated error message");
+
 $memb_hash_ref = $lcm->are_members_which( \@args );
 is_deeply($memb_hash_ref, $test_members_which_mult,
    "are_members_which() returned all expected values");
 
 eval { $memb_hash_ref = $lcm->are_members_which( { key => 'value' } ) };
+like($@,
+    qr/Method call requires exactly 1 argument which must be an array reference/,
+    "are_members_which() correctly generated error message");
+
+eval { $memb_hash_ref = $lcm->are_members_which( \@args, [ 1 .. 3 ] ) };
 like($@,
     qr/Method call requires exactly 1 argument which must be an array reference/,
     "are_members_which() correctly generated error message");
@@ -531,6 +564,11 @@ like($@,
     qr/Method call requires exactly 1 argument \(no references\)/,
     "is_member_any() correctly generated error message");
 
+eval { $lcm->is_member_any( [ 'jerky' ] ) };
+like($@,
+    qr/Method call requires exactly 1 argument \(no references\)/,
+    "is_member_any() correctly generated error message");
+
 $memb_hash_ref = $lcm->are_members_any( \@args );
 ok(wrap_are_members_any(
     $memb_hash_ref,
@@ -538,6 +576,11 @@ ok(wrap_are_members_any(
 ), "are_members_any() returned all expected values");
 
 eval { $memb_hash_ref = $lcm->are_members_any( { key => 'value' } ) };
+like($@,
+    qr/Method call requires exactly 1 argument which must be an array reference/,
+    "are_members_any() correctly generated error message");
+
+eval { $memb_hash_ref = $lcm->are_members_any( \@args, [ 1..3 ] ) };
 like($@,
     qr/Method call requires exactly 1 argument which must be an array reference/,
     "are_members_any() correctly generated error message");
@@ -561,6 +604,12 @@ ok($disj, "Got expected disjoint relationship");
 eval { $disj = $lcm_dj->is_LdisjointR(2) };
 like($@, qr/Method List::Compare::Multiple::is_LdisjointR requires 2 arguments/,
     "Got expected error message");
+
+eval { $LR = $lcm->is_LdisjointR('jerky', 3) };
+like($@,
+    qr/Each argument to method List::Compare::Multiple::is_LdisjointR must be a valid array index /,
+    "Got expected error message"
+);
 
 ########## BELOW:  Testfor bad arguments to constructor ##########
 

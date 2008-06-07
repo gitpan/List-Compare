@@ -1,8 +1,8 @@
 # perl
-#$Id: 11_oo_lists_alt_dual_acc_sorted.t 1279 2008-05-10 16:37:42Z jimk $
+#$Id: 11_oo_lists_alt_dual_acc_sorted.t 1308 2008-06-01 00:46:14Z jimk $
 # 11_oo_lists_alt_dual_acc_sorted.t
 use strict;
-use Test::More qw(no_plan); # tests =>  79;
+use Test::More tests =>  79;
 use List::Compare;
 use lib ("./t");
 use Test::ListCompareSpecial qw( :seen :wrap :arrays :results );

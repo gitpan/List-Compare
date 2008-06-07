@@ -1,6 +1,6 @@
 package List::Compare;
-#$Id: Compare.pm 1305 2008-05-18 23:58:27Z jimk $
-$VERSION = '0.36';
+#$Id: Compare.pm 1329 2008-06-07 23:49:51Z jimk $
+$VERSION = '0.37';
 use strict;
 local $^W = 1;
 use Carp;
@@ -49,17 +49,17 @@ sub new {
     if (@args > 2) {
         if ($accelerated) {
             $class .= '::Multiple::Accelerated';
-            $self = bless {}, ref($class) || $class;
+            $self = bless {}, $class;
         } else {
             $class .= '::Multiple';
-            $self = bless {}, ref($class) || $class;
+            $self = bless {}, $class;
         }
     } elsif (@args == 2) {
         if ($accelerated) {
             $class .= '::Accelerated';
-            $self = bless {}, ref($class) || $class;
+            $self = bless {}, $class;
         } else {
-            $self = bless {}, ref($class) || $class;
+            $self = bless {}, $class;
         }
     } else {
         croak "Must pass at least 2 references to \&new: $!";
@@ -386,7 +386,6 @@ sub get_version {
 package List::Compare::Accelerated;
 use Carp;
 use List::Compare::Base::_Auxiliary qw(
-    _validate_2_seenhashes
     _argument_checker_0
     _chart_engine_regular
     _calc_seen
@@ -1665,7 +1664,6 @@ sub is_member_any {
 
 sub are_members_any {
     my $class = shift;
-#    croak "Method call needs at least one argument:  $!" unless (@_);
     croak "Method call requires exactly 1 argument which must be an array reference\n    holding the items to be tested:  $!"
         unless (@_ == 1 and ref($_[0]) eq 'ARRAY');
     my %data = %$class;
@@ -1673,9 +1671,6 @@ sub are_members_any {
     my $seenref = _calculate_seen_only($aref);
     my (@args, %present);
     @args = @{$_[0]};
-#    @args = (@_ == 1 and ref($_[0]) eq 'ARRAY') 
-#        ?  @{$_[0]}
-#        :  @_;
     for (my $i=0; $i<=$#args; $i++) {
         foreach (keys %{$seenref}) {
             unless (defined $present{$args[$i]}) {
@@ -1742,7 +1737,7 @@ sub get_version {
 1;
 
 
-__END__
+#################### DOCUMENTATION ####################
 
 =head1 NAME
 
@@ -1750,8 +1745,8 @@ List::Compare - Compare elements of two or more lists
 
 =head1 VERSION
 
-This document refers to version 0.36 of List::Compare.  This version was
-released May 23, 2008.
+This document refers to version 0.37 of List::Compare.  This version was
+released June 07, 2008.
 
 =head1 SYNOPSIS
 
@@ -1773,7 +1768,7 @@ The bare essentials:
 
 =over 4
 
-=item * Constructor
+=item * Constructor:  C<new()>
 
 Create a List::Compare object.  Put the two lists into arrays (named or 
 anonymous) and pass references to the arrays to the constructor.
@@ -1809,33 +1804,33 @@ or
         unsorted => 1,
     } );
 
-=item *
+=item * C<get_intersection()>
 
 Get those items which appear at least once in both lists (their intersection).
 
     @intersection = $lc->get_intersection;
 
-=item *
+=item * C<get_union()>
 
 Get those items which appear at least once in either list (their union).
 
     @union = $lc->get_union;
 
-=item *
+=item * C<get_unique()>
 
 Get those items which appear (at least once) only in the first list.
 
     @Lonly = $lc->get_unique;
     @Lonly = $lc->get_Lonly;    # alias
 
-=item *
+=item * C<get_complement()>
 
 Get those items which appear (at least once) only in the second list.
 
     @Ronly = $lc->get_complement;
     @Ronly = $lc->get_Ronly;            # alias
 
-=item *
+=item * C<get_symmetric_difference()>
 
 Get those items which appear at least once in either the first or the second 
 list, but not both.
@@ -1844,7 +1839,7 @@ list, but not both.
     @LorRonly = $lc->get_symdiff;       # alias
     @LorRonly = $lc->get_LorRonly;      # alias
 
-=item *
+=item * C<get_bag()>
 
 Make a bag of all those items in both lists.  The bag differs from the 
 union of the two lists in that it holds as many copies of individual 
@@ -1852,7 +1847,7 @@ elements as appear in the original lists.
 
     @bag = $lc->get_bag;
 
-=item *
+=item * Return references rather than lists
 
 An alternative approach to the above methods:  If you do not immediately 
 require an array as the return value of the method call, but simply need 
@@ -1870,7 +1865,7 @@ parallel methods:
     $LorRonly_ref     = $lc->get_LorRonly_ref;              # alias
     $bag_ref          = $lc->get_bag_ref;
 
-=item *
+=item * C<is_LsubsetR()>
 
 Return a true value if the first argument passed to the constructor 
 ('L' for 'left') is a subset of the second argument passed to the 
@@ -1882,7 +1877,7 @@ Return a true value if R is a subset of L.
 
     $RL = $lc->is_RsubsetL;
 
-=item *
+=item * C<is_LequivalentR()>
 
 Return a true value if the two lists passed to the constructor are 
 equivalent, I<i.e.> if every element in the left-hand list ('L') appears 
@@ -1891,7 +1886,7 @@ at least once in the right-hand list ('R') and I<vice versa>.
     $eqv = $lc->is_LequivalentR;
     $eqv = $lc->is_LeqvlntR;            # alias
 
-=item *
+=item * C<is_LdisjointR()>
 
 Return a true value if the two lists passed to the constructor are 
 disjoint, I<i.e.> if the two lists have zero elements in common (or, what 
@@ -1899,20 +1894,20 @@ is the same thing, if their intersection is an empty set).
 
     $disj = $lc->is_LdisjointR;
 
-=item *
+=item * C<print_subset_chart()>
 
 Pretty-print a chart showing whether one list is a subset of the other.
 
     $lc->print_subset_chart;
 
-=item *
+=item * C<print_equivalence_chart()>
 
 Pretty-print a chart showing whether the two lists are equivalent (same 
 elements found at least once in both).
 
     $lc->print_equivalence_chart;
 
-=item *
+=item * C<is_member_which()>
 
 Determine in I<which> (if any) of the lists passed to the constructor a given 
 string can be found.  In list context, return a list of those indices in the 
@@ -1928,12 +1923,8 @@ In the example above, C<@memb_arr> will be:
 because C<'abel'> is found only in C<@Al> which holds position C<0> in the 
 list of arguments passed to C<new()>.
 
-=item *
-
 In scalar context, the return value is the number of lists passed to the 
 constructor in which a given string is found.
-
-=item *
 
 As with other List::Compare methods which return a list, you may wish the 
 above method returned a (scalar) reference to an array holding the list:
@@ -1951,7 +1942,7 @@ B<Note:>  methods C<is_member_which()> and C<is_member_which_ref> test
 only one string at a time and hence take only one argument.  To test more 
 than one string at a time see the next method, C<are_members_which()>.
 
-=item *
+=item * C<are_members_which()>
 
 Determine in I<which> (if any) of the lists passed to the constructor one or 
 more given strings can be found.  The strings to be tested are placed in an 
@@ -1982,7 +1973,7 @@ B<Note:>  C<are_members_which()> can take more than one argument;
 C<is_member_which()> and C<is_member_which_ref()> each take only one argument.  
 Unlike those two methods, C<are_members_which()> returns a hash reference.
 
-=item *
+=item * C<is_member_any()>
 
 Determine whether a given string can be found in I<any> of the lists passed as 
 arguments to the constructor.  Return 1 if a specified string can be found in 
@@ -1993,7 +1984,7 @@ any of the lists and 0 if not.
 In the example above, C<$found> will be C<1> because C<'abel'> is found in one 
 or more of the lists passed as arguments to C<new()>.
 
-=item *
+=item * C<are_members_any()>
 
 Determine whether a specified string or strings can be found in I<any> of the 
 lists passed as arguments to the constructor.  The strings to be tested are 
@@ -2022,7 +2013,7 @@ C<$memb_hash_ref> will be:
 C<zebra>'s value is C<0> because C<zebra> is not found in either of the lists 
 passed as arguments to C<new()>.
 
-=item *
+=item * C<get_version()>
 
 Return current List::Compare version number.
 
@@ -2034,7 +2025,7 @@ Return current List::Compare version number.
 
 =over 4
 
-=item * Constructor
+=item * Constructor C<new()>
 
 If you are certain that you will only want the results of a I<single> 
 comparison, computation may be accelerated by passing C<'-a'> or 
@@ -2119,7 +2110,7 @@ you in the Accelerated case as well.
 
 =over 4
 
-=item * Constructor
+=item * Constructor C<new()>
 
 Create a List::Compare object.  Put each list into an array and pass
 references to the arrays to the constructor.
@@ -2192,21 +2183,21 @@ is C<0>, C<@beta> is C<1>, and so forth.
 
 =over 4
 
-=item *
+=item * C<get_intersection()>
 
 Get those items found in I<each> of the lists passed to the constructor 
 (their intersection):
 
     @intersection = $lcm->get_intersection;
 
-=item *
+=item * C<get_union()>
 
 Get those items found in I<any> of the lists passed to the constructor 
 (their union):
 
     @union = $lcm->get_union;
 
-=item *
+=item * C<get_unique()>
 
 To get those items which appear only in I<one particular list,> provide 
 C<get_unique()> with that list's index position in the list of arguments 
@@ -2221,7 +2212,7 @@ To get elements unique to C<@Carmen>:
 If no index position is passed to C<get_unique()> it will default to 0 
 and report items unique to the first list passed to the constructor.
 
-=item *
+=item * C<get_complement()>
 
 To get those items which appear in any list I<other than one particular 
 list,> provide C<get_complement()> with that list's index position in 
@@ -2237,14 +2228,14 @@ If no index position is passed to C<get_complement()> it will default to
 0 and report items found in any list other than the first list passed 
 to the constructor.
 
-=item *
+=item * C<get_symmetric_difference()>
 
 Get those items each of which appears in I<only one> of the lists 
 passed to the constructor (their symmetric_difference);
 
     @LorRonly = $lcm->get_symmetric_difference;
 
-=item *
+=item * C<get_bag()>
 
 Make a bag of all items found in any list.  The bag differs from the 
 lists' union in that it holds as many copies of individual elements 
@@ -2252,7 +2243,7 @@ as appear in the original lists.
 
     @bag = $lcm->get_bag;
 
-=item *
+=item * Return reference instead of list
 
 An alternative approach to the above methods:  If you do not immediately 
 require an array as the return value of the method call, but simply need 
@@ -2265,7 +2256,7 @@ a I<reference> to an array, use one of the following parallel methods:
     $LorRonly_ref     = $lcm->get_symmetric_difference_ref;
     $bag_ref          = $lcm->get_bag_ref;
 
-=item *
+=item * C<is_LsubsetR()>
 
 To determine whether one particular list is a subset of another list 
 passed to the constructor, provide C<is_LsubsetR()> with the index 
@@ -2282,7 +2273,7 @@ right-hand list; a false value (C<0>) is returned otherwise.
 If no arguments are passed, C<is_LsubsetR()> defaults to C<(0,1)> and 
 compares the first two lists passed to the constructor.
 
-=item *
+=item * C<is_LequivalentR()>
 
 To determine whether any two particular lists are equivalent to each 
 other, provide C<is_LequivalentR> with their index positions in the 
@@ -2298,7 +2289,7 @@ A true value (C<1>) is returned if the lists are equivalent; a false value
 If no arguments are passed, C<is_LequivalentR> defaults to C<(0,1)> and 
 compares the first two lists passed to the constructor.
 
-=item *
+=item * C<is_LdisjointR()>
 
 To determine whether any two particular lists are disjoint from each other 
 (I<i.e.,> have no members in common), provide C<is_LdisjointR> with their 
@@ -2315,21 +2306,21 @@ A true value (C<1>) is returned if the lists are equivalent; a false value
 If no arguments are passed, C<is_LdisjointR> defaults to C<(0,1)> and 
 compares the first two lists passed to the constructor.
 
-=item *
+=item * C<print_subset_chart()>
 
 Pretty-print a chart showing the subset relationships among the various 
 source lists:
 
     $lcm->print_subset_chart;
 
-=item *
+=item * C<print_equivalence_chart()>
 
 Pretty-print a chart showing the equivalence relationships among the 
 various source lists:
 
     $lcm->print_equivalence_chart;
 
-=item *
+=item * C<is_member_which()>
 
 Determine in I<which> (if any) of the lists passed to the constructor a given 
 string can be found.  In list context, return a list of those indices in the 
@@ -2345,7 +2336,7 @@ In the example above, C<@memb_arr> will be:
 because C<'abel'> is found only in C<@Al> which holds position C<0> in the 
 list of arguments passed to C<new()>.
 
-=item *
+=item * C<is_member_which_ref()>
 
 As with other List::Compare methods which return a list, you may wish the 
 above method returned a (scalar) reference to an array holding the list:
@@ -2363,7 +2354,7 @@ B<Note:>  methods C<is_member_which()> and C<is_member_which_ref> test
 only one string at a time and hence take only one argument.  To test more 
 than one string at a time see the next method, C<are_members_which()>.
 
-=item *
+=item * C<are_members_which()>
 
 Determine in C<which> (if any) of the lists passed to the constructor one or 
 more given strings can be found.  The strings to be tested are placed in an 
@@ -2398,7 +2389,7 @@ C<are_members_which()> returns a hash reference; the other methods return
 either a list or a reference to an array holding that list, depending on 
 context.
 
-=item *
+=item * C<is_member_any()>
 
 Determine whether a given string can be found in I<any> of the lists passed as 
 arguments to the constructor.
@@ -2411,7 +2402,7 @@ and C<0> if not.
 In the example above, C<$found> will be C<1> because C<'abel'> is found in one 
 or more of the lists passed as arguments to C<new()>.
 
-=item *
+=item * C<are_members_any()>
 
 Determine whether a specified string or strings can be found in I<any> of the 
 lists passed as arguments to the constructor.  The strings to be tested are 
@@ -2440,7 +2431,7 @@ In the two examples above, C<$memb_hash_ref> will be:
 C<zebra>'s value will be C<0> because C<zebra> is not found in any of the 
 lists passed as arguments to C<new()>.
 
-=item *
+=item * C<get_version()>
 
 Return current List::Compare version number:
 
@@ -2452,7 +2443,7 @@ Return current List::Compare version number:
 
 =over 4
 
-=item *
+=item * C<get_nonintersection()>
 
 Get those items found in I<any> of the lists passed to the constructor which 
 do I<not> appear in I<all> of the lists (I<i.e.,> all items except those found 
@@ -2460,7 +2451,7 @@ in the intersection of the lists):
 
     @nonintersection = $lcm->get_nonintersection;
 
-=item *
+=item * C<get_shared()>
 
 Get those items which appear in more than one of the lists passed to the 
 constructor (I<i.e.,> all items except those found in their symmetric 
@@ -2468,7 +2459,7 @@ difference);
 
     @shared = $lcm->get_shared;
 
-=item *
+=item * C<get_nonintersection_ref()>
 
 If you only need a reference to an array as a return value rather than a 
 full array, use the following alternative methods:
@@ -2476,7 +2467,7 @@ full array, use the following alternative methods:
     $nonintersection_ref = $lcm->get_nonintersection_ref;
     $shared_ref = $lcm->get_shared_ref;
 
-=item *
+=item * C<get_unique_all()>
 
 Get a reference to an array of array references where each of the interior 
 arrays holds the list of those items I<unique> to the list passed to the 
@@ -2494,7 +2485,7 @@ In the example above, C<$unique_all_ref> will hold:
         [ ],
     ]
 
-=item *
+=item * C<get_complement_all()>
 
 Get a reference to an array of array references where each of the interior 
 arrays holds the list of those items in the I<complement> to the list 
@@ -2520,7 +2511,7 @@ In the example above, C<$complement_all_ref> will hold:
 
 =over 4
 
-=item * Constructor
+=item * Constructor C<new()>
 
 If you are certain that you will only want the results of a single 
 comparison among three or more lists, computation may be accelerated 
@@ -2628,7 +2619,7 @@ seen-hash, why shouldn't you be able to pass (references to) seen-hashes
 I<directly> to the constructor and avoid unnecessary array 
 assignments before the constructor is called?
 
-=item * Constructor
+=item * Constructor C<new()>
 
 You can now do so:
 
@@ -2724,7 +2715,7 @@ List::Compare objects where seen-hashes are used as arguments:
 =head2 General Comments
 
 List::Compare is an object-oriented implementation of very common Perl 
-code (see L<"History, References and Development"> below) used to
+code (see "History, References and Development" below) used to
 determine interesting relationships between two or more lists at a time.  
 A List::Compare object is created and automatically computes the values
 needed to supply List::Compare methods with appropriate results.  In the
@@ -3182,7 +3173,7 @@ or through the web interface at L<http://rt.cpan.org>.
 James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please 
 include 'List::Compare' or 'List-Compare' in your subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  May 23, 2008.
+Creation date:  May 20, 2002.  Last modification date:  June 07, 2008.
 
 =head1 COPYRIGHT
 

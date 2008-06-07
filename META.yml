@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                List-Compare
-version:             0.36
+version:             0.37
 abstract:            Compare elements of two or more lists
 license:             ~
 author:              

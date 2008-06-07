@@ -1,8 +1,8 @@
 # perl
-#$Id: 33_func_lists_dual_sorted.t 1295 2008-05-14 02:09:13Z jimk $
+#$Id: 33_func_lists_dual_sorted.t 1318 2008-06-03 00:34:48Z jimk $
 # 33_func_lists_dual_sorted.t
 use strict;
-use Test::More tests =>  46;
+use Test::More qw(no_plan); # tests =>  50;
 use List::Compare::Functional qw(:originals :aliases);
 use lib ("./t");
 use Test::ListCompareSpecial qw( :seen :func_wrap :arrays :results );
@@ -58,6 +58,10 @@ $unique_all_ref = get_unique_all( [ \@a0, \@a1 ] );
 is_deeply($unique_all_ref, [ @pred ],
     "Got expected values for get_unique_all()");
 
+eval { $unique_all_ref = get_unique_all( [ \@a0, \@a1 ], [ 'foobar' ] ); };
+like($@, qr/Subroutine call requires exactly 1 reference as argument/,
+    "Got expected error message for too many arguments");
+
 @pred = qw ( hilton );
 @complement = get_complement( [ \@a0, \@a1 ] );
 is_deeply(\@complement, \@pred, "Got expected complement");
@@ -72,6 +76,10 @@ is_deeply($complement_ref, \@pred, "Got expected complement");
 $complement_all_ref = get_complement_all( [ \@a0, \@a1 ] );
 is_deeply($complement_all_ref, [ @pred ],
     "Got expected values for get_complement_all()");
+
+eval { $complement_all_ref = get_complement_all( [ \@a0, \@a1 ], [ 'foobar' ] ); };
+like($@, qr/Subroutine call requires exactly 1 reference as argument/,
+    "Got expected error message for too many arguments");
 
 @pred = qw( abel hilton );
 @symmetric_difference = get_symmetric_difference( [ \@a0, \@a1 ] );
@@ -126,6 +134,11 @@ ok(! $disj, "Got expected disjoint relationship");
     like($stdout, qr/Subset Relationships/,
         "Got expected chart header");
 }
+
+eval { my $rv = print_subset_chart( [ \@a0, \@a1 ], [ 'bogus' ] ); };
+like($@, qr/Subroutine call requires exactly 1 reference as argument/,
+    "Got expected error message for too many arguments");
+
 {
     my ($rv, $stdout, $stderr);
     capture(
@@ -137,6 +150,10 @@ ok(! $disj, "Got expected disjoint relationship");
         "Got expected chart header");
 }
      
+eval { my $rv = print_equivalence_chart( [ \@a0, \@a1 ], [ 'bogus' ] ); };
+like($@, qr/Subroutine call requires exactly 1 reference as argument/,
+    "Got expected error message for too many arguments");
+
 @args = qw( abel baker camera delta edward fargo golfer hilton icon jerky zebra );
 is_deeply(func_all_is_member_which( [ \@a0, \@a1 ], \@args ),
     $test_member_which_dual,

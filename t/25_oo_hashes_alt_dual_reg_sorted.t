@@ -1,8 +1,8 @@
 # perl
-#$Id: 25_oo_hashes_alt_dual_reg_sorted.t 1304 2008-05-18 23:53:42Z jimk $
+#$Id: 25_oo_hashes_alt_dual_reg_sorted.t 1309 2008-06-01 00:47:38Z jimk $
 # 25_oo_hashes_alt_dual_reg_sorted.t
 use strict;
-use Test::More tests =>  77;
+use Test::More tests =>  79;
 use List::Compare;
 use lib ("./t");
 use Test::ListCompareSpecial qw( :seen :wrap :hashes :results );
@@ -325,6 +325,14 @@ ok($disj, "disjoint correctly determined");
 ########## BELOW:  Test for bad arguments to constructor ##########
 
 my ($lc_bad);
+
+eval { $lc_bad = List::Compare->new( { lists => undef } ) };
+like($@, qr/Need to define 'lists' key properly/,
+    "Got expected error message from bad constructor");
+
+eval { $lc_bad = List::Compare->new( { lists => 'not an array ref' } ) };
+like($@, qr/Need to define 'lists' key properly/,
+    "Got expected error message from bad constructor");
 
 my $scalar = 'test';
 eval { $lc_bad = List::Compare->new( { lists => [ \$scalar, \%h0 ] } ) };

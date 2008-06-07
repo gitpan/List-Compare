@@ -1,6 +1,6 @@
 package List::Compare::Base::_Auxiliary;
-#$Id: _Auxiliary.pm 1305 2008-05-18 23:58:27Z jimk $
-$VERSION = 0.36;
+#$Id: _Auxiliary.pm 1329 2008-06-07 23:49:51Z jimk $
+$VERSION = 0.37;
 use Carp;
 @ISA = qw(Exporter);
 @EXPORT_OK = qw|
@@ -396,7 +396,6 @@ sub _index_message1 {
     croak "Argument to method $method must be the array index of the target list \n  in list of arrays passed as arguments to the constructor: $!"
         unless (
                 $index =~ /^\d+$/ 
-           and  0 <= $index 
            and  $index <= ${$dataref}{'maxindex'}
         );
 }
@@ -416,7 +415,6 @@ sub _index_message2 {
             croak "Each argument to method $method must be a valid array index for the target list \n  in list of arrays passed as arguments to the constructor: $!"
                 unless (
                         $_ =~ /^\d+$/ 
-                   and  0 <= $_ 
                    and  $_ <= ${$dataref}{'maxindex'}
                 );
         }
@@ -430,7 +428,6 @@ sub _index_message3 {
     croak "Argument to method $method must be the array index of the target list \n  in list of arrays passed as arguments to the constructor: $!"
         unless (
                 $index =~ /^\d+$/ 
-           and  0 <= $index 
            and  $index <= $maxindex
         );
 }
@@ -450,7 +447,6 @@ sub _index_message4 {
             croak "Each argument to method $method must be a valid array index for the target list \n  in list of arrays passed as arguments to the constructor: $!"
                 unless (
                         $_ =~ /^\d+$/ 
-                   and  0 <= $_ 
                    and  $_ <= $maxindex
                 );
         }
@@ -479,15 +475,15 @@ sub _subset_engine_multaccel {
 
 sub _calc_seen {
     my ($refL, $refR) = @_;
-    if (ref($refL) eq 'ARRAY' and ref($refR) eq 'ARRAY') {
+    # We've already guaranteed that args are both array refs or both hash
+    # refs.  So checking the left-hand one is sufficient.
+    if (ref($refL) eq 'ARRAY') {
         my (%seenL, %seenR);
         foreach (@$refL) { $seenL{$_}++ }
         foreach (@$refR) { $seenR{$_}++ }
         return (\%seenL, \%seenR); 
-    } elsif (ref($refL) eq 'HASH' and ref($refR) eq 'HASH') {
-        return ($refL, $refR);
     } else {
-        croak "Improper mixing of arguments; accelerated calculation not possible:  $!";
+        return ($refL, $refR);
     }
 }
 
@@ -512,8 +508,6 @@ sub _equiv_engine {
 sub _argument_checker_0 {
     my @args = @_;
     my $first_ref = ref($args[0]);
-    croak "'$first_ref' must be array ref or hash ref: $!" 
-        unless ($first_ref eq 'ARRAY' or $first_ref eq 'HASH');
     my @temp = @args[1..$#args];
     my ($testing);
     my $condition = 1;
@@ -568,8 +562,7 @@ sub _argument_checker_3 {
     } elsif (@args == 2) {
         return (_argument_checker($args[0]), ${$args[1]}[0]);
     } else {
-        croak "Subroutine call requires 1 or 2 references as arguments:  $!"
-            unless (@args == 1 or @args == 2);
+        croak "Subroutine call requires 1 or 2 references as arguments:  $!";
     }
 }
 
@@ -600,8 +593,7 @@ sub _argument_checker_4 {
             croak "Must provide index positions corresponding to two lists: $!";
         }
     } else {
-        croak "Subroutine call requires 1 or 2 references as arguments: $!"
-            unless (@args == 1 or @args == 2);
+        croak "Subroutine call requires 1 or 2 references as arguments: $!";
     }
 }
 
@@ -622,10 +614,8 @@ sub _calc_seen1 {
             push(@seenrefs, \%seenthis);
         }
         return \@seenrefs;
-    } elsif (ref($listrefs[0]) eq 'HASH') {
-        return \@listrefs;
     } else {
-        croak "Indeterminate case in _calc_seen1: $!";
+        return \@listrefs;
     }
 }
 
@@ -674,9 +664,7 @@ sub _alt_construct_tester_1 {
 # are_members_which are_members_any
 sub _alt_construct_tester_2 {
     my @args = @_;
-    my ($argref);
     if (@args == 1 and (ref($args[0]) eq 'HASH')) {
-        my (@returns);
         my $hashref = $args[0];
        croak "$bad_lists_msg: $!"
            unless ( ${$hashref}{'lists'}
@@ -684,14 +672,10 @@ sub _alt_construct_tester_2 {
         croak "If argument is single hash ref, you must have an 'items' key whose value is an array ref: $!"
            unless ( ${$hashref}{'items'}
                 and (ref(${$hashref}{'items'}) eq 'ARRAY') );
-        @returns = defined ${$hashref}{'items'}
-                        ? (${$hashref}{'lists'}, ${$hashref}{'items'})
-                        : (${$hashref}{'lists'});
-        $argref = \@returns;
+        return [ (${$hashref}{'lists'}, ${$hashref}{'items'}) ];
     } else {
-        $argref = \@args; 
+        return \@args;
     }
-    return $argref;
 }
 
 # _alt_construct_tester_3 prepares for _argument_checker_3 in
@@ -769,8 +753,8 @@ List::Compare::Base::_Auxiliary - Internal use only
 
 =head1 VERSION
 
-This document refers to version 0.36 of List::Compare::Base::_Auxiliary.
-This version was released May 23, 2008.
+This document refers to version 0.37 of List::Compare::Base::_Auxiliary.
+This version was released June 07, 2008.
 
 =head1 SYNOPSIS
 
@@ -782,8 +766,8 @@ List::Compare::Functional.  They are not intended to be publicly callable.
 James E. Keenan (jkeenan@cpan.org).  When sending correspondence, please 
 include 'List::Compare' or 'List-Compare' in your subject line.
 
-Creation date:  May 20, 2002.  Last modification date:  May 23, 2008. 
-Copyright (c) 2002-04 James E. Keenan.  United States.  All rights reserved. 
+Creation date:  May 20, 2002.  Last modification date:  June 07, 2008. 
+Copyright (c) 2002-08 James E. Keenan.  United States.  All rights reserved. 
 This is free software and may be distributed under the same terms as Perl
 itself.
 

@@ -1,4 +1,4 @@
-#$Id: Changes 1329 2008-06-07 23:49:51Z jimk $
+#$Id: Changes 1506 2013-09-06 01:10:34Z jimk $
 Revision history for Perl extension List::Compare.
 
 0.04  Sat Jun  8 2002
@@ -148,3 +148,6 @@ List::Compare::Functional; other internal code clean-up
     - Tests refined and code refactored so as to achieve 100% subroutine,
       statement, branch and condition coverage by test suite as measured by
       Devel::Cover.  Some cleanup of POD.
+
+0.38 Thu Sep  5 21:09:10 EDT 2013
+    - Update support information; no longer using dedicated mailing list.

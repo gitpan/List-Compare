@@ -1,14 +1,22 @@
---- #YAML:1.0
-name:                List-Compare
-version:             0.37
-abstract:            Compare elements of two or more lists
-license:             ~
-author:              
-    - James E Keenan (jkeenan@cpan.org)
-generated_by:        ExtUtils::MakeMaker version 6.42
-distribution_type:   module
-requires:     
-    Test::Simple:                  0.1
+---
+abstract: 'Compare elements of two or more lists'
+author:
+  - 'James E Keenan (jkeenan@cpan.org)'
+build_requires:
+  ExtUtils::MakeMaker: 0
+configure_requires:
+  ExtUtils::MakeMaker: 0
+dynamic_config: 1
+generated_by: 'ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.120921'
+license: unknown
 meta-spec:
-    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
-    version: 1.3
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: List-Compare
+no_index:
+  directory:
+    - t
+    - inc
+requires:
+  Test::Simple: 0.1
+version: 0.38

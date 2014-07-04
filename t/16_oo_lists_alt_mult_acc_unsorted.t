@@ -1,5 +1,5 @@
 # perl
-#$Id: 16_oo_lists_alt_mult_acc_unsorted.t 1288 2008-05-11 16:51:26Z jimk $
+#$Id$
 # t/16_oo_lists_alt_mult_acc_unsorted.t
 use strict;
 use Test::More tests => 110;

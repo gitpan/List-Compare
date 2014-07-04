@@ -1,5 +1,5 @@
 # perl
-#$Id: 46_func_hashes_alt_dual_unsorted.t 1301 2008-05-15 23:42:36Z jimk $
+#$Id$
 # 46_func_hashes_alt_dual_unsorted.t
 use strict;
 use Test::More tests =>  38;

@@ -1,5 +1,5 @@
 # perl
-#$Id: 36_func_lists_mult_unsorted.t 1300 2008-05-15 23:36:34Z jimk $
+#$Id$
 # 36_func_lists_mult_unsorted.t
 use strict;
 use Test::More tests =>  42;

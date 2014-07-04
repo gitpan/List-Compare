@@ -1,5 +1,5 @@
 # perl
-#$Id: 91_func_errors.t 1308 2008-06-01 00:46:14Z jimk $
+#$Id$
 # 91_func_errors.t
 use strict;
 use Test::More tests => 176;

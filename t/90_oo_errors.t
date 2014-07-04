@@ -1,5 +1,5 @@
 # perl
-#$Id: 90_oo_errors.t 1326 2008-06-04 03:42:40Z jimk $
+#$Id$
 # 01_oo_lists_dual_reg_sorted.t
 use strict;
 use Test::More tests =>  30;

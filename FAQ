@@ -1,4 +1,4 @@
-#$Id: FAQ 1224 2008-04-30 01:53:48Z jimk $
+#$Id$
 Q.  How can I make comparisons among more than two lists when I don't know in
 advance how many lists I'll need to compare?
 

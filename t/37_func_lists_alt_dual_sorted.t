@@ -1,5 +1,5 @@
 # perl
-#$Id: 37_func_lists_alt_dual_sorted.t 1320 2008-06-03 00:50:59Z jimk $
+#$Id$
 # 37_func_lists_alt_dual_sorted.t
 use strict;
 use Test::More tests =>  50;

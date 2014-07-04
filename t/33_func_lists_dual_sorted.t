@@ -1,5 +1,5 @@
 # perl
-#$Id: 33_func_lists_dual_sorted.t 1318 2008-06-03 00:34:48Z jimk $
+#$Id$
 # 33_func_lists_dual_sorted.t
 use strict;
 use Test::More qw(no_plan); # tests =>  50;

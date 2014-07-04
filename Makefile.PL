@@ -1,4 +1,3 @@
-#$Id: Makefile.PL 1224 2008-04-30 01:53:48Z jimk $
 use ExtUtils::MakeMaker;
 require 5.006;
 WriteMakefile(

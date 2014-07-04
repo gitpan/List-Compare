@@ -1,5 +1,5 @@
 # perl
-#$Id: 17_oo_hashes_dual_reg_sorted.t 1304 2008-05-18 23:53:42Z jimk $
+#$Id$
 # 17_oo_hashes_dual_reg_sorted.t
 use strict;
 use Test::More tests =>  76;
